@@ -1,0 +1,25 @@
+# FiveM server runtime and caches
+/cache/
+/server-cache/
+/logs/
+*.log
+
+# Server artifacts and binaries
+FXServer.exe
+run.sh
+*.dll
+*.so
+
+# Secrets and local configuration
+.env
+*.key
+secrets.*
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Editor and build files
+.vscode/
+.idea/
+node_modules/
