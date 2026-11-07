@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>HUD</title>
+    <link rel="stylesheet" href="hud.css">
+</head>
+<body>
+    <div class="hud" id="hud">
+        <div class="money">
+            <div class="row">
+                <span>Cash</span>
+                <span id="cash">£0</span>
+            </div>
+
+            <div class="row">
+                <span>Bank</span>
+                <span id="bank">£0</span>
+            </div>
+        </div>
+
+        <div class="progress">
+            <div class="row">
+                <span>Level <span id="level">1</span></span>
+                <span id="xp">0 XP</span>
+            </div>
+
+            <div class="bar">
+                <div class="fill" id="xp-fill"></div>
+            </div>
+        </div>
+
+        <div class="job" id="job">
+            <div class="row">
+                <span id="job-label">No active job</span>
+                <span id="job-progress"></span>
+            </div>
+        </div>
+    </div>
+
+    <script src="hud.js"></script>
+</body>
+</html>

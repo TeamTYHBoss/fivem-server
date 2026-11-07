@@ -3,6 +3,7 @@ local jobBoardOpen = false
 local activeJob = nil
 local activeRouteIndex = nil
 local jobVehicle = nil
+local routeBlip = nil
 
 local function openShop(data)
     if shopOpen then
@@ -50,6 +51,28 @@ local function deleteJobVehicle()
     end
 
     jobVehicle = nil
+end
+
+local function deleteRouteBlip()
+    if routeBlip and DoesBlipExist(routeBlip) then
+        RemoveBlip(routeBlip)
+    end
+
+    routeBlip = nil
+end
+
+local function createRouteBlip(coords, label)
+    deleteRouteBlip()
+
+    routeBlip = AddBlipForCoord(coords.x, coords.y, coords.z)
+    SetBlipSprite(routeBlip, 1)
+    SetBlipColour(routeBlip, 5)
+    SetBlipScale(routeBlip, 0.8)
+    SetBlipAsShortRange(routeBlip, false)
+
+    BeginTextCommandSetBlipName('STRING')
+    AddTextComponentSubstringPlayerName(label or 'Job Waypoint')
+    EndTextCommandSetBlipName(routeBlip)
 end
 
 local function spawnJobVehicle(jobId)
@@ -116,6 +139,25 @@ RegisterNetEvent('whellco_economy:jobStarted', function(data)
 
     spawnJobVehicle(data.id)
 
+    local job = Config.Jobs[data.id]
+
+    if job then
+        local waypoint = job.route[activeRouteIndex]
+
+        if waypoint then
+            createRouteBlip(waypoint, ('%s Waypoint'):format(job.label))
+        end
+    end
+
+    SendNUIMessage({
+        action = 'jobStarted',
+        job = {
+            label = data.label,
+            routeIndex = activeRouteIndex,
+            routeTotal = job and #job.route or 0
+        }
+    })
+
     BeginTextCommandThefeedPost('STRING')
     AddTextComponentSubstringPlayerName(('Started %s job.'):format(data.label or 'job'))
     EndTextCommandThefeedPostTicker(false, true)
@@ -123,6 +165,25 @@ end)
 
 RegisterNetEvent('whellco_economy:routeAdvanced', function(data)
     activeRouteIndex = data.routeIndex
+
+    local job = Config.Jobs[activeJob]
+
+    if job then
+        local waypoint = job.route[activeRouteIndex]
+
+        if waypoint then
+            createRouteBlip(waypoint, ('%s Waypoint'):format(job.label))
+        else
+            deleteRouteBlip()
+        end
+    end
+
+    SendNUIMessage({
+        action = 'routeAdvanced',
+        routeIndex = activeRouteIndex,
+        routeTotal = job and #job.route or 0,
+        completed = data.completed
+    })
 
     if data.completed then
         BeginTextCommandThefeedPost('STRING')
@@ -135,6 +196,11 @@ RegisterNetEvent('whellco_economy:jobCompleted', function()
     activeJob = nil
     activeRouteIndex = nil
     deleteJobVehicle()
+    deleteRouteBlip()
+
+    SendNUIMessage({
+        action = 'jobCompleted'
+    })
 end)
 
 RegisterCommand('shop', function()
@@ -201,5 +267,6 @@ AddEventHandler('onResourceStop', function(resource)
     if resource == GetCurrentResourceName() then
         SetNuiFocus(false, false)
         deleteJobVehicle()
+        deleteRouteBlip()
     end
 end)
