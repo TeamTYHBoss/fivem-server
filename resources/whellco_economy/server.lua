@@ -1,5 +1,7 @@
 local playerAccounts = {}
 local lastRequest = {}
+local activeJobs = {}
+local jobCooldowns = {}
 
 local function getIdentifier(source)
     local identifier = GetPlayerIdentifierByType(source, 'license')
@@ -285,6 +287,134 @@ RegisterNuiCallback('purchaseItem', function(data, cb)
     })
 end)
 
+RegisterNetEvent('whellco_economy:startJob', function(jobId)
+    local source = source
+
+    if not canRequest(source) then
+        return
+    end
+
+    local job = Config.Jobs[jobId]
+
+    if not job then
+        return
+    end
+
+    local identifier = getIdentifier(source)
+
+    if not identifier then
+        return
+    end
+
+    if activeJobs[identifier] then
+        TriggerClientEvent('whellco_economy:notify', source, 'You are already on a job.')
+        return
+    end
+
+    local now = GetGameTimer()
+
+    if now - (jobCooldowns[identifier] or 0) < job.cooldown then
+        TriggerClientEvent('whellco_economy:notify', source, 'You need to wait before starting this job again.')
+        return
+    end
+
+    local ped = GetPlayerPed(source)
+
+    if #(GetEntityCoords(ped) - job.start) > 10.0 then
+        TriggerClientEvent('whellco_economy:notify', source, 'You are too far from the job start location.')
+        return
+    end
+
+    activeJobs[identifier] = {
+        id = jobId,
+        startedAt = now
+    }
+
+    TriggerClientEvent('whellco_economy:jobStarted', source, {
+        id = jobId,
+        label = job.label
+    })
+end)
+
+RegisterNetEvent('whellco_economy:completeJob', function()
+    local source = source
+
+    if not canRequest(source) then
+        return
+    end
+
+    local identifier = getIdentifier(source)
+    local active = activeJobs[identifier]
+
+    if not active then
+        TriggerClientEvent('whellco_economy:notify', source, 'You do not have an active job.')
+        return
+    end
+
+    local job = Config.Jobs[active.id]
+
+    if not job then
+        activeJobs[identifier] = nil
+        return
+    end
+
+    local ped = GetPlayerPed(source)
+
+    if #(GetEntityCoords(ped) - job.complete) > 10.0 then
+        TriggerClientEvent('whellco_economy:notify', source, 'Go to the job completion point.')
+        return
+    end
+
+    local account = getAccount(source)
+
+    if not account then
+        return
+    end
+
+    local payout = job.payout
+    local xpGain = job.xp
+
+    account.bank = account.bank + payout
+    account.xp = account.xp + xpGain
+
+    local newLevel = getLevel(account.xp)
+    local levelledUp = newLevel > account.level
+
+    account.level = newLevel
+
+    MySQL.transaction.await({
+        {
+            query = 'UPDATE whellco_players SET bank = ?, xp = ?, level = ? WHERE identifier = ?',
+            values = { account.bank, account.xp, account.level, identifier }
+        },
+        {
+            query = [[
+                INSERT INTO whellco_transactions
+                    (identifier, type, amount, balance_after, description)
+                VALUES (?, 'wage', ?, ?, ?)
+            ]],
+            values = {
+                identifier,
+                payout,
+                account.bank,
+                ('Completed %s job'):format(job.label)
+            }
+        }
+    })
+
+    jobCooldowns[identifier] = GetGameTimer()
+    activeJobs[identifier] = nil
+
+    if levelledUp then
+        TriggerClientEvent('whellco_economy:levelUp', source, account.level)
+    end
+
+    sendAccount(source)
+
+    TriggerClientEvent('whellco_economy:notify', source, ('Job complete! %s%d added to bank.'):format(Config.Currency, payout))
+    TriggerClientEvent('whellco_economy:jobCompleted', source)
+end)
+
 RegisterCommand('cash', function(source)
     if source == 0 then
         return
@@ -314,6 +444,7 @@ AddEventHandler('playerDropped', function()
 
     if identifier then
         playerAccounts[identifier] = nil
+        activeJobs[identifier] = nil
     end
 
     lastRequest[source] = nil
