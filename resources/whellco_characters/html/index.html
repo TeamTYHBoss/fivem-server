@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Characters</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="characters" id="characters">
+        <div class="window">
+            <header>
+                <h1>Characters</h1>
+                <p id="character-count">0 / 3 characters</p>
+            </header>
+
+            <div class="characters-list" id="characters-list"></div>
+
+            <div class="create-character">
+                <h2>Create Character</h2>
+
+                <input id="first-name" placeholder="First name">
+                <input id="last-name" placeholder="Last name">
+                <input id="date-of-birth" placeholder="YYYY-MM-DD">
+
+                <select id="gender">
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                </select>
+
+                <select id="spawn-point"></select>
+
+                <button id="create-button">Create Character</button>
+            </div>
+
+            <button id="close-button">Close</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
