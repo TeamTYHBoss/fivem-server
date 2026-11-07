@@ -1,0 +1,28 @@
+CREATE TABLE IF NOT EXISTS whellco_properties (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    property_id VARCHAR(64) NOT NULL,
+    owner_character_id INT UNSIGNED NULL,
+    price INT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_whellco_properties_property (property_id)
+);
+
+CREATE TABLE IF NOT EXISTS whellco_property_keys (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    property_id VARCHAR(64) NOT NULL,
+    character_id INT UNSIGNED NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_whellco_property_keys (property_id, character_id)
+);
+
+CREATE TABLE IF NOT EXISTS whellco_property_furniture (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    property_id VARCHAR(64) NOT NULL,
+    item VARCHAR(64) NOT NULL,
+    x FLOAT NOT NULL,
+    y FLOAT NOT NULL,
+    z FLOAT NOT NULL,
+    heading FLOAT NOT NULL DEFAULT 0.0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
