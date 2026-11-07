@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS whellco_economy_receipts (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    character_id INT UNSIGNED NOT NULL,
+    category VARCHAR(64) NOT NULL,
+    description VARCHAR(255) NOT NULL,
+    amount INT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
