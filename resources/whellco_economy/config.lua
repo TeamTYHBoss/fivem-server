@@ -59,35 +59,59 @@ Config.Shops = {
     }
 }
 
+Config.JobBoard = {
+    coords = vector3(215.0, -810.0, 30.0)
+}
+
 Config.Jobs = {
     taxi = {
         label = 'Taxi Driver',
+        vehicle = 'taxi',
         start = vector3(895.0, -179.0, 74.0),
         complete = vector3(-1285.0, -323.0, 39.0),
+        route = {
+            vector3(215.0, -810.0, 30.0),
+            vector3(-1285.0, -323.0, 39.0)
+        },
         payout = 120,
         xp = 15,
         cooldown = 120000
     },
     delivery = {
         label = 'Delivery Driver',
+        vehicle = 'speedo',
         start = vector3(-55.0, -1820.0, 27.0),
         complete = vector3(1130.0, -1480.0, 34.0),
+        route = {
+            vector3(1130.0, -1480.0, 34.0),
+            vector3(-55.0, -1820.0, 27.0)
+        },
         payout = 150,
         xp = 20,
         cooldown = 150000
     },
     mechanic = {
         label = 'Mechanic',
+        vehicle = 'towtruck',
         start = vector3(-337.0, -136.0, 39.0),
         complete = vector3(480.0, -1310.0, 29.0),
+        route = {
+            vector3(480.0, -1310.0, 29.0),
+            vector3(-337.0, -136.0, 39.0)
+        },
         payout = 180,
         xp = 25,
         cooldown = 180000
     },
     garbage = {
         label = 'Garbage Collector',
+        vehicle = 'trash',
         start = vector3(-322.0, -1545.0, 31.0),
         complete = vector3(-1050.0, -2700.0, 13.0),
+        route = {
+            vector3(-1050.0, -2700.0, 13.0),
+            vector3(-322.0, -1545.0, 31.0)
+        },
         payout = 100,
         xp = 12,
         cooldown = 90000

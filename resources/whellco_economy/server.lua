@@ -287,6 +287,39 @@ RegisterNuiCallback('purchaseItem', function(data, cb)
     })
 end)
 
+RegisterNetEvent('whellco_economy:openJobBoard', function()
+    local source = source
+
+    if not canRequest(source) then
+        return
+    end
+
+    local ped = GetPlayerPed(source)
+
+    if #(GetEntityCoords(ped) - Config.JobBoard.coords) > 10.0 then
+        return
+    end
+
+    local identifier = getIdentifier(source)
+    local jobs = {}
+
+    for id, job in pairs(Config.Jobs) do
+        local remaining = math.max(0, job.cooldown - (GetGameTimer() - (jobCooldowns[identifier] or 0)))
+
+        jobs[#jobs + 1] = {
+            id = id,
+            label = job.label,
+            payout = job.payout,
+            xp = job.xp,
+            cooldownRemaining = remaining
+        }
+    end
+
+    TriggerClientEvent('whellco_economy:openJobBoard', source, {
+        jobs = jobs
+    })
+end)
+
 RegisterNetEvent('whellco_economy:startJob', function(jobId)
     local source = source
 
@@ -327,13 +360,66 @@ RegisterNetEvent('whellco_economy:startJob', function(jobId)
 
     activeJobs[identifier] = {
         id = jobId,
-        startedAt = now
+        startedAt = now,
+        routeIndex = 1
     }
 
     TriggerClientEvent('whellco_economy:jobStarted', source, {
         id = jobId,
-        label = job.label
+        label = job.label,
+        routeIndex = 1
     })
+end)
+
+RegisterNetEvent('whellco_economy:advanceRoute', function()
+    local source = source
+
+    if not canRequest(source) then
+        return
+    end
+
+    local identifier = getIdentifier(source)
+    local active = activeJobs[identifier]
+
+    if not active then
+        return
+    end
+
+    local job = Config.Jobs[active.id]
+
+    if not job then
+        activeJobs[identifier] = nil
+        return
+    end
+
+    local routeIndex = active.routeIndex
+
+    if routeIndex > #job.route then
+        return
+    end
+
+    local ped = GetPlayerPed(source)
+    local waypoint = job.route[routeIndex]
+
+    if #(GetEntityCoords(ped) - waypoint) > 8.0 then
+        return
+    end
+
+    active.routeIndex = routeIndex + 1
+
+    if active.routeIndex > #job.route then
+        TriggerClientEvent('whellco_economy:routeAdvanced', source, {
+            routeIndex = active.routeIndex,
+            completed = true
+        })
+
+        TriggerClientEvent('whellco_economy:notify', source, 'Route complete. Return to the depot to finish.')
+    else
+        TriggerClientEvent('whellco_economy:routeAdvanced', source, {
+            routeIndex = active.routeIndex,
+            completed = false
+        })
+    end
 end)
 
 RegisterNetEvent('whellco_economy:completeJob', function()
@@ -355,6 +441,11 @@ RegisterNetEvent('whellco_economy:completeJob', function()
 
     if not job then
         activeJobs[identifier] = nil
+        return
+    end
+
+    if active.routeIndex <= #job.route then
+        TriggerClientEvent('whellco_economy:notify', source, 'Complete the delivery route first.')
         return
     end
 
