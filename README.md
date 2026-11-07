@@ -1,50 +1,67 @@
-# FiveM Server Starter
+# FiveM Server
 
-A clean starting point for a FiveM GTA V roleplay or freeroam server.
+A FiveM server project with custom resources for characters, housing, economy, jobs, vehicles, phone, police, medical, mechanic, real estate, banking, admin, Discord, performance, security, testing and documentation.
 
-## What is included
+## Features
 
-- `server.cfg` — core FiveM server configuration
-- `resources/my_first_resource` — a minimal client/server Lua resource
-- `.gitignore` — excludes server binaries, caches, logs, and secrets
+- Character creation and selection
+- Spawn selector
+- Wardrobe
+- Housing
+- Economy, XP, levels, shops and receipts
+- Jobs, shops, transport and services
+- Vehicle ownership
+- Phone system
+- Job center
+- Police system
+- Medical system
+- Mechanic system
+- Real-estate system
+- Banking system
+- Admin system
+- Discord integration
+- Unified economy hub
+- Performance system
+- Security system
+- Testing system
+- Documentation system
 
 ## Requirements
 
-- A legal copy of Grand Theft Auto V
-- FiveM client
-- FiveM server artifacts
+- FiveM server
+- MySQL or MariaDB
+- oxmysql
 
 ## Setup
 
-1. Install the FiveM server artifacts in a folder such as `C:\FiveM\server`.
-2. Place this repository beside or inside that server folder.
-3. Set your MySQL connection details in `server.cfg` only if you add a database-dependent resource.
-4. Start the server with:
+1. Clone this repository.
+2. Install the required resources.
+3. Create a MySQL database.
+4. Update `server.cfg` with your database connection string.
+5. Run the SQL files in each resource's `sql` folder.
+6. Start the server.
 
-```bat
-FXServer.exe +exec server.cfg
-```
+See `docs/SETUP.md` for detailed setup instructions.
 
-On Linux:
+## Commands
 
-```bash
-./run.sh +exec server.cfg
-```
+- `/characters` — Open the character system.
+- `/spawn` — Open the spawn selector.
+- `/wardrobe` — Open the wardrobe.
+- `/housing` — Open the housing system.
+- `/economy` — Open the economy hub.
+- `/phone` — Open the phone.
+- `/jobcenter` — Open the job center.
+- `/police` — Open the police system.
+- `/medical` — Open the medical system.
+- `/mechanic` — Open the mechanic system.
+- `/realestate` — Open the real-estate system.
+- `/bank` — Open the banking system.
+- `/admin` — Open the admin panel.
+- `/discord` — Open the Discord integration.
+- `/performance` — Open the performance system.
+- `/security` — Open the security system.
+- `/testing` — Open the testing system.
+- `/docs` — Open the documentation system.
 
-## Important
-
-Do **not** commit:
-
-- Your FiveM license key
-- Database passwords
-- Server artifacts
-- GTA V game files
-- Paid or leaked resources
-
-## Adding resources
-
-Add a resource folder under `resources/`, then ensure it in `server.cfg`:
-
-```cfg
-ensure my_new_resource
-```
+See `docs/COMMANDS.md` for the full command list.
