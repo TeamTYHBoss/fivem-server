@@ -1,8 +1,12 @@
-const admin = document.getElementById('admin');
-const resultsContainer = document.getElementById('results');
-const searchInput = document.getElementById('search');
-const searchButton = document.getElementById('search-button');
+const adminMenu = document.getElementById('admin');
+const playersContainer = document.getElementById('players');
+const bansContainer = document.getElementById('bans');
+const actionsContainer = document.getElementById('actions');
 const closeButton = document.getElementById('close-button');
+
+let currentPlayers = [];
+let currentBans = [];
+let currentActions = [];
 
 function post(callbackName, data) {
     return fetch(`https://${GetParentResourceName()}/${callbackName}`, {
@@ -16,66 +20,91 @@ function post(callbackName, data) {
     });
 }
 
-function renderResults(results) {
-    resultsContainer.innerHTML = '';
+function renderPlayers() {
+    playersContainer.innerHTML = '';
 
-    results.forEach(function(character) {
+    currentPlayers.forEach(function(player) {
         const row = document.createElement('div');
-        row.className = 'result';
+        row.className = 'player';
 
         const info = document.createElement('div');
-        info.className = 'result-info';
+        info.className = 'player-info';
 
         const title = document.createElement('h2');
-        title.textContent = `${character.first_name} ${character.last_name}`;
+        title.textContent = player.name;
 
         const details = document.createElement('p');
-        details.textContent = `ID: ${character.id} | Cash: £${character.cash || 0} | Bank: £${character.bank || 0} | Level: ${character.level || 1}`;
+        details.textContent = `ID ${player.id} | ${player.identifier}`;
 
         info.appendChild(title);
         info.appendChild(details);
 
         const actions = document.createElement('div');
-        actions.className = 'result-actions';
 
-        const accountType = document.createElement('select');
-        accountType.innerHTML = '<option value="cash">Cash</option><option value="bank">Bank</option>';
+        const kickButton = document.createElement('button');
+        kickButton.textContent = 'Kick';
 
-        const amount = document.createElement('input');
-        amount.type = 'number';
-        amount.min = 1;
-        amount.placeholder = 'Amount';
-
-        const giveButton = document.createElement('button');
-        giveButton.textContent = 'Give';
-
-        giveButton.addEventListener('click', function() {
-            post('giveMoney', {
-                characterId: character.id,
-                amount: Number(amount.value),
-                accountType: accountType.value
+        kickButton.addEventListener('click', function() {
+            post('kickPlayer', {
+                targetId: player.id,
+                reason: 'Kicked by admin'
             });
         });
 
-        const removeButton = document.createElement('button');
-        removeButton.textContent = 'Remove';
+        const banButton = document.createElement('button');
+        banButton.textContent = 'Ban';
 
-        removeButton.addEventListener('click', function() {
-            post('removeMoney', {
-                characterId: character.id,
-                amount: Number(amount.value),
-                accountType: accountType.value
+        banButton.addEventListener('click', function() {
+            post('banPlayer', {
+                targetId: player.id,
+                reason: 'Banned by admin'
             });
         });
 
-        actions.appendChild(accountType);
-        actions.appendChild(amount);
-        actions.appendChild(giveButton);
-        actions.appendChild(removeButton);
+        actions.appendChild(kickButton);
+        actions.appendChild(banButton);
 
         row.appendChild(info);
         row.appendChild(actions);
-        resultsContainer.appendChild(row);
+        playersContainer.appendChild(row);
+    });
+}
+
+function renderBans() {
+    bansContainer.innerHTML = '';
+
+    currentBans.forEach(function(ban) {
+        const row = document.createElement('div');
+        row.className = 'ban';
+
+        const info = document.createElement('div');
+        info.className = 'ban-info';
+        info.textContent = `${ban.identifier} — ${ban.reason}`;
+
+        const unbanButton = document.createElement('button');
+        unbanButton.textContent = 'Unban';
+
+        unbanButton.addEventListener('click', function() {
+            post('unbanPlayer', {
+                banId: ban.id
+            });
+        });
+
+        row.appendChild(info);
+        row.appendChild(unbanButton);
+        bansContainer.appendChild(row);
+    });
+}
+
+function renderActions() {
+    actionsContainer.innerHTML = '';
+
+    currentActions.forEach(function(action) {
+        const row = document.createElement('div');
+        row.className = 'action';
+        row.textContent = `${action.action_type} — ${action.reason}`;
+
+        actionsContainer.appendChild(row);
     });
 }
 
@@ -87,27 +116,28 @@ window.addEventListener('message', function(event) {
     }
 
     if (data.action === 'open') {
-        renderResults(data.results || []);
-        admin.classList.add('visible');
+        currentPlayers = data.players || [];
+        currentBans = data.bans || [];
+        currentActions = data.actions || [];
+
+        renderPlayers();
+        renderBans();
+        renderActions();
+
+        adminMenu.classList.add('visible');
     }
 
     if (data.action === 'close') {
-        admin.classList.remove('visible');
+        adminMenu.classList.remove('visible');
     }
 });
 
-searchButton.addEventListener('click', function() {
-    post('searchPlayers', {
-        query: searchInput.value
-    });
-});
-
 closeButton.addEventListener('click', function() {
-    post('closeAdmin');
+    post('closeMenu');
 });
 
 document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
-        post('closeAdmin');
+        post('closeMenu');
     }
 });

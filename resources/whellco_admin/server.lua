@@ -8,106 +8,187 @@ local function getIdentifier(source)
     return identifier
 end
 
-local function searchCharacters(query)
-    local like = ('%%%s%%'):format(tostring(query or ''))
+local function isAdmin(source)
+    local identifier = getIdentifier(source)
 
-    return MySQL.query.await(
-        [[
-            SELECT
-                c.id,
-                c.identifier,
-                c.first_name,
-                c.last_name,
-                c.date_of_birth,
-                c.gender,
-                p.cash,
-                p.bank,
-                p.xp,
-                p.level
-            FROM whellco_characters c
-            LEFT JOIN whellco_players p ON p.character_id = c.id
-            WHERE c.first_name LIKE ?
-               OR c.last_name LIKE ?
-               OR c.identifier LIKE ?
-            ORDER BY c.created_at DESC
-            LIMIT ?
-        ]],
-        { like, like, like, Config.MaxResults }
-    ) or {}
+    if not identifier then
+        return false
+    end
+
+    return IsPlayerAceAllowed(source, 'whellco.admin')
 end
 
-local function sendResults(source, results)
-    TriggerClientEvent('whellco_admin:openPanel', source, {
-        results = results
+local function sendMenu(source)
+    local players = {}
+
+    for _, playerId in ipairs(GetPlayers()) do
+        local identifier = getIdentifier(playerId)
+
+        players[#players + 1] = {
+            id = playerId,
+            name = GetPlayerName(playerId),
+            identifier = identifier
+        }
+    end
+
+    local bans = MySQL.query.await(
+        [[
+            SELECT id, identifier, reason, banned_by, banned_at, expires_at
+            FROM whellco_admin_bans
+            ORDER BY banned_at DESC
+            LIMIT 25
+        ]]
+    ) or {}
+
+    local actions = MySQL.query.await(
+        [[
+            SELECT id, admin_id, target_id, action_type, reason, created_at
+            FROM whellco_admin_actions
+            ORDER BY created_at DESC
+            LIMIT 25
+        ]]
+    ) or {}
+
+    TriggerClientEvent('whellco_admin:openMenu', source, {
+        players = players,
+        bans = bans,
+        actions = actions
     })
 end
 
-RegisterNetEvent('whellco_admin:openPanel', function()
-    local source = source
-
-    local results = searchCharacters('')
-
-    sendResults(source, results)
-end)
-
-RegisterNetEvent('whellco_admin:closePanel', function()
-    local source = source
-
-    TriggerClientEvent('whellco_admin:closePanel', source)
-end)
-
-RegisterNetEvent('whellco_admin:searchPlayers', function(query)
-    local source = source
-
-    local results = searchCharacters(query)
-
-    sendResults(source, results)
-end)
-
-RegisterNetEvent('whellco_admin:giveMoney', function(data)
-    local source = source
-    local characterId = tonumber(data.characterId)
-    local amount = tonumber(data.amount)
-    local accountType = tostring(data.accountType or 'cash')
-
-    if not characterId or not amount or amount <= 0 then
+RegisterNetEvent('whellco_admin:openMenu', function()
+    if not isAdmin(source) then
+        TriggerClientEvent('whellco_admin:notify', source, 'You do not have admin permissions.')
         return
     end
 
-    if accountType ~= 'cash' and accountType ~= 'bank' then
+    sendMenu(source)
+end)
+
+RegisterNetEvent('whellco_admin:closeMenu', function()
+    TriggerClientEvent('whellco_admin:closeMenu', source)
+end)
+
+RegisterNetEvent('whellco_admin:kickPlayer', function(targetId, reason)
+    local source = source
+
+    if not isAdmin(source) then
+        TriggerClientEvent('whellco_admin:notify', source, 'You do not have admin permissions.')
         return
     end
 
-    local column = accountType == 'cash' and 'cash' or 'bank'
+    local adminId = getIdentifier(source)
+    local target = GetPlayerFromServerId(targetId)
 
-    MySQL.update.await(
-        ('UPDATE whellco_players SET %s = %s + ? WHERE character_id = ?'):format(column, column),
-        { amount, characterId }
+    if target == 0 then
+        return
+    end
+
+    local targetId2 = getIdentifier(target)
+
+    if not adminId or not targetId2 then
+        return
+    end
+
+    MySQL.insert.await(
+        [[
+            INSERT INTO whellco_admin_actions
+                (admin_id, target_id, action_type, reason)
+            VALUES (?, ?, 'kick', ?)
+        ]],
+        { adminId, targetId2, reason or 'No reason provided' }
     )
 
-    TriggerClientEvent('whellco_admin:notify', source, ('Added %s%d to %s.'):format(Config.Currency, amount, accountType))
+    DropPlayer(target, reason or 'You have been kicked by an administrator.')
 end)
 
-RegisterNetEvent('whellco_admin:removeMoney', function(data)
+RegisterNetEvent('whellco_admin:banPlayer', function(targetId, reason)
     local source = source
-    local characterId = tonumber(data.characterId)
-    local amount = tonumber(data.amount)
-    local accountType = tostring(data.accountType or 'cash')
 
-    if not characterId or not amount or amount <= 0 then
+    if not isAdmin(source) then
+        TriggerClientEvent('whellco_admin:notify', source, 'You do not have admin permissions.')
         return
     end
 
-    if accountType ~= 'cash' and accountType ~= 'bank' then
+    local adminId = getIdentifier(source)
+    local target = GetPlayerFromServerId(targetId)
+
+    if target == 0 then
         return
     end
 
-    local column = accountType == 'cash' and 'cash' or 'bank'
+    local targetId2 = getIdentifier(target)
 
-    MySQL.update.await(
-        ('UPDATE whellco_players SET %s = GREATEST(0, %s - ?) WHERE character_id = ?'):format(column, column),
-        { amount, characterId }
+    if not adminId or not targetId2 then
+        return
+    end
+
+    MySQL.insert.await(
+        [[
+            INSERT INTO whellco_admin_bans
+                (identifier, reason, banned_by)
+            VALUES (?, ?, ?)
+        ]],
+        { targetId2, reason or 'No reason provided', adminId }
     )
 
-    TriggerClientEvent('whellco_admin:notify', source, ('Removed %s%d from %s.'):format(Config.Currency, amount, accountType))
+    MySQL.insert.await(
+        [[
+            INSERT INTO whellco_admin_actions
+                (admin_id, target_id, action_type, reason)
+            VALUES (?, ?, 'ban', ?)
+        ]],
+        { adminId, targetId2, reason or 'No reason provided' }
+    )
+
+    DropPlayer(target, reason or 'You have been banned by an administrator.')
+end)
+
+RegisterNetEvent('whellco_admin:unbanPlayer', function(banId)
+    local source = source
+
+    if not isAdmin(source) then
+        TriggerClientEvent('whellco_admin:notify', source, 'You do not have admin permissions.')
+        return
+    end
+
+    MySQL.query.await(
+        [[
+            DELETE FROM whellco_admin_bans
+            WHERE id = ?
+        ]],
+        { banId }
+    )
+
+    TriggerClientEvent('whellco_admin:notify', source, 'Ban removed.')
+    sendMenu(source)
+end)
+
+AddEventHandler('playerConnecting', function(name, setKickReason, deferrals)
+    local source = source
+    local identifier = getIdentifier(source)
+
+    if not identifier then
+        return
+    end
+
+    local ban = MySQL.single.await(
+        [[
+            SELECT id, reason, expires_at
+            FROM whellco_admin_bans
+            WHERE identifier = ?
+            LIMIT 1
+        ]],
+        { identifier }
+    )
+
+    if not ban then
+        return
+    end
+
+    if ban.expires_at and os.time() > ban.expires_at then
+        return
+    end
+
+    deferrals.done(('You are banned: %s'):format(ban.reason))
 end)

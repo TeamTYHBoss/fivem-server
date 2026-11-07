@@ -2,7 +2,7 @@ fx_version 'cerulean'
 game 'gta5'
 
 author 'Chris Wheller'
-description 'Admin panel for players, characters, balances, inventory and transactions'
+description 'Admin system with panel, player management, bans and admin NUI'
 version '1.0.0'
 
 shared_script 'config.lua'
