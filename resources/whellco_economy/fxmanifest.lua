@@ -2,8 +2,8 @@ fx_version 'cerulean'
 game 'gta5'
 
 author 'Chris Wheller'
-description 'Persistent economy, banking, XP, levels, shops, jobs, receipts and HUD'
-version '1.2.0'
+description 'Persistent economy, banking, XP, levels, shops, jobs, receipts, HUD and inventory'
+version '1.3.0'
 
 shared_script 'config.lua'
 
@@ -23,7 +23,10 @@ files {
     'html/jobboard.js',
     'html/hud.html',
     'html/hud.css',
-    'html/hud.js'
+    'html/hud.js',
+    'html/inventory.html',
+    'html/inventory.css',
+    'html/inventory.js'
 }
 
 dependency 'oxmysql'

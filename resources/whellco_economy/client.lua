@@ -1,5 +1,6 @@
 local shopOpen = false
 local jobBoardOpen = false
+local inventoryOpen = false
 local activeJob = nil
 local activeRouteIndex = nil
 local jobVehicle = nil
@@ -42,6 +43,32 @@ local function closeJobBoard()
     SetNuiFocus(false, false)
     SendNUIMessage({
         action = 'closeJobBoard'
+    })
+end
+
+local function openInventory(data)
+    if inventoryOpen then
+        return
+    end
+
+    inventoryOpen = true
+
+    SetNuiFocus(true, true)
+    SendNUIMessage({
+        action = 'openInventory',
+        items = data.items
+    })
+end
+
+local function closeInventory()
+    if not inventoryOpen then
+        return
+    end
+
+    inventoryOpen = false
+    SetNuiFocus(false, false)
+    SendNUIMessage({
+        action = 'closeInventory'
     })
 end
 
@@ -114,6 +141,8 @@ RegisterNetEvent('whellco_economy:openShop', openShop)
 
 RegisterNetEvent('whellco_economy:openJobBoard', openJobBoard)
 
+RegisterNetEvent('whellco_economy:openInventory', openInventory)
+
 RegisterNetEvent('whellco_economy:updateAccount', function(account)
     SendNUIMessage({
         action = 'updateAccount',
@@ -130,6 +159,22 @@ end)
 RegisterNetEvent('whellco_economy:levelUp', function(level)
     BeginTextCommandThefeedPost('STRING')
     AddTextComponentSubstringPlayerName(('Level up! You are now level %d.'):format(level))
+    EndTextCommandThefeedPostTicker(false, true)
+end)
+
+RegisterNetEvent('whellco_economy:useItem', function(data)
+    if data.id == 'water' then
+        SetPedArmour(PlayerPedId(), 0)
+    elseif data.id == 'sandwich' then
+        SetPedArmour(PlayerPedId(), 0)
+    elseif data.id == 'energy_drink' then
+        SetPedArmour(PlayerPedId(), 0)
+    elseif data.id == 'first_aid' then
+        SetPedArmour(PlayerPedId(), 0)
+    end
+
+    BeginTextCommandThefeedPost('STRING')
+    AddTextComponentSubstringPlayerName(('Used %s.'):format(data.label or 'item'))
     EndTextCommandThefeedPostTicker(false, true)
 end)
 
@@ -211,6 +256,10 @@ RegisterCommand('jobs', function()
     TriggerServerEvent('whellco_economy:openJobBoard')
 end, false)
 
+RegisterCommand('inventory', function()
+    TriggerServerEvent('whellco_economy:openInventory')
+end, false)
+
 RegisterNuiCallback('closeJobBoard', function(_, cb)
     closeJobBoard()
     cb({ ok = true })
@@ -218,6 +267,16 @@ end)
 
 RegisterNuiCallback('startJob', function(data, cb)
     TriggerServerEvent('whellco_economy:startJob', data.jobId)
+    cb({ ok = true })
+end)
+
+RegisterNuiCallback('closeInventory', function(_, cb)
+    closeInventory()
+    cb({ ok = true })
+end)
+
+RegisterNuiCallback('useItem', function(data, cb)
+    TriggerServerEvent('whellco_economy:useItem', data.itemId)
     cb({ ok = true })
 end)
 

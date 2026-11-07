@@ -68,6 +68,54 @@ local function sendAccount(source)
     })
 end
 
+local function getInventoryItems(characterId)
+    return MySQL.query.await(
+        [[
+            SELECT item_id, quantity
+            FROM whellco_inventory
+            WHERE character_id = ? AND quantity > 0
+            ORDER BY item_id ASC
+        ]],
+        { characterId }
+    ) or {}
+end
+
+local function sendInventory(source)
+    local account = getAccount(source)
+
+    if not account then
+        return
+    end
+
+    local items = getInventoryItems(account.characterId)
+    local inventory = {}
+
+    for _, row in ipairs(items) do
+        local item = nil
+
+        for _, shop in pairs(Config.Shops) do
+            if shop.items[row.item_id] then
+                item = shop.items[row.item_id]
+                break
+            end
+        end
+
+        if item then
+            inventory[#inventory + 1] = {
+                id = row.item_id,
+                label = item.label,
+                description = item.description or '',
+                quantity = row.quantity,
+                usable = item.usable or false
+            }
+        end
+    end
+
+    TriggerClientEvent('whellco_economy:openInventory', source, {
+        items = inventory
+    })
+end
+
 RegisterNetEvent('whellco_economy:characterSelected', function(characterId)
     local source = source
     local identifier = getIdentifier(source)
@@ -136,6 +184,16 @@ RegisterNetEvent('whellco_economy:requestAccount', function()
     end
 
     sendAccount(source)
+end)
+
+RegisterNetEvent('whellco_economy:openInventory', function()
+    local source = source
+
+    if not canRequest(source) then
+        return
+    end
+
+    sendInventory(source)
 end)
 
 RegisterNetEvent('whellco_economy:openShop', function(shopId)
@@ -287,6 +345,59 @@ RegisterNuiCallback('purchaseItem', function(data, cb)
             level = account.level
         }
     })
+end)
+
+RegisterNuiCallback('useItem', function(data, cb)
+    local source = source
+    local account = getAccount(source)
+
+    if not account then
+        cb({ ok = false, error = 'Select a character first.' })
+        return
+    end
+
+    if not canRequest(source) then
+        cb({ ok = false, error = 'Please wait before trying again.' })
+        return
+    end
+
+    local itemId = data.itemId
+    local item = nil
+
+    for _, shop in pairs(Config.Shops) do
+        if shop.items[itemId] then
+            item = shop.items[itemId]
+            break
+        end
+    end
+
+    if not item or not item.usable then
+        cb({ ok = false, error = 'That item cannot be used.' })
+        return
+    end
+
+    local updated = MySQL.update.await(
+        [[
+            UPDATE whellco_inventory
+            SET quantity = quantity - 1
+            WHERE character_id = ? AND item_id = ? AND quantity > 0
+        ]],
+        { account.characterId, itemId }
+    )
+
+    if not updated or updated == 0 then
+        cb({ ok = false, error = 'You do not have that item.' })
+        return
+    end
+
+    TriggerClientEvent('whellco_economy:useItem', source, {
+        id = itemId,
+        label = item.label
+    })
+
+    sendInventory(source)
+
+    cb({ ok = true })
 end)
 
 RegisterNetEvent('whellco_economy:openJobBoard', function()
@@ -529,6 +640,14 @@ RegisterCommand('bank', function(source)
     if account then
         TriggerClientEvent('whellco_economy:notify', source, ('Bank balance: %s%d'):format(Config.Currency, account.bank))
     end
+end, false)
+
+RegisterCommand('inventory', function(source)
+    if source == 0 then
+        return
+    end
+
+    TriggerServerEvent('whellco_economy:openInventory')
 end, false)
 
 AddEventHandler('playerDropped', function()
