@@ -1,7 +1,7 @@
 local interactions = {}
 local activeJob = nil
 local jobVehicle = nil
-local deliveryTarget = nil
+local currentStop = nil
 
 local function addInteraction(id, data)
     interactions[id] = data
@@ -88,16 +88,36 @@ CreateThread(function()
             end
         end
 
+        if currentStop then
+            sleep = 0
+
+            local distance = #(playerCoords - currentStop.coords)
+
+            DrawMarker(
+                1,
+                currentStop.coords.x, currentStop.coords.y, currentStop.coords.z - 0.95,
+                0.0, 0.0, 0.0,
+                0.0, 0.0, 0.0,
+                3.0, 3.0, 1.0,
+                0, 255, 120, 150,
+                false, true, 2, false, nil, nil, false
+            )
+
+            if distance <= 4.0 and IsControlJustReleased(0, 38) then
+                TriggerServerEvent('whellco_immersion:completeStop')
+            end
+        end
+
         Wait(sleep)
     end
 end)
 
-RegisterNetEvent('whellco_immersion:startJob', function(jobId, vehicleModel, destination)
+RegisterNetEvent('whellco_immersion:startJob', function(jobId, vehicleModel, mission)
     activeJob = jobId
-    deliveryTarget = destination
+    currentStop = mission.stops[1]
 
     BeginTextCommandThefeedPost('STRING')
-    AddTextComponentSubstringPlayerName(('Job started: %s. Travel to the marked destination.'):format(jobId))
+    AddTextComponentSubstringPlayerName(('Job started: %s. Complete %d stop(s).'):format(jobId, #mission.stops))
     EndTextCommandThefeedPostTicker(false, true)
 
     if vehicleModel then
@@ -118,9 +138,17 @@ RegisterNetEvent('whellco_immersion:startJob', function(jobId, vehicleModel, des
     end
 end)
 
+RegisterNetEvent('whellco_immersion:nextStop', function(stop)
+    currentStop = stop
+
+    BeginTextCommandThefeedPost('STRING')
+    AddTextComponentSubstringPlayerName('Stop completed. Travel to the next destination.')
+    EndTextCommandThefeedPostTicker(false, true)
+end)
+
 RegisterNetEvent('whellco_immersion:completeJob', function(message)
     activeJob = nil
-    deliveryTarget = nil
+    currentStop = nil
 
     if jobVehicle then
         DeleteVehicle(jobVehicle)

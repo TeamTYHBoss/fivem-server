@@ -73,26 +73,49 @@ Config.Jobs = {
         label = 'Taxi Driver',
         start = vector3(903.5, -170.3, 74.1),
         vehicle = 'taxi',
-        payoutPerDelivery = 350
+        basePayout = 250,
+        payoutIncreasePerTier = 125
     },
     delivery = {
         label = 'Delivery Driver',
         start = vector3(-55.7, -1822.8, 26.9),
         vehicle = 'speedo',
-        payoutPerDelivery = 275
+        basePayout = 200,
+        payoutIncreasePerTier = 100
     },
     refuse = {
         label = 'Refuse Collector',
         start = vector3(-322.1, -1546.5, 31.0),
         vehicle = 'trash',
-        payoutPerCollection = 190
+        basePayout = 180,
+        payoutIncreasePerTier = 90
     },
     mechanic = {
         label = 'Mechanic',
         start = vector3(-212.1, -1316.8, 30.4),
         vehicle = 'towtruck',
-        payoutPerRepair = 300
+        basePayout = 275,
+        payoutIncreasePerTier = 125
     }
+}
+
+Config.JobTiers = {
+    { minimumCompleted = 0, stops = 1, timeLimit = 600 },
+    { minimumCompleted = 5, stops = 2, timeLimit = 720 },
+    { minimumCompleted = 15, stops = 3, timeLimit = 840 },
+    { minimumCompleted = 30, stops = 4, timeLimit = 960 },
+    { minimumCompleted = 60, stops = 5, timeLimit = 1080 }
+}
+
+Config.JobDestinations = {
+    vector3(195.2, -933.8, 30.7),
+    vector3(-447.9, 6013.6, 31.7),
+    vector3(1962.3, 3740.7, 32.3),
+    vector3(1701.5, 4924.3, 42.1),
+    vector3(298.1, -584.4, 43.2),
+    vector3(-212.1, -1316.8, 30.4),
+    vector3(428.2, -984.0, 30.7),
+    vector3(24.4, -1345.7, 29.5)
 }
 
 Config.FuelStations = {

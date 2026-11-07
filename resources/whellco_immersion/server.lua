@@ -1,4 +1,5 @@
 local playerJobs = {}
+local jobProgress = {}
 local lastInteraction = {}
 
 local function canInteract(source)
@@ -6,9 +7,9 @@ local function canInteract(source)
         return false
     end
 
-    local now = os.time()
+    local now = GetGameTimer()
 
-    if now - (lastInteraction[source] or 0) < 2 then
+    if now - (lastInteraction[source] or 0) < 2000 then
         return false
     end
 
@@ -22,6 +23,46 @@ local function getNearbyInteraction(source, interaction)
     local playerCoords = GetEntityCoords(ped)
 
     return #(playerCoords - interaction.coords) <= 5.0
+end
+
+local function getTier(completedJobs)
+    local selectedTier = Config.JobTiers[1]
+
+    for _, tier in ipairs(Config.JobTiers) do
+        if completedJobs >= tier.minimumCompleted then
+            selectedTier = tier
+        end
+    end
+
+    return selectedTier
+end
+
+local function buildRoute(job, tier)
+    local stops = {}
+    local used = {}
+
+    for index = 1, tier.stops do
+        local destinationIndex
+
+        repeat
+            destinationIndex = math.random(1, #Config.JobDestinations)
+        until not used[destinationIndex]
+
+        used[destinationIndex] = true
+
+        stops[index] = {
+            index = index,
+            coords = Config.JobDestinations[destinationIndex]
+        }
+    end
+
+    local payout = job.basePayout + (job.payoutIncreasePerTier * (tier.stops - 1))
+
+    return {
+        stops = stops,
+        payout = payout,
+        timeLimit = tier.timeLimit
+    }
 end
 
 RegisterNetEvent('whellco_immersion:interact', function(interactionType, interaction)
@@ -39,7 +80,25 @@ RegisterNetEvent('whellco_immersion:interact', function(interactionType, interac
         return
     end
 
-    if interactionType == 'shop' then
+    if interactionType == 'job' then
+        local job = Config.Jobs[interaction.jobId]
+
+        if job and not playerJobs[source] then
+            local completedJobs = jobProgress[source] or 0
+            local tier = getTier(completedJobs)
+            local mission = buildRoute(job, tier)
+
+            playerJobs[source] = {
+                jobId = interaction.jobId,
+                mission = mission,
+                currentStop = 1,
+                startedAt = GetGameTimer()
+            }
+
+            TriggerClientEvent('whellco_immersion:startJob', source, interaction.jobId, job.vehicle, mission)
+        end
+
+    elseif interactionType == 'shop' then
         local shop = Config.Shops[interaction.shopId]
 
         if shop then
@@ -61,15 +120,6 @@ RegisterNetEvent('whellco_immersion:interact', function(interactionType, interac
             TriggerClientEvent('whellco_immersion:notify', source, ('Welcome to %s.'):format(service.label))
         end
 
-    elseif interactionType == 'job' then
-        local job = Config.Jobs[interaction.jobId]
-
-        if job and not playerJobs[source] then
-            playerJobs[source] = interaction.jobId
-
-            TriggerClientEvent('whellco_immersion:startJob', source, interaction.jobId, job.vehicle, vector3(195.2, -933.8, 30.7))
-        end
-
     elseif interactionType == 'fuel' then
         local station = Config.FuelStations[interaction.stationIndex]
 
@@ -79,26 +129,36 @@ RegisterNetEvent('whellco_immersion:interact', function(interactionType, interac
     end
 end)
 
-RegisterNetEvent('whellco_immersion:completeJob', function()
+RegisterNetEvent('whellco_immersion:completeStop', function()
     local source = source
-    local jobId = playerJobs[source]
+    local activeJob = playerJobs[source]
 
-    if not jobId then
+    if not activeJob then
         return
     end
 
-    local job = Config.Jobs[jobId]
+    if GetGameTimer() - activeJob.startedAt > activeJob.mission.timeLimit * 1000 then
+        playerJobs[source] = nil
 
-    if not job then
+        TriggerClientEvent('whellco_immersion:notify', source, 'You ran out of time. Return to the job centre to try again.')
         return
     end
 
-    local payout = job.payoutPerDelivery or job.payoutPerCollection or job.payoutPerRepair or 0
+    if activeJob.currentStop < #activeJob.mission.stops then
+        activeJob.currentStop = activeJob.currentStop + 1
+
+        TriggerClientEvent('whellco_immersion:nextStop', source, activeJob.mission.stops[activeJob.currentStop])
+        return
+    end
+
+    local jobId = activeJob.jobId
+    local payout = activeJob.mission.payout
+
+    jobProgress[source] = (jobProgress[source] or 0) + 1
+    playerJobs[source] = nil
 
     -- Replace with your economy framework's server-side money addition.
     TriggerClientEvent('whellco_immersion:completeJob', source, ('Job complete. You earned %s%d.'):format(Config.Currency, payout))
-
-    playerJobs[source] = nil
 end)
 
 AddEventHandler('playerDropped', function()
