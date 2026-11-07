@@ -1,0 +1,99 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    color: #fff;
+}
+
+.banking {
+    display: none;
+    position: fixed;
+    inset: 0;
+    align-items: center;
+    justify-content: center;
+    background: rgba(3, 7, 15, .85);
+    backdrop-filter: blur(8px);
+}
+
+.banking.visible {
+    display: flex;
+}
+
+.window {
+    width: min(760px, 94vw);
+    max-height: 88vh;
+    overflow-y: auto;
+    padding: 28px;
+    border-radius: 18px;
+    background: rgba(10, 16, 28, .95);
+    border: 1px solid rgba(255, 255, 255, .14);
+    box-shadow: 0 25px 80px rgba(0, 0, 0, .65);
+}
+
+h1 {
+    font-size: 26px;
+    text-transform: uppercase;
+}
+
+header p {
+    margin-top: 6px;
+    color: rgba(255, 255, 255, .70);
+}
+
+.balance {
+    margin: 20px 0;
+    padding: 18px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .06);
+    border: 1px solid rgba(255, 255, 255, .12);
+}
+
+.actions {
+    display: flex;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+input {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, .18);
+    background: rgba(255, 255, 255, .06);
+    color: #fff;
+}
+
+button {
+    padding: 10px 14px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    color: #04121c;
+    cursor: pointer;
+    background: linear-gradient(135deg, #00d4ff, #7b5cff);
+}
+
+.transactions {
+    display: grid;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.transaction {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .06);
+    border: 1px solid rgba(255, 255, 255, .12);
+}
+
+#close-button {
+    width: 100%;
+    padding: 12px;
+}
