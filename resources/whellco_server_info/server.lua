@@ -1,21 +1,28 @@
-local function getPlayerCount()
+local function getPlayerData()
+    local players = {}
     local count = 0
 
-    for _ in pairs(GetPlayers()) do
+    for _, playerId in ipairs(GetPlayers()) do
         count = count + 1
+
+        players[count] = {
+            id = playerId,
+            name = GetPlayerName(playerId) or 'Unknown Player'
+        }
     end
 
-    return count
+    return players, count
 end
 
 CreateThread(function()
     while true do
-        local playerCount = getPlayerCount()
+        local players, playerCount = getPlayerData()
         local maxPlayers = GetConvarInt('sv_maxclients', 32)
 
         TriggerClientEvent('whellco_server_info:update', -1, {
             players = playerCount,
-            maxPlayers = maxPlayers
+            maxPlayers = maxPlayers,
+            playerNames = players
         })
 
         Wait(5000)
@@ -23,8 +30,11 @@ CreateThread(function()
 end)
 
 AddEventHandler('playerConnecting', function()
+    local players, playerCount = getPlayerData()
+
     TriggerClientEvent('whellco_server_info:update', -1, {
-        players = getPlayerCount() + 1,
-        maxPlayers = GetConvarInt('sv_maxclients', 32)
+        players = playerCount,
+        maxPlayers = GetConvarInt('sv_maxclients', 32),
+        playerNames = players
     })
 end)

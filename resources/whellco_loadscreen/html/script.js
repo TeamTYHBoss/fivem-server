@@ -97,6 +97,7 @@ tabs.forEach(function(tab) {
 });
 
 const playerCount = document.getElementById('player-count');
+const playerList = document.getElementById('player-list');
 
 window.addEventListener('message', function(event) {
     const data = event.data;
@@ -108,10 +109,35 @@ window.addEventListener('message', function(event) {
     if (data.eventName === 'whellcoPlayerCount') {
         const players = Number(data.players) || 0;
         const maxPlayers = Number(data.maxPlayers) || 0;
+        const names = Array.isArray(data.playerNames) ? data.playerNames : [];
 
         playerCount.textContent = maxPlayers > 0
             ? players + ' / ' + maxPlayers
             : players + ' online';
+
+        playerList.innerHTML = '';
+
+        if (names.length === 0) {
+            const emptyItem = document.createElement('li');
+            emptyItem.className = 'empty';
+            emptyItem.textContent = 'No players are currently connected.';
+            playerList.appendChild(emptyItem);
+        } else {
+            names.forEach(function(player) {
+                const item = document.createElement('li');
+
+                const name = document.createElement('span');
+                name.textContent = player.name || 'Unknown Player';
+
+                const id = document.createElement('span');
+                id.className = 'player-id';
+                id.textContent = 'ID ' + player.id;
+
+                item.appendChild(name);
+                item.appendChild(id);
+                playerList.appendChild(item);
+            });
+        }
 
         return;
     }
