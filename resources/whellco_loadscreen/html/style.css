@@ -1,0 +1,131 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Segoe UI", Arial, sans-serif;
+    color: #fff;
+    background: #05070d;
+}
+
+.background {
+    position: fixed;
+    inset: -25%;
+    background:
+        radial-gradient(circle at 20% 25%, rgba(0, 170, 255, .35), transparent 45%),
+        radial-gradient(circle at 80% 70%, rgba(160, 60, 255, .30), transparent 45%),
+        #05070d;
+    animation: drift 18s ease-in-out infinite alternate;
+}
+
+@keyframes drift {
+    from {
+        transform: scale(1) rotate(0deg);
+    }
+
+    to {
+        transform: scale(1.15) rotate(8deg);
+    }
+}
+
+main {
+    position: relative;
+    width: min(560px, 90vw);
+    text-align: center;
+    padding: 40px;
+    border-radius: 18px;
+    background: rgba(10, 15, 25, .55);
+    border: 1px solid rgba(255, 255, 255, .12);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 25px 70px rgba(0, 0, 0, .55);
+}
+
+.logo {
+    width: 86px;
+    height: 86px;
+    margin: 0 auto 18px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    font-size: 38px;
+    font-weight: 800;
+    color: #04121c;
+    background: linear-gradient(135deg, #00d4ff, #7b5cff);
+    animation: pulse 2.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(0, 212, 255, .5);
+    }
+
+    50% {
+        transform: scale(1.08);
+        box-shadow: 0 0 35px rgba(0, 212, 255, .55);
+    }
+}
+
+h1 {
+    font-size: 30px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.subtitle {
+    margin-top: 8px;
+    color: rgba(255, 255, 255, .72);
+}
+
+.progress-wrap {
+    height: 10px;
+    margin: 28px 0 10px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, .12);
+}
+
+.progress-bar {
+    width: 0%;
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #00d4ff, #7b5cff);
+    transition: width .35s ease;
+}
+
+.percentage {
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.status {
+    margin-top: 6px;
+    min-height: 20px;
+    font-size: 13px;
+    color: rgba(255, 255, 255, .68);
+}
+
+.tip {
+    margin-top: 26px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    background: rgba(255, 255, 255, .08);
+    border: 1px solid rgba(255, 255, 255, .12);
+}
+
+.tip-label {
+    font-weight: 800;
+    color: #00d4ff;
+    text-transform: uppercase;
+}
