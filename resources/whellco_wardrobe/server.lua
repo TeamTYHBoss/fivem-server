@@ -15,6 +15,10 @@ RegisterNetEvent('whellco_wardrobe:confirm', function(appearance)
     appearance.model = model
 
     -- Store this in MySQL, a JSON file, or your framework's identity system.
-    -- For now, return it to the client and allow spawning.
+    -- For now, return it to the client and open the spawn selector.
     TriggerClientEvent('whellco_wardrobe:confirmed', source, appearance)
+
+    SetTimeout(500, function()
+        TriggerClientEvent('whellco_spawn_selector:open', source)
+    end)
 end)

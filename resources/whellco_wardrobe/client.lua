@@ -133,13 +133,6 @@ RegisterNetEvent('whellco_wardrobe:confirmed', function(appearance)
     SetPedComponentVariation(ped, 6, appearance.shoes or 0, 0, 0)
 
     exports.spawnmanager:setAutoSpawn(false)
-
-    exports.spawnmanager:spawnPlayer({
-        x = 195.17,
-        y = -933.77,
-        z = 30.69,
-        heading = 144.0
-    })
 end)
 
 AddEventHandler('onResourceStop', function(resource)
