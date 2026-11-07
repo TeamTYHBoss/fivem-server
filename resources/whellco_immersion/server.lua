@@ -2,6 +2,16 @@ local playerJobs = {}
 local jobProgress = {}
 local lastInteraction = {}
 
+local function getIdentifier(source)
+    local identifier = GetPlayerIdentifierByType(source, 'license')
+
+    if not identifier then
+        identifier = GetPlayerIdentifierByType(source, 'steam')
+    end
+
+    return identifier
+end
+
 local function canInteract(source)
     if type(source) ~= 'number' or source <= 0 then
         return false
@@ -64,6 +74,37 @@ local function buildRoute(job, tier)
         timeLimit = tier.timeLimit
     }
 end
+
+AddEventHandler('playerConnecting', function(_, _, deferrals)
+    local source = source
+    local identifier = getIdentifier(source)
+
+    deferrals.defer()
+    Wait(0)
+    deferrals.update('Loading your job progress…')
+
+    local completedJobs = 0
+
+    if identifier then
+        local result = MySQL.scalar.await(
+            'SELECT completed_jobs FROM whellco_job_progress WHERE identifier = ? LIMIT 1',
+            { identifier }
+        )
+
+        if result then
+            completedJobs = tonumber(result) or 0
+        else
+            MySQL.insert.await(
+                'INSERT INTO whellco_job_progress (identifier, completed_jobs) VALUES (?, 0)',
+                { identifier }
+            )
+        end
+    end
+
+    jobProgress[source] = completedJobs
+
+    deferrals.done()
+end)
 
 RegisterNetEvent('whellco_immersion:interact', function(interactionType, interaction)
     local source = source
@@ -151,11 +192,23 @@ RegisterNetEvent('whellco_immersion:completeStop', function()
         return
     end
 
-    local jobId = activeJob.jobId
+    local identifier = getIdentifier(source)
     local payout = activeJob.mission.payout
 
     jobProgress[source] = (jobProgress[source] or 0) + 1
     playerJobs[source] = nil
+
+    if identifier then
+        MySQL.update.await(
+            [[
+                INSERT INTO whellco_job_progress (identifier, completed_jobs)
+                VALUES (?, ?)
+                ON DUPLICATE KEY UPDATE
+                    completed_jobs = VALUES(completed_jobs)
+            ]],
+            { identifier, jobProgress[source] }
+        )
+    end
 
     -- Replace with your economy framework's server-side money addition.
     TriggerClientEvent('whellco_immersion:completeJob', source, ('Job complete. You earned %s%d.'):format(Config.Currency, payout))
