@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Phone</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="phone" id="phone">
+        <div class="window">
+            <header>
+                <h1>Phone</h1>
+                <p id="phone-number">Number: Unknown</p>
+            </header>
+
+            <div class="tabs">
+                <button class="tab active" data-tab="contacts">Contacts</button>
+                <button class="tab" data-tab="messages">Messages</button>
+                <button class="tab" data-tab="calls">Calls</button>
+            </div>
+
+            <div class="panel" id="contacts"></div>
+            <div class="panel hidden" id="messages"></div>
+            <div class="panel hidden" id="calls"></div>
+
+            <button id="close-button">Close</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
