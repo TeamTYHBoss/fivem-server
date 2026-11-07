@@ -75,6 +75,21 @@ local function buildRoute(job, tier)
     }
 end
 
+local function saveProgress(identifier, completedJobs)
+    local playerName = GetPlayerName(source) or 'Unknown Player'
+
+    MySQL.update.await(
+        [[
+            INSERT INTO whellco_job_progress (identifier, player_name, completed_jobs)
+            VALUES (?, ?, ?)
+            ON DUPLICATE KEY UPDATE
+                player_name = VALUES(player_name),
+                completed_jobs = VALUES(completed_jobs)
+        ]],
+        { identifier, playerName, completedJobs }
+    )
+end
+
 AddEventHandler('playerConnecting', function(_, _, deferrals)
     local source = source
     local identifier = getIdentifier(source)
@@ -199,20 +214,53 @@ RegisterNetEvent('whellco_immersion:completeStop', function()
     playerJobs[source] = nil
 
     if identifier then
-        MySQL.update.await(
-            [[
-                INSERT INTO whellco_job_progress (identifier, completed_jobs)
-                VALUES (?, ?)
-                ON DUPLICATE KEY UPDATE
-                    completed_jobs = VALUES(completed_jobs)
-            ]],
-            { identifier, jobProgress[source] }
-        )
+        saveProgress(identifier, jobProgress[source])
     end
 
     -- Replace with your economy framework's server-side money addition.
     TriggerClientEvent('whellco_immersion:completeJob', source, ('Job complete. You earned %s%d.'):format(Config.Currency, payout))
 end)
+
+RegisterCommand('jobleaderboard', function(source)
+    if source == 0 then
+        return
+    end
+
+    local results = MySQL.query.await(
+        [[
+            SELECT
+                player_name,
+                completed_jobs
+            FROM whellco_job_progress
+            WHERE completed_jobs > 0
+            ORDER BY completed_jobs DESC, updated_at ASC
+            LIMIT 10
+        ]],
+        {}
+    )
+
+    local lines = {
+        'Job Leaderboard'
+    }
+
+    if not results or #results == 0 then
+        lines[#lines + 1] = 'No completed jobs have been recorded yet.'
+    else
+        for index, row in ipairs(results) do
+            lines[#lines + 1] = ('%d. %s — %d jobs'):format(
+                index,
+                row.player_name or 'Unknown Player',
+                tonumber(row.completed_jobs) or 0
+            )
+        end
+    end
+
+    exports.chat:addMessage(source, {
+        color = { 0, 190, 255 },
+        multiline = true,
+        args = { 'Job Leaderboard', table.concat(lines, '\n') }
+    })
+end, false)
 
 AddEventHandler('playerDropped', function()
     playerJobs[source] = nil
