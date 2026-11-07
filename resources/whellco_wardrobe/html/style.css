@@ -1,0 +1,97 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    color: #fff;
+}
+
+.wardrobe {
+    display: none;
+    position: fixed;
+    inset: 0;
+    align-items: center;
+    justify-content: flex-start;
+    background: linear-gradient(90deg, rgba(3, 7, 15, .92) 0%, rgba(3, 7, 15, .25) 55%, transparent 100%);
+}
+
+.wardrobe.visible {
+    display: flex;
+}
+
+.panel {
+    width: min(380px, 90vw);
+    max-height: 92vh;
+    overflow-y: auto;
+    margin: 24px;
+    padding: 24px;
+    border-radius: 18px;
+    background: rgba(10, 16, 28, .94);
+    border: 1px solid rgba(255, 255, 255, .14);
+    box-shadow: 0 25px 80px rgba(0, 0, 0, .65);
+}
+
+h1 {
+    font-size: 23px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.section {
+    margin-top: 22px;
+}
+
+h2 {
+    margin-bottom: 12px;
+    font-size: 14px;
+    color: #00d4ff;
+    text-transform: uppercase;
+}
+
+.model-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.model-buttons button,
+#confirm-button {
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, .18);
+    border-radius: 10px;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    background: rgba(255, 255, 255, .07);
+    transition: background .18s ease, border-color .18s ease;
+}
+
+.model-buttons button.active,
+.model-buttons button:hover {
+    border-color: rgba(0, 212, 255, .75);
+    background: rgba(0, 212, 255, .12);
+}
+
+label {
+    display: block;
+    margin-bottom: 14px;
+    font-size: 13px;
+    color: rgba(255, 255, 255, .78);
+}
+
+input[type="range"] {
+    width: 100%;
+    margin-top: 6px;
+    accent-color: #00d4ff;
+}
+
+#confirm-button {
+    width: 100%;
+    margin-top: 18px;
+    border: none;
+    color: #04121c;
+    background: linear-gradient(135deg, #00d4ff, #7b5cff);
+}
