@@ -8,7 +8,7 @@ const muteButton = document.getElementById('mute-button');
 const volumeSlider = document.getElementById('volume-slider');
 
 const tips = [
-    'Tip: Use /hello once you are in the city.',
+    'Tip: Read the server rules before entering the city.',
     'Tip: Be respectful to other players.',
     'Tip: Report bugs so the server can improve.',
     'Tip: Check the server rules before roleplaying.',
@@ -78,6 +78,39 @@ volumeSlider.addEventListener('input', function() {
     updateMuteButton();
     applyVolume();
 });
+
+const tabs = document.querySelectorAll('.tab');
+const panels = document.querySelectorAll('.panel');
+
+tabs.forEach(function(tab) {
+    tab.addEventListener('click', function() {
+        const target = tab.dataset.panel;
+
+        tabs.forEach(function(item) {
+            item.classList.toggle('active', item === tab);
+        });
+
+        panels.forEach(function(panel) {
+            panel.classList.toggle('active', panel.id === target);
+        });
+    });
+});
+
+const playerName = document.getElementById('player-name');
+const playerCount = document.getElementById('player-count');
+
+fetch('http://localhost:30120/info.json')
+    .then(function(response) {
+        return response.json();
+    })
+    .then(function(data) {
+        if (data && data.clients !== undefined) {
+            playerCount.textContent = data.clients + ' / ' + data.sv_maxclients;
+        }
+    })
+    .catch(function() {
+        playerCount.textContent = 'Unavailable';
+    });
 
 window.addEventListener('message', function(event) {
     const data = event.data;

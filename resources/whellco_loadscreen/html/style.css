@@ -112,6 +112,103 @@ h1 {
     color: rgba(255, 255, 255, .68);
 }
 
+.tabs {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 24px;
+}
+
+.tab {
+    padding: 9px 18px;
+    border: 1px solid rgba(255, 255, 255, .18);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .06);
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .2s ease, transform .2s ease;
+}
+
+.tab:hover {
+    transform: translateY(-2px);
+    background: rgba(255, 255, 255, .14);
+}
+
+.tab.active {
+    background: linear-gradient(135deg, #00d4ff, #7b5cff);
+    border-color: transparent;
+    color: #04121c;
+}
+
+.panel {
+    display: none;
+    margin-top: 18px;
+    padding: 18px;
+    border-radius: 14px;
+    text-align: left;
+    background: rgba(255, 255, 255, .06);
+    border: 1px solid rgba(255, 255, 255, .12);
+}
+
+.panel.active {
+    display: block;
+    animation: fade .25s ease;
+}
+
+@keyframes fade {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.panel h2 {
+    margin-bottom: 10px;
+    font-size: 18px;
+    color: #00d4ff;
+}
+
+.panel ul {
+    padding-left: 20px;
+    line-height: 1.7;
+    font-size: 14px;
+}
+
+.stat-grid {
+    display: grid;
+    gap: 10px;
+}
+
+.stat {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, .25);
+}
+
+.stat-label {
+    color: rgba(255, 255, 255, .70);
+    font-size: 13px;
+}
+
+.stat-value {
+    font-weight: 700;
+}
+
+.note {
+    margin-top: 12px;
+    font-size: 12px;
+    color: rgba(255, 255, 255, .60);
+}
+
 .tip {
     margin-top: 26px;
     display: inline-flex;

@@ -9,9 +9,7 @@
     <div class="background"></div>
 
     <main>
-        <div class="logo">
-            <span>W</span>
-        </div>
+        <div class="logo"><span>W</span></div>
 
         <h1>WhellCo FiveM</h1>
         <p class="subtitle">Preparing your experience…</p>
@@ -23,9 +21,50 @@
         <p class="percentage" id="percentage">0%</p>
         <p class="status" id="status">Connecting to server…</p>
 
+        <div class="tabs">
+            <button class="tab active" data-panel="rules">Server Rules</button>
+            <button class="tab" data-panel="stats">Player Info</button>
+        </div>
+
+        <section id="rules" class="panel active">
+            <h2>Server Rules</h2>
+            <ul>
+                <li>Be respectful to all players and staff.</li>
+                <li>No cheating, exploiting, or abusing bugs.</li>
+                <li>Stay in character during roleplay scenarios.</li>
+                <li>Do not use offensive language or harassment.</li>
+                <li>Follow staff instructions at all times.</li>
+            </ul>
+        </section>
+
+        <section id="stats" class="panel">
+            <h2>Player Information</h2>
+
+            <div class="stat-grid">
+                <div class="stat">
+                    <span class="stat-label">Players online</span>
+                    <span class="stat-value" id="player-count">—</span>
+                </div>
+
+                <div class="stat">
+                    <span class="stat-label">Your FiveM name</span>
+                    <span class="stat-value" id="player-name">Loading…</span>
+                </div>
+
+                <div class="stat">
+                    <span class="stat-label">Server status</span>
+                    <span class="stat-value">Online</span>
+                </div>
+            </div>
+
+            <p class="note">
+                Your character and detailed statistics become available after you spawn.
+            </p>
+        </section>
+
         <div class="tip">
             <span class="tip-label">Tip</span>
-            <span id="tip-text">Use /hello once you are in the city.</span>
+            <span id="tip-text">Read the server rules before entering the city.</span>
         </div>
 
         <div class="audio-controls">
