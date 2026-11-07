@@ -1,0 +1,26 @@
+CREATE TABLE IF NOT EXISTS whellco_mechanic_duties (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    character_id INT UNSIGNED NOT NULL,
+    job_id VARCHAR(64) NOT NULL,
+    on_duty TINYINT(1) NOT NULL DEFAULT 0,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_whellco_mechanic_duties (character_id, job_id)
+);
+
+CREATE TABLE IF NOT EXISTS whellco_mechanic_repairs (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    mechanic_id INT UNSIGNED NOT NULL,
+    vehicle_plate VARCHAR(16) NOT NULL,
+    repair_type VARCHAR(64) NOT NULL,
+    price INT NOT NULL,
+    repaired_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS whellco_mechanic_upgrades (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    mechanic_id INT UNSIGNED NOT NULL,
+    vehicle_plate VARCHAR(16) NOT NULL,
+    upgrade_type VARCHAR(64) NOT NULL,
+    price INT NOT NULL,
+    upgraded_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
