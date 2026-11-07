@@ -141,6 +141,8 @@ RegisterNetEvent('whellco_characters:selectCharacter', function(characterId)
 
     activeCharacters[identifier] = character.id
 
+    TriggerEvent('whellco_economy:characterSelected', character.id, source)
+
     TriggerClientEvent('whellco_characters:spawnCharacter', source, {
         character = character,
         spawn = spawn.coords

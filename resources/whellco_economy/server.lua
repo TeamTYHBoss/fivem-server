@@ -43,8 +43,9 @@ end
 
 local function getAccount(source)
     local identifier = getIdentifier(source)
+    local characterId = playerAccounts[identifier] and playerAccounts[identifier].characterId
 
-    if not identifier then
+    if not identifier or not characterId then
         return nil
     end
 
@@ -67,32 +68,32 @@ local function sendAccount(source)
     })
 end
 
-AddEventHandler('playerConnecting', function(_, _, deferrals)
+RegisterNetEvent('whellco_economy:characterSelected', function(characterId)
     local source = source
     local identifier = getIdentifier(source)
 
-    deferrals.defer()
-    Wait(0)
-    deferrals.update('Loading your account…')
-
-    if not identifier then
-        deferrals.done('Unable to identify your account.')
+    if not identifier or not characterId then
         return
     end
 
     local existing = MySQL.single.await(
-        'SELECT cash, bank, xp, level FROM whellco_players WHERE identifier = ? LIMIT 1',
-        { identifier }
+        [[
+            SELECT cash, bank, xp, level
+            FROM whellco_players
+            WHERE character_id = ?
+            LIMIT 1
+        ]],
+        { characterId }
     )
 
     if not existing then
         MySQL.insert.await(
             [[
                 INSERT INTO whellco_players
-                    (identifier, player_name, cash, bank, xp, level)
-                VALUES (?, ?, ?, ?, 0, 1)
+                    (character_id, identifier, player_name, cash, bank, xp, level)
+                VALUES (?, ?, ?, ?, ?, 0, 1)
             ]],
-            { identifier, GetPlayerName(source) or 'Unknown Player', Config.StartingCash, Config.StartingBank }
+            { characterId, identifier, GetPlayerName(source) or 'Unknown Player', Config.StartingCash, Config.StartingBank }
         )
 
         existing = {
@@ -107,14 +108,15 @@ AddEventHandler('playerConnecting', function(_, _, deferrals)
         [[
             SELECT type, amount, balance_after, description, created_at
             FROM whellco_transactions
-            WHERE identifier = ?
+            WHERE character_id = ?
             ORDER BY created_at DESC
             LIMIT 25
         ]],
-        { identifier }
+        { characterId }
     ) or {}
 
     playerAccounts[identifier] = {
+        characterId = characterId,
         identifier = identifier,
         cash = tonumber(existing.cash) or 0,
         bank = tonumber(existing.bank) or 0,
@@ -123,7 +125,7 @@ AddEventHandler('playerConnecting', function(_, _, deferrals)
         transactions = transactions
     }
 
-    deferrals.done()
+    sendAccount(source)
 end)
 
 RegisterNetEvent('whellco_economy:requestAccount', function()
@@ -184,7 +186,7 @@ RegisterNuiCallback('purchaseItem', function(data, cb)
     local account = getAccount(source)
 
     if not account then
-        cb({ ok = false, error = 'Account unavailable.' })
+        cb({ ok = false, error = 'Select a character first.' })
         return
     end
 
@@ -224,25 +226,25 @@ RegisterNuiCallback('purchaseItem', function(data, cb)
 
     local success = MySQL.transaction.await({
         {
-            query = 'UPDATE whellco_players SET cash = cash - ? WHERE identifier = ? AND cash >= ?',
-            values = { total, account.identifier, total }
+            query = 'UPDATE whellco_players SET cash = cash - ? WHERE character_id = ? AND cash >= ?',
+            values = { total, account.characterId, total }
         },
         {
             query = [[
-                INSERT INTO whellco_inventory (identifier, item_id, quantity)
+                INSERT INTO whellco_inventory (character_id, item_id, quantity)
                 VALUES (?, ?, ?)
                 ON DUPLICATE KEY UPDATE quantity = quantity + VALUES(quantity)
             ]],
-            values = { account.identifier, data.itemId, quantity }
+            values = { account.characterId, data.itemId, quantity }
         },
         {
             query = [[
                 INSERT INTO whellco_transactions
-                    (identifier, type, amount, balance_after, description)
+                    (character_id, type, amount, balance_after, description)
                 VALUES (?, 'purchase', ?, ?, ?)
             ]],
             values = {
-                account.identifier,
+                account.characterId,
                 total,
                 account.cash - total,
                 ('Purchased %dx %s'):format(quantity, item.label)
@@ -264,8 +266,8 @@ RegisterNuiCallback('purchaseItem', function(data, cb)
     account.level = newLevel
 
     MySQL.update.await(
-        'UPDATE whellco_players SET cash = ?, xp = ?, level = ? WHERE identifier = ?',
-        { account.cash, account.xp, account.level, account.identifier }
+        'UPDATE whellco_players SET cash = ?, xp = ?, level = ? WHERE character_id = ?',
+        { account.cash, account.xp, account.level, account.characterId }
     )
 
     if levelledUp then
@@ -300,11 +302,16 @@ RegisterNetEvent('whellco_economy:openJobBoard', function()
         return
     end
 
-    local identifier = getIdentifier(source)
+    local account = getAccount(source)
+
+    if not account then
+        return
+    end
+
     local jobs = {}
 
     for id, job in pairs(Config.Jobs) do
-        local remaining = math.max(0, job.cooldown - (GetGameTimer() - (jobCooldowns[identifier] or 0)))
+        local remaining = math.max(0, job.cooldown - (GetGameTimer() - (jobCooldowns[account.characterId] or 0)))
 
         jobs[#jobs + 1] = {
             id = id,
@@ -333,20 +340,20 @@ RegisterNetEvent('whellco_economy:startJob', function(jobId)
         return
     end
 
-    local identifier = getIdentifier(source)
+    local account = getAccount(source)
 
-    if not identifier then
+    if not account then
         return
     end
 
-    if activeJobs[identifier] then
+    if activeJobs[account.characterId] then
         TriggerClientEvent('whellco_economy:notify', source, 'You are already on a job.')
         return
     end
 
     local now = GetGameTimer()
 
-    if now - (jobCooldowns[identifier] or 0) < job.cooldown then
+    if now - (jobCooldowns[account.characterId] or 0) < job.cooldown then
         TriggerClientEvent('whellco_economy:notify', source, 'You need to wait before starting this job again.')
         return
     end
@@ -358,7 +365,7 @@ RegisterNetEvent('whellco_economy:startJob', function(jobId)
         return
     end
 
-    activeJobs[identifier] = {
+    activeJobs[account.characterId] = {
         id = jobId,
         startedAt = now,
         routeIndex = 1
@@ -378,8 +385,8 @@ RegisterNetEvent('whellco_economy:advanceRoute', function()
         return
     end
 
-    local identifier = getIdentifier(source)
-    local active = activeJobs[identifier]
+    local account = getAccount(source)
+    local active = account and activeJobs[account.characterId]
 
     if not active then
         return
@@ -388,7 +395,7 @@ RegisterNetEvent('whellco_economy:advanceRoute', function()
     local job = Config.Jobs[active.id]
 
     if not job then
-        activeJobs[identifier] = nil
+        activeJobs[account.characterId] = nil
         return
     end
 
@@ -429,8 +436,8 @@ RegisterNetEvent('whellco_economy:completeJob', function()
         return
     end
 
-    local identifier = getIdentifier(source)
-    local active = activeJobs[identifier]
+    local account = getAccount(source)
+    local active = account and activeJobs[account.characterId]
 
     if not active then
         TriggerClientEvent('whellco_economy:notify', source, 'You do not have an active job.')
@@ -440,7 +447,7 @@ RegisterNetEvent('whellco_economy:completeJob', function()
     local job = Config.Jobs[active.id]
 
     if not job then
-        activeJobs[identifier] = nil
+        activeJobs[account.characterId] = nil
         return
     end
 
@@ -453,12 +460,6 @@ RegisterNetEvent('whellco_economy:completeJob', function()
 
     if #(GetEntityCoords(ped) - job.complete) > 10.0 then
         TriggerClientEvent('whellco_economy:notify', source, 'Go to the job completion point.')
-        return
-    end
-
-    local account = getAccount(source)
-
-    if not account then
         return
     end
 
@@ -475,17 +476,17 @@ RegisterNetEvent('whellco_economy:completeJob', function()
 
     MySQL.transaction.await({
         {
-            query = 'UPDATE whellco_players SET bank = ?, xp = ?, level = ? WHERE identifier = ?',
-            values = { account.bank, account.xp, account.level, identifier }
+            query = 'UPDATE whellco_players SET bank = ?, xp = ?, level = ? WHERE character_id = ?',
+            values = { account.bank, account.xp, account.level, account.characterId }
         },
         {
             query = [[
                 INSERT INTO whellco_transactions
-                    (identifier, type, amount, balance_after, description)
+                    (character_id, type, amount, balance_after, description)
                 VALUES (?, 'wage', ?, ?, ?)
             ]],
             values = {
-                identifier,
+                account.characterId,
                 payout,
                 account.bank,
                 ('Completed %s job'):format(job.label)
@@ -493,8 +494,8 @@ RegisterNetEvent('whellco_economy:completeJob', function()
         }
     })
 
-    jobCooldowns[identifier] = GetGameTimer()
-    activeJobs[identifier] = nil
+    jobCooldowns[account.characterId] = GetGameTimer()
+    activeJobs[account.characterId] = nil
 
     if levelledUp then
         TriggerClientEvent('whellco_economy:levelUp', source, account.level)
@@ -533,9 +534,14 @@ end, false)
 AddEventHandler('playerDropped', function()
     local identifier = getIdentifier(source)
 
-    if identifier then
+    if identifier and playerAccounts[identifier] then
+        local characterId = playerAccounts[identifier].characterId
+
+        if characterId then
+            activeJobs[characterId] = nil
+        end
+
         playerAccounts[identifier] = nil
-        activeJobs[identifier] = nil
     end
 
     lastRequest[source] = nil

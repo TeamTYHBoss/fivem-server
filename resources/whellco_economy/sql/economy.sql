@@ -1,29 +1,15 @@
-CREATE TABLE IF NOT EXISTS whellco_players (
-    identifier VARCHAR(64) NOT NULL PRIMARY KEY,
-    player_name VARCHAR(64) NOT NULL,
-    cash INT NOT NULL DEFAULT 500,
-    bank INT NOT NULL DEFAULT 2500,
-    xp INT NOT NULL DEFAULT 0,
-    level INT NOT NULL DEFAULT 1,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+-- Phase 6 migration: link economy records to individual characters.
 
-CREATE TABLE IF NOT EXISTS whellco_transactions (
-    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    identifier VARCHAR(64) NOT NULL,
-    type ENUM('deposit', 'withdraw', 'purchase', 'wage', 'transfer', 'refund') NOT NULL,
-    amount INT NOT NULL,
-    balance_after INT NOT NULL,
-    description VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_whellco_transactions_identifier (identifier),
-    INDEX idx_whellco_transactions_created (created_at)
-);
+ALTER TABLE whellco_players
+    ADD COLUMN character_id INT UNSIGNED NULL AFTER identifier,
+    ADD UNIQUE KEY uq_whellco_players_character (character_id);
 
-CREATE TABLE IF NOT EXISTS whellco_inventory (
-    identifier VARCHAR(64) NOT NULL,
-    item_id VARCHAR(64) NOT NULL,
-    quantity INT NOT NULL DEFAULT 0,
-    PRIMARY KEY (identifier, item_id)
-);
+ALTER TABLE whellco_transactions
+    ADD COLUMN character_id INT UNSIGNED NULL AFTER identifier,
+    ADD INDEX idx_whellco_transactions_character (character_id);
+
+ALTER TABLE whellco_inventory
+    DROP PRIMARY KEY,
+    ADD COLUMN character_id INT UNSIGNED NULL AFTER identifier,
+    ADD PRIMARY KEY (character_id, item_id),
+    ADD INDEX idx_whellco_inventory_character (character_id);
