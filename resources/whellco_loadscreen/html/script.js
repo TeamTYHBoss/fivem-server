@@ -96,26 +96,27 @@ tabs.forEach(function(tab) {
     });
 });
 
-const playerName = document.getElementById('player-name');
 const playerCount = document.getElementById('player-count');
-
-fetch('http://localhost:30120/info.json')
-    .then(function(response) {
-        return response.json();
-    })
-    .then(function(data) {
-        if (data && data.clients !== undefined) {
-            playerCount.textContent = data.clients + ' / ' + data.sv_maxclients;
-        }
-    })
-    .catch(function() {
-        playerCount.textContent = 'Unavailable';
-    });
 
 window.addEventListener('message', function(event) {
     const data = event.data;
 
-    if (!data || data.eventName !== 'loadProgress') {
+    if (!data) {
+        return;
+    }
+
+    if (data.eventName === 'whellcoPlayerCount') {
+        const players = Number(data.players) || 0;
+        const maxPlayers = Number(data.maxPlayers) || 0;
+
+        playerCount.textContent = maxPlayers > 0
+            ? players + ' / ' + maxPlayers
+            : players + ' online';
+
+        return;
+    }
+
+    if (data.eventName !== 'loadProgress') {
         return;
     }
 
