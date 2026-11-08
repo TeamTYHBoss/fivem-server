@@ -2,6 +2,69 @@
 
 This repository contains the FiveM server resources and documentation.
 
+## Bugs and errors squashed
+
+The following bugs, errors, and reliability issues have been fixed and pushed to the repository.
+
+### Computer
+
+- Fixed a regression that replaced the complete computer server script with a patch/instruction file.
+- Restored the full computer server implementation for banking, shopping, marketplace, transfers, social posts, comments, and notifications.
+- Fixed invalid Lua `content:trim()` calls that could cause runtime errors when creating posts or comments.
+- Added a safe local `trim()` helper for post and comment input.
+- Added server-side inventory metadata validation for marketplace listings.
+- Prevented clients from injecting arbitrary marketplace listing metadata.
+- Added `/computerrecovery` to list unresolved recovery records.
+- Added `/computerresolve <id>` to resolve recovery records.
+- Added cooldown cleanup when players disconnect.
+- Preserved recovery states and rollback behavior for failed transfers and marketplace purchases.
+
+### Fast food
+
+- Added the missing `oxmysql` integration to the fast-food server script.
+- Fixed purchases so the food item is added before the player is charged.
+- Added rollback so a failed payment removes the item that was added.
+- Added checks for `AddItem`, `RemoveMoney`, and `RemoveItem` results.
+- Added a two-second per-player purchase cooldown.
+- Changed the cooldown so failed purchase attempts do not consume it.
+- Added cooldown cleanup when a player disconnects.
+- Added validation for restaurant IDs, item IDs, menu availability, and purchase price.
+- Added asynchronous purchase logging.
+- Added logging for failed purchase-database inserts.
+- Preserved cashier handovers, player food bags, and eating food from the bag.
+
+### IPTV
+
+- Added the missing `oxmysql` integration to the IPTV server script.
+- Added validation for playlist URLs, including HTTP/HTTPS checks and URL-length limits.
+- Added a 10-second callback timeout for external playlist requests.
+- Added a response-size limit of 1 MB.
+- Limited parsed playlists to 500 channels.
+- Added validation for saved channel values from 1 through 1,000.
+- Added checks for remote `AddItem` and `RemoveItem` results.
+- Replaced blocking last-channel database lookups with asynchronous callbacks.
+- Added private/internal address filtering for playlist and channel URLs.
+- Added IPv6 loopback, link-local, and unique-local address checks.
+- Ensured only channels with both a name and a valid URL are returned.
+- Preserved TV remote ownership, channel selection, and last-channel saving.
+
+### Weather
+
+- Fixed the weather scheduler so `Config.SyncInterval` controls the actual time-sync interval.
+- Removed overlapping weather and time-update loops.
+- Added safe defaults for invalid, zero, or negative sync and weather-change intervals.
+- Added guarded access to seasonal and realistic weather configuration.
+- Preserved seasonal weather, real-time clock sync, night detection, and `/weatherinfo`.
+
+## Server updates
+
+- Added a computer resource with banking, shopping, marketplace, transfers, social posts, comments, and notifications.
+- Added fast-food restaurants with menus, purchases, cashier NPCs, customer NPCs, food bags, and eating animations.
+- Added IPTV with working TVs, channel switching, channel selection UI, remote requirement, and last-channel saving.
+- Added realistic weather, real-time clock sync, streetlights, house windows, TV-style window flicker, curtains, silhouettes, swimming pools, water effects, and dive ripples.
+- Added server-side validation, cooldowns, rollback handling, recovery states, and asynchronous database operations across affected resources.
+- Added documentation for computer metadata, recovery tools, IPTV timeout behavior, fast-food cooldowns, and weather intervals.
+
 ## Computer resource
 
 `whellco_computer` adds an in-game computer with banking, shopping, a player marketplace, bank transfers, social posts, comments, and notifications.
