@@ -311,34 +311,48 @@ QBCore.Functions.CreateCallback('whellco_computer:buyListing', function(source, 
             return
         end
 
-        if not buyer.Functions.RemoveMoney('bank', listing.price, 'computer-marketplace') then
-            cb(false, 'Purchase failed')
-            return
-        end
+        local metadata = json.decode(listing.metadata or '{}')
 
-        if not buyer.Functions.AddItem(listing.item, listing.quantity, false, json.decode(listing.metadata or '{}')) then
-            buyer.Functions.AddMoney('bank', listing.price, 'computer-marketplace-refund')
+        if not buyer.Functions.AddItem(listing.item, listing.quantity, false, metadata) then
             cb(false, 'Inventory full')
             return
         end
 
-        seller.Functions.AddMoney('bank', listing.price, 'computer-marketplace-sale')
+        if not buyer.Functions.RemoveMoney('bank', listing.price, 'computer-marketplace') then
+            buyer.Functions.RemoveItem(listing.item, listing.quantity, false, metadata)
+            cb(false, 'Purchase failed')
+            return
+        end
 
-        MySQL.update('UPDATE whellco_computer_listings SET status = ?, buyer = ? WHERE id = ?', {
-            'sold',
-            buyer.PlayerData.citizenid,
-            listingId
-        })
+        MySQL.transaction({
+            'UPDATE whellco_computer_listings SET status = ?, buyer = ? WHERE id = ? AND status = ?',
+            'INSERT INTO whellco_computer_notifications (citizenid, kind, reference_id, content) VALUES (?, ?, ?, ?)'
+        }, {
+            {
+                'sold',
+                buyer.PlayerData.citizenid,
+                listingId,
+                'active'
+            },
+            {
+                seller.PlayerData.citizenid,
+                'marketplace',
+                listingId,
+                ('%s bought your listing for $%s'):format(buyer.PlayerData.charinfo.firstname, listing.price)
+            }
+        }, function(success)
+            if not success then
+                buyer.Functions.AddMoney('bank', listing.price, 'computer-marketplace-refund')
+                buyer.Functions.RemoveItem(listing.item, listing.quantity, false, metadata)
+                cb(false, 'Purchase failed')
+                return
+            end
 
-        MySQL.insert('INSERT INTO whellco_computer_notifications (citizenid, kind, reference_id, content) VALUES (?, ?, ?, ?)', {
-            seller.PlayerData.citizenid,
-            'marketplace',
-            listingId,
-            ('%s bought your listing for $%s'):format(buyer.PlayerData.charinfo.firstname, listing.price)
-        })
+            seller.Functions.AddMoney('bank', listing.price, 'computer-marketplace-sale')
 
-        notify(seller.PlayerData.source, 'Marketplace Sale', ('%s bought your listing for $%s'):format(buyer.PlayerData.charinfo.firstname, listing.price), 'success')
-        cb(true, ('Bought %s x%s for $%s'):format(listing.item, listing.quantity, listing.price))
+            notify(seller.PlayerData.source, 'Marketplace Sale', ('%s bought your listing for $%s'):format(buyer.PlayerData.charinfo.firstname, listing.price), 'success')
+            cb(true, ('Bought %s x%s for $%s'):format(listing.item, listing.quantity, listing.price))
+        end)
     end)
 end)
 
