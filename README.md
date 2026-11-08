@@ -2,43 +2,90 @@
 
 This repository contains the FiveM server resources and documentation.
 
-## Refactor status
+## Current status
 
-The computer resource is now split into focused server and UI modules. Shared helpers live in `whellco_utils`, reducing duplicated notification, cooldown, validation, and formatting logic.
+The server resources have been refactored, secured, and documented. The computer system now uses a modular server and UI architecture, shared utilities reduce duplicated logic, and IPTV includes trusted-domain allowlisting and playlist caching.
 
-The computer client callback names and database schema remain unchanged, so existing UI and SQL setups continue to work.
+The computer client callback names and database schema remain unchanged, so existing SQL setups and integrations continue to work.
 
-IPTV now supports trusted-domain allowlisting and short-lived playlist caching.
-
-## Bugs and errors squashed
-
-The following bugs, errors, and reliability issues have been fixed and pushed to the repository.
+## Complete changelog
 
 ### Computer
 
-- Fixed a regression that replaced the complete computer server script with a patch/instruction file.
+#### Bugs and errors fixed
+
+- Fixed a regression that replaced the complete computer server script with a patch or instruction file.
 - Restored the full computer server implementation for banking, shopping, marketplace, transfers, social posts, comments, and notifications.
 - Fixed invalid Lua `content:trim()` calls that could cause runtime errors when creating posts or comments.
-- Added a safe local `trim()` helper for post and comment input.
-- Added server-side inventory metadata validation for marketplace listings.
-- Prevented clients from injecting arbitrary marketplace listing metadata.
-- Added `/computerrecovery` to list unresolved recovery records.
-- Added `/computerresolve <id>` to resolve recovery records.
-- Added cooldown cleanup when players disconnect.
-- Preserved recovery states and rollback behavior for failed transfers and marketplace purchases.
-- Split the computer server into `bank`, `shop`, `marketplace`, `social`, and `notifications` modules.
+- Added a safe string-trimming helper for post and comment input.
+- Fixed invalid JavaScript `elseif` syntax in the modular UI event handler.
+- Fixed the modular renderer to use the existing HTML element IDs.
+- Wired the modular UI files into `index.html` and removed the legacy `script.js` include.
+- Added a status-message element for user feedback.
+
+#### Architecture updates
+
+- Split the computer server into focused modules:
+  - `server/main.lua` for shared state, recovery commands, and disconnect cleanup.
+  - `server/bank.lua` for balances, transfers, transfer history, and recovery records.
+  - `server/shop.lua` for shop data and purchases.
+  - `server/marketplace.lua` for listings, cancellations, and purchases.
+  - `server/social.lua` for posts and comments.
+  - `server/notifications.lua` for notification retrieval and read state.
+- Split the UI into:
+  - `state.js` for shared client state and state setters.
+  - `api.js` for NUI callback wrappers.
+  - `render.js` for rendering, HTML escaping, and status messages.
+  - `events.js` for all UI event handling and data refreshes.
 - Added a shared `whellco_utils` resource for notifications, player lookup, cooldowns, validation, JSON handling, and money formatting.
-- Wired the modular computer UI into `index.html`.
+
+#### UI features
+
+The modular computer UI now handles:
+
+- Tab switching for Bank, Shop, Marketplace, Social, and Notifications.
+- Opening and closing the computer.
+- Escape-key closing.
+- Bank balance display and refresh.
+- Bank transfers and transfer-history refresh.
+- Shop item display and purchases.
+- Marketplace listing display, creation, cancellation, and purchase.
+- Social post display and creation.
+- Notification display, refresh, and mark-as-read.
+- HTML escaping for user-controlled content.
+
+#### Marketplace security
+
+- Marketplace listing metadata is read from the seller’s server-side inventory item.
+- Clients cannot inject arbitrary marketplace listing metadata.
+- Listings are claimed before item delivery and payment.
+- Failed item delivery or payment rolls the listing back to `active` and clears the buyer.
+- Listing quantity and price are validated server-side.
+
+#### Transfer recovery
+
+- Bank transfers create durable records before debiting the sender.
+- Transfer records use `pending`, `recovery`, and `resolved` states.
+- Failed transfers are marked for recovery when a player disconnects or payment fails.
+- Failed receiver payment credits are refunded to the sender where possible.
+- `/computerrecovery` lists unresolved recovery records.
+- `/computerresolve <id>` marks a recovery record as resolved.
+- Cooldown entries are removed when players disconnect.
 
 ### Fast food
+
+#### Bugs and errors fixed
 
 - Added the missing `oxmysql` integration to the fast-food server script.
 - Fixed purchases so the food item is added before the player is charged.
 - Added rollback so a failed payment removes the item that was added.
 - Added checks for `AddItem`, `RemoveMoney`, and `RemoveItem` results.
-- Added a two-second per-player purchase cooldown.
 - Changed the cooldown so failed purchase attempts do not consume it.
 - Added cooldown cleanup when a player disconnects.
+
+#### Features and reliability
+
+- Added a two-second per-player purchase cooldown.
 - Added validation for restaurant IDs, item IDs, menu availability, and purchase price.
 - Added asynchronous purchase logging.
 - Added logging for failed purchase-database inserts.
@@ -46,21 +93,29 @@ The following bugs, errors, and reliability issues have been fixed and pushed to
 
 ### IPTV
 
+#### Bugs and errors fixed
+
 - Added the missing `oxmysql` integration to the IPTV server script.
+- Replaced blocking last-channel database lookups with asynchronous callbacks.
+- Added checks for remote `AddItem` and `RemoveItem` results.
+- Ensured only channels with both a name and a valid URL are returned.
+- Preserved TV remote ownership, channel selection, and last-channel saving.
+
+#### Request safety
+
 - Added validation for playlist URLs, including HTTP/HTTPS checks and URL-length limits.
 - Added a 10-second callback timeout for external playlist requests.
 - Added a response-size limit of 1 MB.
 - Limited parsed playlists to 500 channels.
 - Added validation for saved channel values from 1 through 1,000.
-- Added checks for remote `AddItem` and `RemoveItem` results.
-- Replaced blocking last-channel database lookups with asynchronous callbacks.
 - Added private/internal address filtering for playlist and channel URLs.
 - Added IPv6 loopback, link-local, and unique-local address checks.
-- Ensured only channels with both a name and a valid URL are returned.
-- Preserved TV remote ownership, channel selection, and last-channel saving.
-- Added trusted-domain allowlisting and short-lived playlist caching.
+- Added trusted-domain allowlisting for playlist hosts.
+- Added short-lived playlist caching to reduce repeated external requests.
 
 ### Weather
+
+#### Bugs and errors fixed
 
 - Fixed the weather scheduler so `Config.SyncInterval` controls the actual time-sync interval.
 - Removed overlapping weather and time-update loops.
@@ -68,49 +123,23 @@ The following bugs, errors, and reliability issues have been fixed and pushed to
 - Added guarded access to seasonal and realistic weather configuration.
 - Preserved seasonal weather, real-time clock sync, night detection, and `/weatherinfo`.
 
-## Server updates
+## Resource overview
 
-- Added a computer resource with banking, shopping, marketplace, transfers, social posts, comments, and notifications.
-- Added fast-food restaurants with menus, purchases, cashier NPCs, customer NPCs, food bags, and eating animations.
-- Added IPTV with working TVs, channel switching, channel selection UI, remote requirement, and last-channel saving.
-- Added realistic weather, real-time clock sync, streetlights, house windows, TV-style window flicker, curtains, silhouettes, swimming pools, water effects, and dive ripples.
-- Added server-side validation, cooldowns, rollback handling, recovery states, and asynchronous database operations across affected resources.
-- Added documentation for computer metadata, recovery tools, IPTV timeout behavior, fast-food cooldowns, and weather intervals.
-
-## Computer resource
+### Computer
 
 `whellco_computer` adds an in-game computer with banking, shopping, a player marketplace, bank transfers, social posts, comments, and notifications.
 
-The server is now modular:
+### Fast food
 
-- `server/main.lua` contains shared state, recovery commands, and player-disconnect cleanup.
-- `server/bank.lua` handles balances, transfers, transfer history, and recovery records.
-- `server/shop.lua` handles shop data and purchases.
-- `server/marketplace.lua` handles listings, cancellations, and purchases.
-- `server/social.lua` handles posts and comments.
-- `server/notifications.lua` handles notification retrieval and read state.
+The fast-food resource adds restaurants with menus, purchases, cashier NPCs, customer NPCs, food bags, and eating animations.
 
-## Computer UI modules
+### IPTV
 
-`index.html` now loads the modular UI files:
+The IPTV resource adds working TVs, channel switching, a channel-selection UI, remote requirement, and last-channel saving.
 
-```html
-<script src="state.js"></script>
-<script src="api.js"></script>
-<script src="render.js"></script>
-<script src="events.js"></script>
-```
+### Weather
 
-The former `script.js` is no longer loaded by the computer UI.
-
-- `state.js` stores shared client state and provides state setters.
-- `api.js` wraps NUI callbacks for bank, shop, marketplace, transfers, social, and notifications.
-- `render.js` renders lists and values, escapes HTML, and displays status messages.
-- `events.js` handles shop purchases, marketplace cancel and purchase actions, notification read actions, opening/closing the computer, and refreshing loaded data.
-
-## Known UI limitation
-
-`events.js` currently handles shop purchases, marketplace cancel/buy actions, and notification read actions. Bank transfers, marketplace listing creation, social posts, refresh buttons, tab switching, and the close button still need their handlers migrated from the former `script.js` before those controls are fully functional in the modular UI.
+The weather resource adds realistic weather, real-time clock sync, streetlights, house windows, TV-style window flicker, curtains, silhouettes, swimming pools, water effects, and dive ripples.
 
 ## Shared utilities
 
@@ -126,30 +155,18 @@ The former `script.js` is no longer loaded by the computer UI.
 
 Ensure `ensure whellco_utils` runs before `ensure whellco_computer` in `server.cfg`.
 
-## Computer marketplace metadata
-
-Marketplace listings now use server-side inventory metadata. When a player creates a listing, the server reads metadata from that player’s actual inventory item rather than trusting metadata sent by the client.
-
-If the item has no metadata, an empty metadata table is stored. This preserves useful metadata while preventing clients from injecting arbitrary listing metadata.
-
 ## Computer recovery tools
 
-Failed or interrupted marketplace operations can be marked as `recovery`. Administrators can inspect and resolve these records without directly editing the database.
+Failed or interrupted computer operations can be marked as `recovery`. Administrators can inspect and resolve these records without directly editing the database.
 
 | Command | Permission | Purpose |
 |---|---|---|
 | `/computerrecovery` | Admin | Lists the latest unresolved recovery records. |
 | `/computerresolve <id>` | Admin | Marks a recovery record as resolved. |
 
-## IPTV request timeout
+## IPTV configuration
 
-The IPTV resource uses a 10-second callback timeout. If an external playlist host is slow or unreachable, the TV returns an empty channel list after 10 seconds.
-
-FiveM’s `PerformHttpRequest` does not provide a reliable way to cancel an in-progress request. The timeout therefore prevents the UI callback from hanging, but the underlying request may still complete later. For production servers, use trusted playlist sources or an allowlist of playlist domains.
-
-## IPTV playlist security
-
-IPTV playlist requests are restricted to trusted domains. Add allowed hosts to `Config.TrustedPlaylistDomains`, for example:
+IPTV playlist requests are restricted to trusted domains. Add allowed hosts to `Config.TrustedPlaylistDomains`:
 
 ```lua
 Config.TrustedPlaylistDomains = {
@@ -160,13 +177,13 @@ Config.TrustedPlaylistDomains = {
 
 Parsed playlists are cached for `Config.PlaylistCacheSeconds`. This reduces repeated external requests while keeping channel data reasonably fresh.
 
-## Fast food cooldowns
+## Fast food configuration
 
 Fast-food purchases use a two-second per-player cooldown. The cooldown is recorded only after the restaurant, item, price, inventory, and payment checks succeed, so failed purchase attempts do not consume the cooldown.
 
 Cooldown entries are removed when a player disconnects.
 
-## Weather intervals
+## Weather configuration
 
 `Config.SyncInterval` controls how often the server sends time and weather updates, in seconds. `Config.WeatherChangeInterval` controls how often a new weather type is selected, also in seconds.
 
@@ -194,3 +211,5 @@ Both values must be at least 1. Invalid or non-positive values fall back to safe
 - Bank transfers create durable records before debiting senders.
 - Notification ownership is validated server-side.
 - IPTV playlist hosts are restricted to the configured trusted-domain allowlist.
+- IPTV playlist and channel URLs are checked against private and internal network ranges.
+- IPTV external requests have timeout and response-size limits.
