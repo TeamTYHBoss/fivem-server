@@ -1,14 +1,10 @@
-local function getIdentifier(source)
-    local identifier = GetPlayerIdentifierByType(source, 'license')
+local QBCore = exports['qb-core']:GetCoreObject()
 
-    if not identifier then
-        identifier = GetPlayerIdentifierByType(source, 'steam')
-    end
-
-    return identifier
+local function getQbPlayer(source)
+    return QBCore.Functions.GetPlayer(source)
 end
 
-local function getOrCreateAccount(identifier)
+local function getOrCreateAccount(citizenId)
     local account = MySQL.single.await(
         [[
             SELECT id, balance
@@ -16,7 +12,7 @@ local function getOrCreateAccount(identifier)
             WHERE character_id = ?
             LIMIT 1
         ]],
-        { identifier }
+        { citizenId }
     )
 
     if account then
@@ -29,7 +25,7 @@ local function getOrCreateAccount(identifier)
                 (character_id, balance)
             VALUES (?, ?)
         ]],
-        { identifier, Config.StartingBalance }
+        { citizenId, Config.StartingBalance }
     )
 
     return {
@@ -50,13 +46,13 @@ local function recordTransaction(accountId, transactionType, amount, balanceAfte
 end
 
 local function sendMenu(source)
-    local identifier = getIdentifier(source)
+    local Player = getQbPlayer(source)
 
-    if not identifier then
+    if not Player then
         return
     end
 
-    local account = getOrCreateAccount(identifier)
+    local account = getOrCreateAccount(Player.PlayerData.citizenid)
 
     local transactions = MySQL.query.await(
         [[
@@ -85,13 +81,24 @@ end)
 
 RegisterNetEvent('whellco_banking:deposit', function(amount)
     local source = source
-    local identifier = getIdentifier(source)
+    local Player = getQbPlayer(source)
 
-    if not identifier or not amount or amount <= 0 then
+    amount = math.floor(tonumber(amount) or 0)
+
+    if not Player or amount <= 0 then
         return
     end
 
-    local account = getOrCreateAccount(identifier)
+    if Player.Functions.GetMoney('cash') < amount then
+        TriggerClientEvent('QBCore:Notify', source, 'You do not have enough cash.', 'error')
+        return
+    end
+
+    if not Player.Functions.RemoveMoney('cash', amount, 'Bank deposit') then
+        return
+    end
+
+    local account = getOrCreateAccount(Player.PlayerData.citizenid)
 
     MySQL.query.await(
         [[
@@ -102,26 +109,26 @@ RegisterNetEvent('whellco_banking:deposit', function(amount)
         { amount, account.id }
     )
 
-    local newBalance = account.balance + amount
+    recordTransaction(account.id, 'deposit', amount, account.balance + amount)
 
-    recordTransaction(account.id, 'deposit', amount, newBalance)
-
-    TriggerClientEvent('whellco_banking:notify', source, ('Deposited £%s.'):format(amount))
+    TriggerClientEvent('QBCore:Notify', source, ('Deposited £%s.'):format(amount), 'success')
     sendMenu(source)
 end)
 
 RegisterNetEvent('whellco_banking:withdraw', function(amount)
     local source = source
-    local identifier = getIdentifier(source)
+    local Player = getQbPlayer(source)
 
-    if not identifier or not amount or amount <= 0 then
+    amount = math.floor(tonumber(amount) or 0)
+
+    if not Player or amount <= 0 then
         return
     end
 
-    local account = getOrCreateAccount(identifier)
+    local account = getOrCreateAccount(Player.PlayerData.citizenid)
 
     if account.balance < amount then
-        TriggerClientEvent('whellco_banking:notify', source, 'Insufficient funds.')
+        TriggerClientEvent('QBCore:Notify', source, 'Insufficient funds.', 'error')
         return
     end
 
@@ -134,39 +141,48 @@ RegisterNetEvent('whellco_banking:withdraw', function(amount)
         { amount, account.id }
     )
 
-    local newBalance = account.balance - amount
+    if not Player.Functions.AddMoney('cash', amount, 'Bank withdrawal') then
+        MySQL.query.await(
+            [[
+                UPDATE whellco_bank_accounts
+                SET balance = balance + ?
+                WHERE id = ?
+            ]],
+            { amount, account.id }
+        )
 
-    recordTransaction(account.id, 'withdrawal', amount, newBalance)
+        return
+    end
 
-    TriggerClientEvent('whellco_banking:notify', source, ('Withdrew £%s.'):format(amount))
+    recordTransaction(account.id, 'withdrawal', amount, account.balance - amount)
+
+    TriggerClientEvent('QBCore:Notify', source, ('Withdrew £%s.'):format(amount), 'success')
     sendMenu(source)
 end)
 
 RegisterNetEvent('whellco_banking:transfer', function(targetId, amount)
     local source = source
-    local identifier = getIdentifier(source)
+    local Player = getQbPlayer(source)
 
-    if not identifier or not targetId or not amount or amount <= 0 then
+    amount = math.floor(tonumber(amount) or 0)
+
+    if not Player or not targetId or amount <= 0 then
         return
     end
 
     local target = GetPlayerFromServerId(targetId)
+    local TargetPlayer = target > 0 and getQbPlayer(target) or nil
 
-    if target == 0 then
+    if not TargetPlayer then
+        TriggerClientEvent('QBCore:Notify', source, 'That player is not online.', 'error')
         return
     end
 
-    local targetIdentifier = getIdentifier(target)
-
-    if not targetIdentifier then
-        return
-    end
-
-    local senderAccount = getOrCreateAccount(identifier)
-    local targetAccount = getOrCreateAccount(targetIdentifier)
+    local senderAccount = getOrCreateAccount(Player.PlayerData.citizenid)
+    local targetAccount = getOrCreateAccount(TargetPlayer.PlayerData.citizenid)
 
     if senderAccount.balance < amount then
-        TriggerClientEvent('whellco_banking:notify', source, 'Insufficient funds.')
+        TriggerClientEvent('QBCore:Notify', source, 'Insufficient funds.', 'error')
         return
     end
 
@@ -189,13 +205,11 @@ RegisterNetEvent('whellco_banking:transfer', function(targetId, amount)
         }
     })
 
-    local senderBalance = senderAccount.balance - amount
-    local targetBalance = targetAccount.balance + amount
+    recordTransaction(senderAccount.id, 'transfer', amount, senderAccount.balance - amount)
+    recordTransaction(targetAccount.id, 'transfer', amount, targetAccount.balance + amount)
 
-    recordTransaction(senderAccount.id, 'transfer', amount, senderBalance)
-    recordTransaction(targetAccount.id, 'transfer', amount, targetBalance)
+    TriggerClientEvent('QBCore:Notify', source, ('Sent £%s.'):format(amount), 'success')
+    TriggerClientEvent('QBCore:Notify', target, ('Received £%s.'):format(amount), 'success')
 
-    TriggerClientEvent('whellco_banking:notify', source, ('Sent £%s.'):format(amount))
-    TriggerClientEvent('whellco_banking:notify', target, ('Received £%s.'):format(amount))
     sendMenu(source)
 end)

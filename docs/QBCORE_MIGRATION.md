@@ -64,7 +64,9 @@ Player.Functions.SetMetaData('whellco_level', value)
 - `whellco_spawn_selector`: migrated.
 - `whellco_wardrobe`: migrated.
 - `whellco_housing`: migrated.
-- Remaining WhellCo resources: use the compatibility bridge while being migrated in batches.
+- `whellco_banking`: migrated.
+- `whellco_vehicles`: migration SQL added; server logic migration pending.
+- Remaining vehicle and auction systems: batch migration pending.
 
 ## Compatibility bridge
 
@@ -80,22 +82,11 @@ Player.Functions.SetMetaData('whellco_level', value)
 
 New and migrated resources should use these exports or call QBCore directly.
 
-## Batch 1 migration
+## Batch 2 migration
 
-Run `resources/whellco_characters/sql/qbcore_migration.sql` once.
+Run `resources/whellco_banking/sql/qbcore_migration.sql` and `resources/whellco_vehicles/sql/qbcore_migration.sql` once.
 
-It converts existing character and player identifier values from FiveM license identifiers to QBCore citizen IDs.
-
-## Batch 1b migration
-
-- `whellco_spawn_selector` now validates the QBCore player before opening and returns the player’s citizen ID when a spawn is selected.
-- `whellco_wardrobe` now stores appearance in QBCore player metadata under `whellco_appearance`.
-- `whellco_wardrobe` can return a saved appearance through `whellco_wardrobe:requestAppearance`.
-
-## Batch 1c migration
-
-Run `resources/whellco_housing/sql/qbcore_migration.sql` once.
-
-- Property ownership and property keys now use QBCore citizen IDs.
-- Property purchases use QBCore cash through `Player.Functions.RemoveMoney`.
-- Housing notifications use QBCore notifications.
+- Bank accounts now use QBCore citizen IDs.
+- Deposits remove QBCore cash; withdrawals add QBCore cash.
+- Bank transfers validate both QBCore players and update citizen-keyed accounts.
+- Vehicle ownership migration converts `whellco_vehicles.owner_identifier` from license identifiers to QBCore citizen IDs.
