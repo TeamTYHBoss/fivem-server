@@ -1,3 +1,9 @@
+local QBCore = exports['qb-core']:GetCoreObject()
+
+local function getQbPlayer(source)
+    return QBCore.Functions.GetPlayer(source)
+end
+
 local function sendMenu(source, filter)
     filter = tostring(filter or 'all')
 
@@ -37,7 +43,7 @@ local function sendMenu(source, filter)
 end
 
 RegisterNetEvent('whellco_auction_exports:openMenu', function()
-    if not IsPlayerAceAllowed(source, Config.ExportPermission) then
+    if not QBCore.Functions.HasPermission(source, 'admin') then
         return
     end
 
@@ -49,7 +55,7 @@ RegisterNetEvent('whellco_auction_exports:closeMenu', function()
 end)
 
 RegisterNetEvent('whellco_auction_exports:filterExports', function(filter)
-    if not IsPlayerAceAllowed(source, Config.ExportPermission) then
+    if not QBCore.Functions.HasPermission(source, 'admin') then
         return
     end
 
@@ -58,8 +64,9 @@ end)
 
 RegisterNetEvent('whellco_auction_exports:exportAuction', function(auctionId, plate, sellerId, buyerId, finalPrice, status)
     local source = source
+    local Player = getQbPlayer(source)
 
-    if not IsPlayerAceAllowed(source, Config.ExportPermission) then
+    if not Player or not QBCore.Functions.HasPermission(source, 'admin') then
         return
     end
 
@@ -79,7 +86,7 @@ RegisterNetEvent('whellco_auction_exports:exportAuction', function(auctionId, pl
         { auctionId, plate, sellerId, buyerId, finalPrice or 0, status }
     )
 
-    TriggerClientEvent('whellco_auction_exports:notify', source, 'Auction exported.')
+    TriggerClientEvent('QBCore:Notify', source, 'Auction exported.', 'success')
 
     sendMenu(source, 'all')
 end)

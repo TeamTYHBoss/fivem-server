@@ -1,11 +1,7 @@
-local function getIdentifier(source)
-    local identifier = GetPlayerIdentifierByType(source, 'license')
+local QBCore = exports['qb-core']:GetCoreObject()
 
-    if not identifier then
-        identifier = GetPlayerIdentifierByType(source, 'steam')
-    end
-
-    return identifier
+local function getQbPlayer(source)
+    return QBCore.Functions.GetPlayer(source)
 end
 
 local function sendMenu(source)
@@ -26,7 +22,7 @@ local function sendMenu(source)
 end
 
 RegisterNetEvent('whellco_auction_audit:openMenu', function()
-    if not IsPlayerAceAllowed(source, Config.AuditPermission) then
+    if not QBCore.Functions.HasPermission(source, 'admin') then
         return
     end
 
@@ -39,14 +35,9 @@ end)
 
 RegisterNetEvent('whellco_auction_audit:recordAudit', function(auctionId, action, details)
     local source = source
+    local Player = getQbPlayer(source)
 
-    if not IsPlayerAceAllowed(source, Config.AuditPermission) then
-        return
-    end
-
-    local identifier = getIdentifier(source)
-
-    if not identifier then
+    if not Player or not QBCore.Functions.HasPermission(source, 'admin') then
         return
     end
 
@@ -63,10 +54,10 @@ RegisterNetEvent('whellco_auction_audit:recordAudit', function(auctionId, action
                 (auction_id, actor_id, action, details)
             VALUES (?, ?, ?, ?)
         ]],
-        { auctionId, identifier, action, details }
+        { auctionId, Player.PlayerData.citizenid, action, details }
     )
 
-    TriggerClientEvent('whellco_auction_audit:notify', source, ('Audit recorded: %s.'):format(Config.AuditActions[action]))
+    TriggerClientEvent('QBCore:Notify', source, ('Audit recorded: %s.'):format(Config.AuditActions[action]), 'success')
 
     sendMenu(source)
 end)

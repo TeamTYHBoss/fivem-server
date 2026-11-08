@@ -1,17 +1,13 @@
-local function getIdentifier(source)
-    local identifier = GetPlayerIdentifierByType(source, 'license')
+local QBCore = exports['qb-core']:GetCoreObject()
 
-    if not identifier then
-        identifier = GetPlayerIdentifierByType(source, 'steam')
-    end
-
-    return identifier
+local function getQbPlayer(source)
+    return QBCore.Functions.GetPlayer(source)
 end
 
 local function sendMenu(source)
-    local identifier = getIdentifier(source)
+    local Player = getQbPlayer(source)
 
-    if not identifier then
+    if not Player then
         return
     end
 
@@ -23,7 +19,7 @@ local function sendMenu(source)
             ORDER BY created_at DESC
             LIMIT 25
         ]],
-        { identifier }
+        { Player.PlayerData.citizenid }
     ) or {}
 
     TriggerClientEvent('whellco_auction_reports:openMenu', source, {
@@ -42,9 +38,9 @@ end)
 
 RegisterNetEvent('whellco_auction_reports:submitReport', function(auctionId, reason, details)
     local source = source
-    local identifier = getIdentifier(source)
+    local Player = getQbPlayer(source)
 
-    if not identifier then
+    if not Player then
         return
     end
 
@@ -70,10 +66,10 @@ RegisterNetEvent('whellco_auction_reports:submitReport', function(auctionId, rea
                 (auction_id, reporter_id, reason, details)
             VALUES (?, ?, ?, ?)
         ]],
-        { auctionId, identifier, reason, details }
+        { auctionId, Player.PlayerData.citizenid, reason, details }
     )
 
-    TriggerClientEvent('whellco_auction_reports:notify', source, 'Auction report submitted.')
+    TriggerClientEvent('QBCore:Notify', source, 'Auction report submitted.', 'success')
 
     sendMenu(source)
 end)

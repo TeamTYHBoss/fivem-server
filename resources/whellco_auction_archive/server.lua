@@ -1,3 +1,9 @@
+local QBCore = exports['qb-core']:GetCoreObject()
+
+local function getQbPlayer(source)
+    return QBCore.Functions.GetPlayer(source)
+end
+
 local function sendMenu(source, filter)
     filter = tostring(filter or 'all')
 
@@ -50,8 +56,9 @@ end)
 
 RegisterNetEvent('whellco_auction_archive:archiveAuction', function(auctionId, plate, sellerId, buyerId, finalPrice, status)
     local source = source
+    local Player = getQbPlayer(source)
 
-    if not IsPlayerAceAllowed(source, 'whellco.auction.moderate') then
+    if not Player or not QBCore.Functions.HasPermission(source, 'admin') then
         return
     end
 
@@ -71,7 +78,7 @@ RegisterNetEvent('whellco_auction_archive:archiveAuction', function(auctionId, p
         { auctionId, plate, sellerId, buyerId, finalPrice or 0, status }
     )
 
-    TriggerClientEvent('whellco_auction_archive:notify', source, 'Auction archived.')
+    TriggerClientEvent('QBCore:Notify', source, 'Auction archived.', 'success')
 
     sendMenu(source, 'all')
 end)

@@ -1,17 +1,13 @@
-local function getIdentifier(source)
-    local identifier = GetPlayerIdentifierByType(source, 'license')
+local QBCore = exports['qb-core']:GetCoreObject()
 
-    if not identifier then
-        identifier = GetPlayerIdentifierByType(source, 'steam')
-    end
-
-    return identifier
+local function getQbPlayer(source)
+    return QBCore.Functions.GetPlayer(source)
 end
 
 local function sendMenu(source)
-    local identifier = getIdentifier(source)
+    local Player = getQbPlayer(source)
 
-    if not identifier then
+    if not Player then
         return
     end
 
@@ -19,13 +15,11 @@ local function sendMenu(source)
         [[
             SELECT id, auction_id, recommendation_type, score, reason, created_at
             FROM whellco_auction_recommendations
-            WHERE character_id = (
-                SELECT character_id FROM whellco_players WHERE identifier = ? ORDER BY created_at DESC LIMIT 1
-            )
+            WHERE character_id = ?
             ORDER BY score DESC, created_at DESC
             LIMIT ?
         ]],
-        { identifier, Config.MaxRecommendations }
+        { Player.PlayerData.citizenid, Config.MaxRecommendations }
     ) or {}
 
     TriggerClientEvent('whellco_auction_recommendations:openMenu', source, {
@@ -44,65 +38,38 @@ end)
 
 RegisterNetEvent('whellco_auction_recommendations:generateRecommendations', function()
     local source = source
-    local identifier = getIdentifier(source)
+    local Player = getQbPlayer(source)
 
-    if not identifier then
+    if not Player then
         return
     end
 
-    local account = MySQL.single.await(
-        [[
-            SELECT character_id
-            FROM whellco_players
-            WHERE identifier = ?
-            ORDER BY created_at DESC
-            LIMIT 1
-        ]],
-        { identifier }
-    )
-
-    if not account then
-        return
-    end
+    local citizenId = Player.PlayerData.citizenid
 
     MySQL.query.await(
         [[
             DELETE FROM whellco_auction_recommendations
             WHERE character_id = ?
         ]],
-        { account.character_id }
+        { citizenId }
     )
 
-    local recommendations = {}
+    local index = 0
 
-    for index, recommendationType in ipairs(Config.RecommendationTypes) do
-        recommendations[#recommendations + 1] = {
-            character_id = account.character_id,
-            auction_id = index,
-            recommendation_type = recommendationType,
-            score = 100 - (index * 10),
-            reason = ('Recommended through %s.'):format(recommendationType)
-        }
-    end
+    for recommendationType in pairs(Config.RecommendationTypes) do
+        index = index + 1
 
-    for _, recommendation in ipairs(recommendations) do
         MySQL.insert.await(
             [[
                 INSERT INTO whellco_auction_recommendations
                     (character_id, auction_id, recommendation_type, score, reason)
                 VALUES (?, ?, ?, ?, ?)
             ]],
-            {
-                recommendation.character_id,
-                recommendation.auction_id,
-                recommendation.recommendation_type,
-                recommendation.score,
-                recommendation.reason
-            }
+            { citizenId, index, recommendationType, 100 - (index * 10), ('Recommended through %s.'):format(recommendationType) }
         )
     end
 
-    TriggerClientEvent('whellco_auction_recommendations:notify', source, 'Recommendations refreshed.')
+    TriggerClientEvent('QBCore:Notify', source, 'Recommendations refreshed.', 'success')
 
     sendMenu(source)
 end)

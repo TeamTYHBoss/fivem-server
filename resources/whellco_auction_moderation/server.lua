@@ -1,3 +1,9 @@
+local QBCore = exports['qb-core']:GetCoreObject()
+
+local function getQbPlayer(source)
+    return QBCore.Functions.GetPlayer(source)
+end
+
 local function sendMenu(source)
     local logs = MySQL.query.await(
         [[
@@ -15,7 +21,7 @@ local function sendMenu(source)
 end
 
 RegisterNetEvent('whellco_auction_moderation:openMenu', function()
-    if not IsPlayerAceAllowed(source, Config.ModeratorPermission) then
+    if not QBCore.Functions.HasPermission(source, 'admin') then
         return
     end
 
@@ -28,14 +34,9 @@ end)
 
 RegisterNetEvent('whellco_auction_moderation:moderateAuction', function(auctionId, action, note)
     local source = source
+    local Player = getQbPlayer(source)
 
-    if not IsPlayerAceAllowed(source, Config.ModeratorPermission) then
-        return
-    end
-
-    local identifier = GetPlayerIdentifierByType(source, 'license') or GetPlayerIdentifierByType(source, 'steam')
-
-    if not identifier then
+    if not Player or not QBCore.Functions.HasPermission(source, 'admin') then
         return
     end
 
@@ -52,10 +53,10 @@ RegisterNetEvent('whellco_auction_moderation:moderateAuction', function(auctionI
                 (auction_id, moderator_id, action, note)
             VALUES (?, ?, ?, ?)
         ]],
-        { auctionId, identifier, action, note }
+        { auctionId, Player.PlayerData.citizenid, action, note }
     )
 
-    TriggerClientEvent('whellco_auction_moderation:notify', source, ('Moderation action recorded: %s.'):format(Config.ModerationActions[action]))
+    TriggerClientEvent('QBCore:Notify', source, ('Moderation action recorded: %s.'):format(Config.ModerationActions[action]), 'success')
 
     sendMenu(source)
 end)

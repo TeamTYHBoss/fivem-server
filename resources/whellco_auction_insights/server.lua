@@ -1,12 +1,25 @@
+local QBCore = exports['qb-core']:GetCoreObject()
+
+local function getQbPlayer(source)
+    return QBCore.Functions.GetPlayer(source)
+end
+
 local function sendMenu(source)
+    local Player = getQbPlayer(source)
+
+    if not Player then
+        return
+    end
+
     local insights = MySQL.query.await(
         [[
             SELECT id, auction_id, category, insight, score, created_at
             FROM whellco_auction_insights
+            WHERE character_id = ?
             ORDER BY created_at DESC
             LIMIT ?
         ]],
-        { Config.MaxInsights }
+        { Player.PlayerData.citizenid, Config.MaxInsights }
     ) or {}
 
     TriggerClientEvent('whellco_auction_insights:openMenu', source, {
@@ -25,6 +38,11 @@ end)
 
 RegisterNetEvent('whellco_auction_insights:addInsight', function(auctionId, category, insight, score)
     local source = source
+    local Player = getQbPlayer(source)
+
+    if not Player then
+        return
+    end
 
     category = tostring(category or '')
     insight = tostring(insight or '')
@@ -51,7 +69,7 @@ RegisterNetEvent('whellco_auction_insights:addInsight', function(auctionId, cate
         { auctionId, category, insight, score }
     )
 
-    TriggerClientEvent('whellco_auction_insights:notify', source, 'Insight added.')
+    TriggerClientEvent('QBCore:Notify', source, 'Insight added.', 'success')
 
     sendMenu(source)
 end)

@@ -1,3 +1,9 @@
+local QBCore = exports['qb-core']:GetCoreObject()
+
+local function getQbPlayer(source)
+    return QBCore.Functions.GetPlayer(source)
+end
+
 local function sendMenu(source, filter)
     filter = tostring(filter or 'all')
 
@@ -37,7 +43,7 @@ local function sendMenu(source, filter)
 end
 
 RegisterNetEvent('whellco_auction_insights_dashboard:openMenu', function()
-    if not IsPlayerAceAllowed(source, Config.DashboardPermission) then
+    if not QBCore.Functions.HasPermission(source, 'admin') then
         return
     end
 
@@ -49,7 +55,7 @@ RegisterNetEvent('whellco_auction_insights_dashboard:closeMenu', function()
 end)
 
 RegisterNetEvent('whellco_auction_insights_dashboard:filterDashboard', function(filter)
-    if not IsPlayerAceAllowed(source, Config.DashboardPermission) then
+    if not QBCore.Functions.HasPermission(source, 'admin') then
         return
     end
 
@@ -58,8 +64,9 @@ end)
 
 RegisterNetEvent('whellco_auction_insights_dashboard:recordInsight', function(auctionId, category, metric, value)
     local source = source
+    local Player = getQbPlayer(source)
 
-    if not IsPlayerAceAllowed(source, Config.DashboardPermission) then
+    if not Player or not QBCore.Functions.HasPermission(source, 'admin') then
         return
     end
 
@@ -87,7 +94,7 @@ RegisterNetEvent('whellco_auction_insights_dashboard:recordInsight', function(au
         { auctionId, category, metric, value }
     )
 
-    TriggerClientEvent('whellco_auction_insights_dashboard:notify', source, 'Dashboard insight recorded.')
+    TriggerClientEvent('QBCore:Notify', source, 'Dashboard insight recorded.', 'success')
 
     sendMenu(source, category)
 end)
