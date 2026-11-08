@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS whellco_fire_sprinklers (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    staff_citizenid VARCHAR(50) NOT NULL,
+    zone_label VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    INDEX staff_idx (staff_citizenid),
+    INDEX created_idx (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
