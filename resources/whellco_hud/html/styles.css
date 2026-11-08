@@ -1,0 +1,56 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    color: white;
+    overflow: hidden;
+    user-select: none;
+}
+
+#hud {
+    position: fixed;
+    left: 25px;
+    bottom: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+#hud.hidden {
+    display: none;
+}
+
+.bar {
+    position: relative;
+    width: 220px;
+    height: 16px;
+    background: rgba(0, 0, 0, 0.55);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.bar .fill {
+    height: 100%;
+    width: 0%;
+    transition: width 0.25s ease;
+}
+
+.bar span {
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+}
+
+.health .fill { background: #22c55e; }
+.armor .fill { background: #3b82f6; }
+.stamina .fill { background: #f59e0b; }
+.hunger .fill { background: #eab308; }
+.thirst .fill { background: #38bdf8; }
+.stress .fill { background: #ef4444; }
+.oxygen .fill { background: #06b6d4; }
