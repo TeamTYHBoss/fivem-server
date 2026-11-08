@@ -47,12 +47,22 @@ Config.RateLimits = {
 }
 ```
 
-- Each player may send at most 8 requests in any rolling 5-minute period.
-- Each player must wait at least 8 seconds between requests.
-- The server allows at most 30 requests in any rolling 60-second period.
-- No more than 3 provider requests run concurrently.
-- The queue holds up to 25 waiting requests.
-- Requests older than 20 seconds are removed from the queue and the player receives a timeout notification.
+## Admin queue inspection
+
+Administrators can inspect the AI dialogue queue with:
+
+```text
+/aiqueue
+```
+
+The command shows:
+
+- Current queued requests and queue capacity.
+- Active provider requests and maximum concurrency.
+- Recent server-wide requests and the rolling request limit.
+- Up to 10 queued jobs, including source ID, NPC ID, and wait time.
+
+Server console administrators can also run `/aiqueue`; the output is printed to the console.
 
 ## Request queue
 

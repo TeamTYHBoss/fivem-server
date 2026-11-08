@@ -79,20 +79,24 @@ local function processQueue()
     end
 end
 
-local function enqueue(source, npc, prompt, callback)
+local function enqueue(source, npc, prompt, npcId)
     if #queue >= Config.RateLimits.queueMaxSize then
         TriggerClientEvent('QBCore:Notify', source, 'AI dialogue queue is full. Please try again shortly.', 'error')
         return
     end
 
-    queue[#queue + 1] = {
+    local job = {
         source = source,
+        npcId = npcId,
         npc = npc,
         prompt = prompt,
-        callback = callback,
-        queuedAt = os.time()
+        queuedAt = os.time(),
+        execute = function(done)
+            dispatch(job, done)
+        end
     }
 
+    queue[#queue + 1] = job
     processQueue()
 end
 
@@ -247,22 +251,56 @@ RegisterNetEvent('whellco_ai_dialogue:send', function(npcId, message)
     local npc = Config.AllowedNpcs[npcId]
     local prompt = ('Player: %s\nNPC: %s'):format(Player.PlayerData.charinfo.firstname, message)
 
-    enqueue(source, npc, prompt, function()
-        -- Placeholder to retain a stable queue interface.
-    end)
+    enqueue(source, npc, prompt, npcId)
+end)
 
-    -- Dispatch immediately through the queue-controlled worker.
-    local job = queue[#queue]
+RegisterCommand('aiqueue', function(source)
+    if source > 0 then
+        local Player = QBCore.Functions.GetPlayer(source)
 
-    if job then
-        job.npcId = npcId
-        job.execute = function(done)
-            dispatch(job, done)
+        if not Player or not QBCore.Functions.HasPermission(source, 'admin') then
+            TriggerClientEvent('QBCore:Notify', source, 'You do not have permission.', 'error')
+            return
+        end
+    end
+
+    local now = os.time()
+    local lines = {
+        ('AI Dialogue Queue Status'),
+        ('Queued: %d/%d'):format(#queue, Config.RateLimits.queueMaxSize),
+        ('Active provider requests: %d/%d'):format(activeRequests, Config.RateLimits.globalMaxConcurrent),
+        ('Recent server requests: %d/%d in %d seconds'):format(
+            #pruneTimestamps(globalRequests, Config.RateLimits.globalWindowSeconds),
+            Config.RateLimits.globalMaxRequests,
+            Config.RateLimits.globalWindowSeconds
+        )
+    }
+
+    for index, job in ipairs(queue) do
+        if index > 10 then
+            lines[#lines + 1] = ('... and %d more queued requests'):format(#queue - 10)
+            break
         end
 
-        processQueue()
+        lines[#lines + 1] = ('%d. source=%d npc=%s waiting=%ds'):format(
+            index,
+            job.source,
+            job.npcId or 'unknown',
+            now - job.queuedAt
+        )
     end
-end)
+
+    local output = table.concat(lines, '\n')
+
+    if source > 0 then
+        TriggerClientEvent('chat:addMessage', source, {
+            color = { 255, 255, 255 },
+            args = { 'AI Queue', output }
+        })
+    else
+        print(output)
+    end
+end, false)
 
 CreateThread(function()
     while true do
