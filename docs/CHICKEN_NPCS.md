@@ -43,6 +43,8 @@
 - Chickens shake dry after calming down.
 - Chickens shake every 3 seconds while wet.
 - Water droplets fly off when the chicken shakes.
+- Chickens preen their feathers after drying.
+- Preen effects repeat every 1 second after drying.
 - Chickens calm down when the player is more than 6 metres away.
 - Calm chickens return to normal wandering.
 
@@ -72,6 +74,7 @@
 | `shakeInterval` | Time between shake effects |
 | `shiverInterval` | Time between shiver movements |
 | `ruffleInterval` | Time between ruffle effects |
+| `preenInterval` | Time between preen effects |
 | `waterDropletCount` | Number of water droplets per shake |
 | `counters` | Counter locations that trigger flour |
 | `sinks` | Sink locations that trigger wet footprints |
