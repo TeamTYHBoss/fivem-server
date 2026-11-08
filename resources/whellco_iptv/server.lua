@@ -2,18 +2,47 @@ local QBCore = exports['qb-core']:GetCoreObject()
 local MySQL = exports.oxmysql
 
 local MAX_PLAYLIST_LENGTH = 2048
+local MAX_RESPONSE_SIZE = 1048576
 local MAX_CHANNELS = 500
 local MAX_CHANNEL_NUMBER = 1000
+local REQUEST_TIMEOUT = 10000
 
 local function notify(source, message, kind)
     TriggerClientEvent('QBCore:Notify', source, message, kind or 'primary', 5000)
 end
 
 local function isValidPlaylistUrl(url)
-    return type(url) == 'string'
-        and #url > 0
-        and #url <= MAX_PLAYLIST_LENGTH
-        and url:match('^https?://') ~= nil
+    if type(url) ~= 'string' or #url == 0 or #url > MAX_PLAYLIST_LENGTH then
+        return false
+    end
+
+    if not url:match('^https?://') then
+        return false
+    end
+
+    local host = url:match('^https?://([^/:?#]+)')
+
+    if not host then
+        return false
+    end
+
+    host = host:lower()
+
+    if host == 'localhost'
+        or host:match('^127%.%d+%.%d+%.%d+$')
+        or host:match('^10%.%d+%.%d+%.%d+$')
+        or host:match('^192%.168%.%d+%.%d+$')
+        or host:match('^172%.1[6-9]%.%d+%.%d+$')
+        or host:match('^172%.2[0-9]%.%d+%.%d+$')
+        or host:match('^172%.3[01]%.%d+%.%d+$') then
+        return false
+    end
+
+    return true
+end
+
+local function isValidChannelUrl(url)
+    return isValidPlaylistUrl(url)
 end
 
 local function parseM3U(content)
@@ -22,24 +51,28 @@ local function parseM3U(content)
     for line in content:gmatch('[^\r\n]+') do
         local name = line:match('#EXTINF:-1[^,]*,(.*)')
 
-        if name then
-            if #channels >= MAX_CHANNELS then
-                break
-            end
-
+        if name and #channels < MAX_CHANNELS then
             channels[#channels + 1] = {
                 name = name
             }
-        else
+        elseif #channels > 0 then
             local url = line:match('^https?://.*')
 
-            if url and #channels > 0 then
+            if url and isValidChannelUrl(url) then
                 channels[#channels].url = url
             end
         end
     end
 
-    return channels
+    local validChannels = {}
+
+    for _, channel in ipairs(channels) do
+        if channel.name and channel.url then
+            validChannels[#validChannels + 1] = channel
+        end
+    end
+
+    return validChannels
 end
 
 QBCore.Functions.CreateCallback('whellco_iptv:getChannels', function(source, cb, playlistUrl)
@@ -48,8 +81,23 @@ QBCore.Functions.CreateCallback('whellco_iptv:getChannels', function(source, cb,
         return
     end
 
+    local responded = false
+
+    SetTimeout(REQUEST_TIMEOUT, function()
+        if not responded then
+            responded = true
+            cb({ channels = {} })
+        end
+    end)
+
     PerformHttpRequest(playlistUrl, function(status, body)
-        if status ~= 200 or type(body) ~= 'string' or #body > 1048576 then
+        if responded then
+            return
+        end
+
+        responded = true
+
+        if status ~= 200 or type(body) ~= 'string' or #body > MAX_RESPONSE_SIZE then
             cb({ channels = {} })
             return
         end

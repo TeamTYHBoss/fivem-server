@@ -1,6 +1,9 @@
 local QBCore = exports['qb-core']:GetCoreObject()
 local MySQL = exports.oxmysql
 
+local PURCHASE_COOLDOWN = 2000
+local purchaseCooldowns = {}
+
 local function notify(source, message, kind)
     TriggerClientEvent('QBCore:Notify', source, message, kind or 'primary', 5000)
 end
@@ -12,7 +15,11 @@ local function isAdmin(Player)
 end
 
 local function getRestaurant(id)
-    for _, restaurant in ipairs(Config.Restaurants) do
+    if type(id) ~= 'string' then
+        return nil
+    end
+
+    for _, restaurant in ipairs(Config.Restaurants or {}) do
         if restaurant.id == id then
             return restaurant
         end
@@ -22,9 +29,13 @@ local function getRestaurant(id)
 end
 
 local function canBuy(restaurantId, itemId)
-    local item = Config.Menu[itemId]
+    if type(itemId) ~= 'string' then
+        return false
+    end
 
-    if not item then
+    local item = Config.Menu and Config.Menu[itemId]
+
+    if not item or type(item.restaurants) ~= 'table' then
         return false
     end
 
@@ -37,20 +48,29 @@ local function canBuy(restaurantId, itemId)
     return false
 end
 
+local function isOnCooldown(source)
+    local now = GetGameTimer()
+    local lastPurchase = purchaseCooldowns[source] or 0
+
+    return now - lastPurchase < PURCHASE_COOLDOWN
+end
+
 RegisterNetEvent('whellco_fast_food:buy', function(restaurantId, itemId)
     local source = source
     local Player = QBCore.Functions.GetPlayer(source)
+
+    if not Player or type(restaurantId) ~= 'string' or type(itemId) ~= 'string' then
+        return
+    end
+
+    if isOnCooldown(source) then
+        notify(source, 'Please wait before making another purchase.', 'error')
+        return
+    end
+
     local restaurant = getRestaurant(restaurantId)
 
-    if not Player or not restaurant then
-        return
-    end
-
-    if type(restaurantId) ~= 'string' or type(itemId) ~= 'string' then
-        return
-    end
-
-    if not canBuy(restaurantId, itemId) then
+    if not restaurant or not canBuy(restaurantId, itemId) then
         notify(source, 'This item is not available here.', 'error')
         return
     end
@@ -61,6 +81,8 @@ RegisterNetEvent('whellco_fast_food:buy', function(restaurantId, itemId)
         notify(source, 'You do not have enough cash.', 'error')
         return
     end
+
+    purchaseCooldowns[source] = GetGameTimer()
 
     if not Player.Functions.AddItem(itemId, 1) then
         notify(source, 'Your inventory is full.', 'error')
@@ -82,7 +104,12 @@ RegisterNetEvent('whellco_fast_food:buy', function(restaurantId, itemId)
             restaurant.id,
             itemId,
             item.price
-        }
+        },
+        function(insertId)
+            if not insertId then
+                print(('[whellco_fast_food] Failed to log purchase for %s'):format(Player.PlayerData.citizenid))
+            end
+        end
     )
 
     TriggerClientEvent('whellco_fast_food:handOver', source, itemId)
@@ -92,9 +119,14 @@ end)
 RegisterNetEvent('whellco_fast_food:eat', function(itemId)
     local source = source
     local Player = QBCore.Functions.GetPlayer(source)
-    local item = Config.Menu[itemId]
 
-    if not Player or type(itemId) ~= 'string' or not item then
+    if not Player or type(itemId) ~= 'string' then
+        return
+    end
+
+    local item = Config.Menu and Config.Menu[itemId]
+
+    if not item then
         return
     end
 

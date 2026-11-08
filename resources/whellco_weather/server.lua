@@ -1,5 +1,6 @@
 local QBCore = exports['qb-core']:GetCoreObject()
 
+local MIN_SYNC_INTERVAL = 1000
 local currentWeather = 'CLEAR'
 
 local function notify(source, message, kind)
@@ -58,19 +59,30 @@ local function syncTime()
     TriggerClientEvent('whellco_weather:setNight', -1, isNight)
 end
 
+local function getPositiveInterval(value, fallback)
+    local interval = tonumber(value)
+
+    if not interval or interval < 1 then
+        return fallback
+    end
+
+    return math.floor(interval)
+end
+
 CreateThread(function()
-    local weatherTimer = 0
-    local weatherChangeInterval = Config.WeatherChangeInterval or 300
+    local syncInterval = getPositiveInterval(Config.SyncInterval, 60)
+    local weatherChangeInterval = getPositiveInterval(Config.WeatherChangeInterval, 300)
+    local elapsedSeconds = 0
 
     while true do
         updateWeather()
         syncTime()
 
         Wait(1000)
-        weatherTimer += 1
+        elapsedSeconds += 1
 
-        if weatherTimer >= weatherChangeInterval then
-            weatherTimer = 0
+        if elapsedSeconds >= weatherChangeInterval then
+            elapsedSeconds = 0
         end
     end
 end)
