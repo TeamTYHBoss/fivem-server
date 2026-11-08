@@ -15,6 +15,54 @@ local function isAdmin(Player)
     return job and Config.AdminJobs[job.name]
 end
 
+local function isWhitelistedLocation(coords)
+    local whitelist = Config.FalsePositiveWhitelist.Teleport
+
+    for _, location in ipairs(whitelist.locations) do
+        if #(coords - location) <= whitelist.radius then
+            return true
+        end
+    end
+
+    return false
+end
+
+local function isWhitelistedMoney(context, amount)
+    local whitelist = Config.FalsePositiveWhitelist.Money
+
+    for _, allowedContext in ipairs(whitelist.contexts) do
+        if context == allowedContext and amount <= whitelist.maxAmount then
+            return true
+        end
+    end
+
+    return false
+end
+
+local function isWhitelistedItem(itemName, amount)
+    local whitelist = Config.FalsePositiveWhitelist.Items
+
+    for _, allowedItem in ipairs(whitelist.items) do
+        if itemName == allowedItem and amount <= whitelist.maxAmount then
+            return true
+        end
+    end
+
+    return false
+end
+
+local function isWhitelistedVehicle(model)
+    local whitelist = Config.FalsePositiveWhitelist.Vehicles
+
+    for _, allowedModel in ipairs(whitelist.models) do
+        if model == allowedModel then
+            return true
+        end
+    end
+
+    return false
+end
+
 local function addScore(source, amount, reason)
     playerScores[source] = (playerScores[source] or 0) + amount
 
@@ -76,6 +124,15 @@ RegisterNetEvent('whellco_anticheat:report', function(detection, details)
         return
     end
 
+    if detection == 'Teleport' then
+        local playerPed = GetPlayerPed(source)
+        local coords = GetEntityCoords(playerPed)
+
+        if isWhitelistedLocation(coords) then
+            return
+        end
+    end
+
     addScore(source, 10, detection)
 end)
 
@@ -90,6 +147,10 @@ RegisterNetEvent('whellco_anticheat:money', function(amount, context)
     amount = tonumber(amount) or 0
 
     if amount <= 0 then
+        return
+    end
+
+    if isWhitelistedMoney(context, amount) then
         return
     end
 
@@ -111,6 +172,10 @@ RegisterNetEvent('whellco_anticheat:vehicle', function(model)
         return
     end
 
+    if isWhitelistedVehicle(model) then
+        return
+    end
+
     if isRateLimited(source, 'vehicle', baseline.vehiclePerMinute) then
         addScore(source, 20, 'vehicle-spam')
     end
@@ -125,6 +190,10 @@ RegisterNetEvent('whellco_anticheat:item', function(itemName, amount)
     end
 
     amount = tonumber(amount) or 0
+
+    if isWhitelistedItem(itemName, amount) then
+        return
+    end
 
     if isRateLimited(source, 'item', baseline.itemPerMinute) then
         addScore(source, 20, 'item-spam')

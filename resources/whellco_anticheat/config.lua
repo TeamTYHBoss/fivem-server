@@ -39,6 +39,48 @@ Config.Detection = {
     Godmode = true
 }
 
+-- Whitelisted detections are ignored to prevent common false positives.
+-- Use narrowly and review regularly; do not whitelist broad exploit categories.
+Config.FalsePositiveWhitelist = {
+    Teleport = {
+        -- Examples: interiors, elevators, job teleports, and scripted transitions
+        locations = {
+            vector3(127.3, -1299.9, 29.3),
+            vector3(950.0, 50.0, 70.0),
+            vector3(950.0, 60.0, 70.0),
+            vector3(950.0, 70.0, 70.0)
+        },
+        radius = 25.0
+    },
+    Money = {
+        -- Legitimate high-value transactions should be explicitly allowlisted.
+        contexts = {
+            'salary',
+            'business-payout',
+            'bank-transfer'
+        },
+        maxAmount = 250000
+    },
+    Items = {
+        -- Common legitimate item grants
+        items = {
+            'water_bottle',
+            'coffee',
+            'repairkit',
+            'lockpick'
+        },
+        maxAmount = 50
+    },
+    Vehicles = {
+        -- Job or scripted vehicle models that may spawn repeatedly
+        models = {
+            'police',
+            'ambulance',
+            'taxi'
+        }
+    }
+}
+
 Config.AdminJobs = {
     'admin',
     'manager'

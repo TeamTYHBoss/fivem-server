@@ -23,6 +23,16 @@ Run:
 source database/whellco_anticheat.sql
 ```
 
+## False-positive whitelist
+
+The whitelist prevents common legitimate triggers from creating anti-cheat penalties.
+
+- Teleport whitelist: scripted locations and nearby transitions.
+- Money whitelist: salary, business payouts, and bank transfers up to a configured limit.
+- Item whitelist: common legitimate items up to a configured amount.
+- Vehicle whitelist: job or scripted vehicle models.
+- Whitelisted events are ignored before scoring and enforcement.
+
 ## Adaptive learning
 
 - Adaptive thresholds start conservative.
@@ -69,6 +79,7 @@ View anti-cheat information:
 
 - Detection and enforcement run server-side.
 - Client reports are treated as signals, not proof.
+- Whitelists are narrowly scoped and should be reviewed regularly.
 - Automatic permanent bans are enabled by default.
 - Permanent bans require a score of 100 or higher.
 - Audit trails store detection, score, and case details.
