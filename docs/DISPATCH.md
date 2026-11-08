@@ -1,6 +1,6 @@
 # Emergency Dispatch Notifications
 
-`whellco_dispatch` provides QBCore-native dispatch notifications for police, fire, and EMS emergency calls.
+`whellco_dispatch` provides QBCore-native dispatch notifications, GPS waypoint routing, and emergency-call routing for police, fire, and EMS.
 
 ## Startup order
 
@@ -11,24 +11,24 @@ ensure whellco_qbcore
 ensure whellco_dispatch
 ```
 
-## QBCore integration
+## GPS routing
 
-- Player identity uses `QBCore.Functions.GetPlayer(source)`.
-- Eligible responders are selected through `QBCore.Functions.GetQBCorePlayers()`.
-- Job filtering uses `Player.PlayerData.job.name`.
-- Notifications use `QBCore.Functions.Notify`.
-- The resource declares `qb-core` as a dependency.
+```lua
+Config.GpsRouting = {
+    enabled = true,
+    autoRouteHighPriority = true,
+    routeTimeoutSeconds = 180,
+    waypointColor = 38,
+    clearWaypointOnArrival = true,
+    arrivalDistance = 25.0
+}
+```
 
-## Call types
-
-| Call type | Responders | Priority |
-|---|---|---:|
-| `officer_down` | Police | 3 |
-| `structure_fire` | Fire Department | 3 |
-| `medical_emergency` | EMS | 3 |
-| `vehicle_theft` | Police | 2 |
-| `robbery` | Police | 3 |
-| `traffic_collision` | Police and EMS | 1 |
+- High-priority calls automatically set a GPS waypoint.
+- Players can manually set a route with `/dispatchroute [call_id]`.
+- Routes expire after 180 seconds.
+- Routes clear automatically when the player comes within 25 metres.
+- Players can clear all active routes with `/dispatchclearroute`.
 
 ## Commands
 
@@ -40,26 +40,36 @@ Send a dispatch call:
 /dispatch structure_fire large fire at the docks
 ```
 
+Set a GPS route:
+
+```text
+/dispatchroute 1
+```
+
+Clear all active GPS routes:
+
+```text
+/dispatchclearroute
+```
+
 Clear a dispatch call:
 
 ```text
 /dispatchclear 1
 ```
 
-## Features
+## QBCore integration
 
-- QBCore job-based dispatch routing.
-- Per-call cooldown to prevent spam.
-- Map blips with configurable sprite and colour.
-- Automatic blip cleanup after 120 seconds.
-- Emergency audio cues.
-- Server-side call validation.
-- Configurable call types, responder jobs, priorities, and sounds.
+- Player identity uses `QBCore.Functions.GetPlayer(source)`.
+- Eligible responders are selected through `QBCore.Functions.GetQBCorePlayers()`.
+- Job filtering uses `Player.PlayerData.job.name`.
+- Notifications use `QBCore.Functions.Notify`.
+- The resource declares `qb-core` as a dependency.
 
 ## Security
 
 - Dispatch calls are validated server-side.
+- GPS routes are only available to players whose QBCore job is eligible for the call.
 - Call details are limited to 180 characters.
 - Players can only clear calls assigned to their QBCore job.
 - The dispatch cooldown prevents repeated calls from the same player.
-- Blips are automatically removed after their configured lifetime.

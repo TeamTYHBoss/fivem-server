@@ -1,6 +1,7 @@
 local QBCore = exports['qb-core']:GetCoreObject()
 
 local activeBlips = {}
+local activeRoutes = {}
 
 local function createBlip(call, callConfig)
     if not call.coords then
@@ -26,6 +27,27 @@ local function createBlip(call, callConfig)
     end)
 end
 
+local function startRoute(call)
+    if not Config.GpsRouting.enabled or not call.coords then
+        return
+    end
+
+    SetNewWaypoint(call.coords.x, call.coords.y)
+
+    activeRoutes[call.id] = {
+        coords = call.coords,
+        startedAt = GetGameTimer(),
+        timeoutMs = (Config.GpsRouting.routeTimeoutSeconds or 180) * 1000
+    }
+end
+
+local function clearRoute(callId)
+    if activeRoutes[callId] then
+        DeleteWaypoint()
+        activeRoutes[callId] = nil
+    end
+end
+
 RegisterNetEvent('whellco_dispatch:receiveCall', function(call, settings)
     if not call then
         return
@@ -41,6 +63,24 @@ RegisterNetEvent('whellco_dispatch:receiveCall', function(call, settings)
 
     playSoundFrontend(-1, job.sound or 'CHECKPOINT_PERFECT', job.soundSet or 'HUD_MINI_GAME_SOUNDSET', true)
     createBlip(call, settings)
+
+    local shouldRoute = Config.GpsRouting.autoRouteHighPriority and (call.priority or 0) >= 3
+
+    if shouldRoute then
+        startRoute(call)
+    end
+end)
+
+RegisterNetEvent('whellco_dispatch:setRoute', function(callId)
+    local call = activeRoutes[callId]
+
+    if not call then
+        QBCore.Functions.Notify('No active GPS route for that call.', 'error')
+        return
+    end
+
+    SetNewWaypoint(call.coords.x, call.coords.y)
+    QBCore.Functions.Notify('GPS route set.', 'success')
 end)
 
 RegisterNetEvent('whellco_dispatch:clearCall', function(callId)
@@ -48,27 +88,53 @@ RegisterNetEvent('whellco_dispatch:clearCall', function(callId)
         RemoveBlip(activeBlips[callId])
         activeBlips[callId] = nil
     end
+
+    clearRoute(callId)
 end)
 
-RegisterCommand('dispatch', function(_, args)
-    local callType = args[1]
-    local details = table.concat(args, ' ', 2)
-
-    if not callType then
-        QBCore.Functions.Notify('Usage: /dispatch [call_type] [details]', 'error')
-        return
-    end
-
-    TriggerServerEvent('whellco_dispatch:sendCall', callType, details)
-end, false)
-
-RegisterCommand('dispatchclear', function(_, args)
+RegisterCommand('dispatchroute', function(_, args)
     local callId = tonumber(args[1])
 
     if not callId then
-        QBCore.Functions.Notify('Usage: /dispatchclear [call_id]', 'error')
+        QBCore.Functions.Notify('Usage: /dispatchroute [call_id]', 'error')
         return
     end
 
-    TriggerServerEvent('whellco_dispatch:clearCall', callId)
+    TriggerServerEvent('whellco_dispatch:requestRoute', callId)
 end, false)
+
+RegisterCommand('dispatchclearroute', function()
+    for callId in pairs(activeRoutes) do
+        clearRoute(callId)
+    end
+
+    QBCore.Functions.Notify('All dispatch GPS routes cleared.', 'success')
+end, false)
+
+CreateThread(function()
+    while true do
+        local sleep = 1000
+
+        if next(activeRoutes) then
+            sleep = 1000
+            local playerPed = PlayerPedId()
+            local coords = GetEntityCoords(playerPed)
+            local now = GetGameTimer()
+
+            for callId, route in pairs(activeRoutes) do
+                if now - route.startedAt > route.timeoutMs then
+                    clearRoute(callId)
+                elseif Config.GpsRouting.clearWaypointOnArrival then
+                    local distance = #(coords - route.coords)
+
+                    if distance <= (Config.GpsRouting.arrivalDistance or 25.0) then
+                        clearRoute(callId)
+                        QBCore.Functions.Notify('Arrived at dispatch location.', 'success')
+                    end
+                end
+            end
+        end
+
+        Wait(sleep)
+    end
+end)

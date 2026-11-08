@@ -80,6 +80,27 @@ RegisterNetEvent('whellco_dispatch:sendCall', function(callType, details)
     end
 end)
 
+RegisterNetEvent('whellco_dispatch:requestRoute', function(callId)
+    local source = source
+    local Player = QBCore.Functions.GetPlayer(source)
+    local call = activeCalls[callId]
+
+    if not Player or not call then
+        TriggerClientEvent('QBCore:Notify', source, 'Dispatch call not found.', 'error')
+        return
+    end
+
+    local job = Player.PlayerData.job
+    local callConfig = Config.CallTypes[call.type]
+
+    if not job or not callConfig or not callConfig.jobs[job.name] then
+        TriggerClientEvent('QBCore:Notify', source, 'You do not have access to this dispatch route.', 'error')
+        return
+    end
+
+    TriggerClientEvent('whellco_dispatch:setRoute', source, callId)
+end)
+
 RegisterNetEvent('whellco_dispatch:clearCall', function(callId)
     local source = source
     local Player = QBCore.Functions.GetPlayer(source)

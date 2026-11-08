@@ -75,3 +75,12 @@ Config.NotificationDuration = 10000
 Config.MaxActiveBlips = 20
 Config.BlipLifetimeSeconds = 120
 Config.CooldownSeconds = 5
+
+Config.GpsRouting = {
+    enabled = true,
+    autoRouteHighPriority = true,
+    routeTimeoutSeconds = 180,
+    waypointColor = 38,
+    clearWaypointOnArrival = true,
+    arrivalDistance = 25.0
+}
