@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Dynamic Radio Static</title>
+</head>
+<body>
+    <audio id="static-audio" loop preload="auto">
+        <source src="static.mp3" type="audio/mpeg">
+    </audio>
+    <script>
+        window.addEventListener('message', function(event) {
+            const data = event.data || {};
+
+            if (data.action === 'updateStatic') {
+                const audio = document.getElementById('static-audio');
+                audio.volume = Math.max(0, Math.min(1, data.volume));
+            }
+        });
+    </script>
+</body>
+</html>
