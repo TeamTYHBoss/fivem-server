@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS whellco_auction_recommendations (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    character_id INT UNSIGNED NOT NULL,
+    auction_id INT UNSIGNED NOT NULL,
+    recommendation_type VARCHAR(24) NOT NULL,
+    score DECIMAL(5, 2) NOT NULL DEFAULT 0,
+    reason VARCHAR(255) NOT NULL DEFAULT '',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
