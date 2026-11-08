@@ -1,8 +1,6 @@
 # Third Eye Interaction System
 
-`whellco_ox_target` provides a QBCore-compatible third-eye interaction layer using `ox_target`.
-
-It replaces static text prompts with raycast-based interactions for models, vehicles, peds, and zones.
+`whellco_ox_target` provides a QBCore-compatible third-eye interaction layer using `ox_target`, with visual feedback, icons, highlight markers, and audio cues.
 
 ## Requirements
 
@@ -12,6 +10,39 @@ ensure oxmysql
 ensure ox_target
 ensure whellco_ox_target
 ```
+
+## Visual feedback
+
+```lua
+Config.VisualFeedback = {
+    enabled = true,
+    highlightColor = { 0, 150, 255 },
+    highlightAlpha = 120,
+    highlightDistance = 2.5,
+    successSound = 'SELECT',
+    successSoundSet = 'HUD_FRONTEND_DEFAULT_SOUNDSET',
+    errorSound = 'ERROR',
+    errorSoundSet = 'HUD_FRONTEND_DEFAULT_SOUNDSET'
+}
+```
+
+Each target can override its feedback icon, colour, and sound:
+
+```lua
+feedback = {
+    icon = 'fa-solid fa-shield-halved',
+    color = '#0096ff',
+    sound = 'SELECT'
+}
+```
+
+## Feedback behavior
+
+- Selecting a target shows a short coloured highlight marker.
+- Zone targets display an interaction icon when the player is close enough.
+- Successful interactions play a success sound and show a success notification.
+- Failed or unauthorised interactions play an error sound and show an error notification.
+- The global feedback system can be disabled with `Config.VisualFeedback.enabled = false`.
 
 ## QBCore compatibility
 
@@ -30,29 +61,6 @@ ensure whellco_ox_target
 | `vehicle` | Any nearby vehicle |
 | `ped` | NPC interactions |
 | `zone` | Fixed world locations such as stashes, counters, or terminals |
-
-## Configuration
-
-```lua
-['police_armory'] = {
-    type = 'model',
-    model = `prop_amb_clinic_01`,
-    label = 'Police Armory',
-    icon = 'fa-solid fa-shield-halved',
-    distance = 2.5,
-    requiredJob = 'police',
-    jobGrade = 2,
-    event = 'whellco_ox_target:openArmory'
-}
-```
-
-## Adding a target
-
-1. Add an entry to `Config.Targets`.
-2. Choose a `type`: `model`, `vehicle`, `ped`, or `zone`.
-3. Set the label, icon, distance, required job, and job grade.
-4. Set the server event to trigger.
-5. Restart the resource.
 
 ## Security
 
