@@ -19,6 +19,8 @@ Config.Disguise = {
     CrowdBlendMaxSpeed = 2.0,
     NpcDetectionChance = 40,
     NpcSuspicionSpike = 50,
+    OutOfSightDrainPerSecond = 1,
+    OutOfSightDelaySeconds = 5,
     AlertJobs = {
         police = true
     }

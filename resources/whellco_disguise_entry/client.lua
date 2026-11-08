@@ -5,6 +5,7 @@ local currentArea = nil
 local guardPromptActive = false
 local suspicion = 0
 local crowdBlending = false
+local lastSeenTime = 0
 
 local function isInsideArea(area)
     local playerCoords = GetEntityCoords(PlayerPedId())
@@ -98,6 +99,7 @@ RegisterNetEvent('whellco_disguise_entry:apply', function(data)
     currentArea = data.area
     suspicion = 0
     crowdBlending = false
+    lastSeenTime = os.time()
 
     local playerPed = PlayerPedId()
 
@@ -111,6 +113,7 @@ RegisterNetEvent('whellco_disguise_entry:apply', function(data)
             crowdBlending = isBlendingIntoCrowd()
 
             if crowdBlending then
+                lastSeenTime = os.time()
                 updateSuspicionHud()
             else
                 if wasBlending then
@@ -118,10 +121,18 @@ RegisterNetEvent('whellco_disguise_entry:apply', function(data)
 
                     if detected then
                         suspicion = math.min(Config.Disguise.SuspicionMax, suspicion + Config.Disguise.NpcSuspicionSpike)
+                        lastSeenTime = os.time()
                     end
                 end
 
-                suspicion = math.min(Config.Disguise.SuspicionMax, suspicion + Config.Disguise.SuspicionPerSecond)
+                local timeSinceSeen = os.time() - lastSeenTime
+
+                if timeSinceSeen >= Config.Disguise.OutOfSightDelaySeconds then
+                    suspicion = math.max(0, suspicion - Config.Disguise.OutOfSightDrainPerSecond)
+                else
+                    suspicion = math.min(Config.Disguise.SuspicionMax, suspicion + Config.Disguise.SuspicionPerSecond)
+                end
+
                 updateSuspicionHud()
             end
 
@@ -212,5 +223,5 @@ RegisterNetEvent('whellco_disguise_entry:alert', function(job, coords)
 end)
 
 RegisterCommand('disguisehelp', function()
-    QBCore.Functions.Notify('Stand in a restricted area and press E to use a disguise kit. Move slowly in crowds to pause suspicion growth.', 'primary')
+    QBCore.Functions.Notify('Stand in a restricted area and press E to use a disguise kit. Move slowly in crowds to pause suspicion growth. Stay out of sight to reduce suspicion.', 'primary')
 end, false)

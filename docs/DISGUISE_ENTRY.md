@@ -4,7 +4,7 @@
 
 ## Suspicion meter
 
-- Suspicion rises by 2 points per second while disguised.
+- Suspicion rises by 2 points per second while disguised and visible.
 - Suspicion maximum is 100.
 - Reaching 100 suspicion triggers detection.
 - The meter changes colour as suspicion rises.
@@ -12,6 +12,15 @@
 - Orange indicates medium suspicion.
 - Red indicates high suspicion.
 - Passing a guard challenge reduces suspicion by 25 points.
+
+## Out-of-sight drain
+
+- Suspicion drains by 1 point per second when the player is out of sight.
+- Out-of-sight drain begins after 5 seconds without being seen.
+- Being seen resets the out-of-sight timer.
+- Crowd blending counts as being seen.
+- NPC detection resets the out-of-sight timer.
+- Suspicion cannot drain below 0.
 
 ## Crowd blending
 
@@ -26,13 +35,6 @@
 - Leaving the crowd or moving too fast resumes suspicion growth.
 - Nearby NPCs turn to look at the player when blend state breaks.
 - If an NPC catches the player breaking blend, suspicion spikes instantly.
-
-## NPC detection
-
-- NPC detection chance is 40% when blend state breaks.
-- NPC suspicion spike is 50 points.
-- A detected break can immediately push suspicion close to detection threshold.
-- NPC reactions and detection are handled locally for responsive feedback.
 
 ## Guard challenges
 
