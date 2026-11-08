@@ -1,7 +1,20 @@
 local QBCore = exports['qb-core']:GetCoreObject()
 local MySQL = exports.oxmysql
 
+local MAX_PLAYLIST_LENGTH = 2048
 local MAX_CHANNELS = 500
+local MAX_CHANNEL_NUMBER = 1000
+
+local function notify(source, message, kind)
+    TriggerClientEvent('QBCore:Notify', source, message, kind or 'primary', 5000)
+end
+
+local function isValidPlaylistUrl(url)
+    return type(url) == 'string'
+        and #url > 0
+        and #url <= MAX_PLAYLIST_LENGTH
+        and url:match('^https?://') ~= nil
+end
 
 local function parseM3U(content)
     local channels = {}
@@ -30,18 +43,13 @@ local function parseM3U(content)
 end
 
 QBCore.Functions.CreateCallback('whellco_iptv:getChannels', function(source, cb, playlistUrl)
-    if type(playlistUrl) ~= 'string' or #playlistUrl == 0 or #playlistUrl > 2048 then
-        cb({ channels = {} })
-        return
-    end
-
-    if not playlistUrl:match('^https?://') then
+    if not isValidPlaylistUrl(playlistUrl) then
         cb({ channels = {} })
         return
     end
 
     PerformHttpRequest(playlistUrl, function(status, body)
-        if status ~= 200 or not body then
+        if status ~= 200 or type(body) ~= 'string' or #body > 1048576 then
             cb({ channels = {} })
             return
         end
@@ -80,12 +88,12 @@ RegisterNetEvent('whellco_iptv:pickUpRemote', function()
     end
 
     if not Player.Functions.AddItem('tv_remote', 1) then
-        TriggerClientEvent('QBCore:Notify', source, 'Your inventory is full.', 'error')
+        notify(source, 'Your inventory is full.', 'error')
         return
     end
 
     TriggerClientEvent('whellco_iptv:remoteStatus', source, true)
-    TriggerClientEvent('QBCore:Notify', source, 'You found the TV remote.', 'success')
+    notify(source, 'You found the TV remote.', 'success')
 end)
 
 RegisterNetEvent('whellco_iptv:dropRemote', function()
@@ -105,13 +113,13 @@ RegisterNetEvent('whellco_iptv:dropRemote', function()
     end
 
     TriggerClientEvent('whellco_iptv:remoteStatus', source, false)
-    TriggerClientEvent('QBCore:Notify', source, 'You left the house and dropped the TV remote.', 'primary')
+    notify(source, 'You left the house and dropped the TV remote.', 'primary')
 end)
 
 QBCore.Functions.CreateCallback('whellco_iptv:getLastChannel', function(source, cb, tvId)
     local Player = QBCore.Functions.GetPlayer(source)
 
-    if not Player or not tvId then
+    if not Player or type(tvId) ~= 'string' or #tvId == 0 then
         cb({ channel = 1 })
         return
     end
@@ -134,13 +142,13 @@ RegisterNetEvent('whellco_iptv:saveChannel', function(tvId, channel)
     local Player = QBCore.Functions.GetPlayer(source)
     local channelNumber = tonumber(channel)
 
-    if not Player or not tvId or not channelNumber then
+    if not Player or type(tvId) ~= 'string' or #tvId == 0 or not channelNumber then
         return
     end
 
     channelNumber = math.floor(channelNumber)
 
-    if channelNumber < 1 or channelNumber > 1000 then
+    if channelNumber < 1 or channelNumber > MAX_CHANNEL_NUMBER then
         return
     end
 

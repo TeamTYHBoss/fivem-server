@@ -1,6 +1,10 @@
 local QBCore = exports['qb-core']:GetCoreObject()
 local MySQL = exports.oxmysql
 
+local function notify(source, message, kind)
+    TriggerClientEvent('QBCore:Notify', source, message, kind or 'primary', 5000)
+end
+
 local function isAdmin(Player)
     local job = Player.PlayerData.job
 
@@ -42,26 +46,30 @@ RegisterNetEvent('whellco_fast_food:buy', function(restaurantId, itemId)
         return
     end
 
+    if type(restaurantId) ~= 'string' or type(itemId) ~= 'string' then
+        return
+    end
+
     if not canBuy(restaurantId, itemId) then
-        TriggerClientEvent('QBCore:Notify', source, 'This item is not available here.', 'error')
+        notify(source, 'This item is not available here.', 'error')
         return
     end
 
     local item = Config.Menu[itemId]
 
     if (Player.PlayerData.money.cash or 0) < item.price then
-        TriggerClientEvent('QBCore:Notify', source, 'You do not have enough cash.', 'error')
+        notify(source, 'You do not have enough cash.', 'error')
         return
     end
 
     if not Player.Functions.AddItem(itemId, 1) then
-        TriggerClientEvent('QBCore:Notify', source, 'Your inventory is full.', 'error')
+        notify(source, 'Your inventory is full.', 'error')
         return
     end
 
     if not Player.Functions.RemoveMoney('cash', item.price, 'fast-food-purchase') then
         Player.Functions.RemoveItem(itemId, 1)
-        TriggerClientEvent('QBCore:Notify', source, 'Purchase failed.', 'error')
+        notify(source, 'Purchase failed.', 'error')
         return
     end
 
@@ -78,7 +86,7 @@ RegisterNetEvent('whellco_fast_food:buy', function(restaurantId, itemId)
     )
 
     TriggerClientEvent('whellco_fast_food:handOver', source, itemId)
-    TriggerClientEvent('QBCore:Notify', source, ('Purchased %s for $%d.'):format(item.label, item.price), 'success')
+    notify(source, ('Purchased %s for $%d.'):format(item.label, item.price), 'success')
 end)
 
 RegisterNetEvent('whellco_fast_food:eat', function(itemId)
@@ -86,23 +94,23 @@ RegisterNetEvent('whellco_fast_food:eat', function(itemId)
     local Player = QBCore.Functions.GetPlayer(source)
     local item = Config.Menu[itemId]
 
-    if not Player or not item then
+    if not Player or type(itemId) ~= 'string' or not item then
         return
     end
 
     local inventoryItem = Player.Functions.GetItemByName(itemId)
 
     if not inventoryItem or (inventoryItem.amount or 0) < 1 then
-        TriggerClientEvent('QBCore:Notify', source, 'You do not have this food item.', 'error')
+        notify(source, 'You do not have this food item.', 'error')
         return
     end
 
     if not Player.Functions.RemoveItem(itemId, 1) then
-        TriggerClientEvent('QBCore:Notify', source, 'Could not consume that item.', 'error')
+        notify(source, 'Could not consume that item.', 'error')
         return
     end
 
-    TriggerClientEvent('QBCore:Notify', source, ('You ate %s.'):format(item.label), 'success')
+    notify(source, ('You ate %s.'):format(item.label), 'success')
 end)
 
 RegisterCommand('foodinfo', function(source)
@@ -112,5 +120,5 @@ RegisterCommand('foodinfo', function(source)
         return
     end
 
-    TriggerClientEvent('QBCore:Notify', source, 'Fast food restaurants are active.', 'primary')
+    notify(source, 'Fast food restaurants are active.', 'primary')
 end, false)
