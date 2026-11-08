@@ -67,7 +67,7 @@ local function updateHouseLights()
                 if not houseLights[house.id] then
                     houseLights[house.id] = {}
 
-                    for _, window in ipairs(house.windows) do
+                    for index, window in ipairs(house.windows) do
                         UseParticleFxAssetNextCall('core')
                         local handle = StartParticleFxLoopedAtCoord(
                             'exp_grd_bzgas_smoke',
@@ -83,14 +83,24 @@ local function updateHouseLights()
                             false
                         )
 
-                        houseLights[house.id][#houseLights[house.id] + 1] = handle
+                        houseLights[house.id][#houseLights[house.id] + 1] = {
+                            handle = handle,
+                            isTv = index <= house.tvWindowCount
+                        }
+                    end
+                end
+
+                for _, light in ipairs(houseLights[house.id]) do
+                    if light.isTv and DoesParticleFxLoopedExist(light.handle) then
+                        local flicker = math.random(50, 100) / 100
+                        SetParticleFxLoopedScale(light.handle, 0.3 * flicker, 0.3 * flicker, 0.3 * flicker)
                     end
                 end
             else
                 if houseLights[house.id] then
-                    for _, handle in ipairs(houseLights[house.id]) do
-                        if DoesParticleFxLoopedExist(handle) then
-                            StopParticleFxLooped(handle, false)
+                    for _, light in ipairs(houseLights[house.id]) do
+                        if DoesParticleFxLoopedExist(light.handle) then
+                            StopParticleFxLooped(light.handle, false)
                         end
                     end
 
@@ -99,9 +109,9 @@ local function updateHouseLights()
             end
         else
             if houseLights[house.id] then
-                for _, handle in ipairs(houseLights[house.id]) do
-                    if DoesParticleFxLoopedExist(handle) then
-                        StopParticleFxLooped(handle, false)
+                for _, light in ipairs(houseLights[house.id]) do
+                    if DoesParticleFxLoopedExist(light.handle) then
+                        StopParticleFxLooped(light.handle, false)
                     end
                 end
 
@@ -113,7 +123,7 @@ end
 
 CreateThread(function()
     while true do
-        Wait(1000)
+        Wait(100)
 
         updateStreetLights()
         updateHouseLights()

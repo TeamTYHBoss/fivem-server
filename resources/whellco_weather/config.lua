@@ -10,6 +10,7 @@ Config.Houses = {
         label = 'House',
         coords = vector3(-268.0, -955.0, 31.0),
         lightDistance = 50.0,
+        tvWindowCount = 2,
         windows = {
             vector3(-268.0, -953.0, 32.0),
             vector3(-270.0, -953.0, 32.0),

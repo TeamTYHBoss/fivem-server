@@ -1,6 +1,6 @@
 # Weather
 
-`whellco_weather` adds realistic weather and real-time clock sync. Streetlights turn on gradually as it gets darker, and house windows light up at night.
+`whellco_weather` adds realistic weather and real-time clock sync. Streetlights turn on gradually as it gets darker, house windows light up at night, and some windows flicker like a TV is on inside.
 
 ## Weather
 
@@ -34,6 +34,15 @@
 - Window lights are based on the server machine clock.
 - Window lights only appear when a player is nearby.
 - Window lights are removed when the player moves away.
+
+## TV flicker
+
+- Some house windows flicker like a TV is on inside.
+- The first two windows in each house flicker.
+- Flicker changes every 100 milliseconds.
+- Flicker uses random brightness.
+- Flicker only happens at night.
+- Flicker stops during the day.
 
 ## Night time
 
