@@ -1,6 +1,6 @@
 # Weather
 
-`whellco_weather` adds realistic weather and real-time clock sync. Streetlights turn on gradually as it gets darker, house windows light up at night, some windows flicker like a TV is on inside, TV windows have a subtle blue tint, some windows have curtains or blinds, and silhouettes appear behind the curtains.
+`whellco_weather` adds realistic weather and real-time clock sync. Streetlights turn on gradually as it gets darker, house windows light up at night, some windows flicker like a TV is on inside, TV windows have a subtle blue tint, some windows have curtains or blinds, silhouettes appear behind the curtains, and nearby buildings, NPCs, and items spawn only.
 
 ## Weather
 
@@ -65,6 +65,15 @@
 - Silhouettes use configurable headings.
 - Silhouettes only appear when a player is nearby.
 - Silhouettes are removed when the player moves away.
+
+## Nearby spawning
+
+- Nearby buildings, NPCs, and items spawn only.
+- Buildings, NPCs, and items spawn when a player is nearby.
+- Buildings, NPCs, and items are removed when the player moves away.
+- Buildings, NPCs, and items use configurable positions.
+- Buildings, NPCs, and items use configurable models.
+- Buildings, NPCs, and items use configurable headings.
 
 ## Night time
 

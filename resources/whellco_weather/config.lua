@@ -48,6 +48,24 @@ Config.Houses = {
                 z = 32.0,
                 heading = 0.0
             }
+        },
+        npcs = {
+            {
+                model = 'a_m_y_business_01',
+                x = -268.0,
+                y = -956.0,
+                z = 31.0,
+                heading = 0.0
+            }
+        },
+        items = {
+            {
+                model = 'prop_ld_flow_bin',
+                x = -268.0,
+                y = -957.0,
+                z = 31.0,
+                heading = 0.0
+            }
         }
     }
 }

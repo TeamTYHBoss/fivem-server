@@ -4,6 +4,8 @@ local streetLightLevel = 0.0
 local houseLights = {}
 local houseCurtains = {}
 local houseSilhouettes = {}
+local houseNpcs = {}
+local houseItems = {}
 
 RegisterNetEvent('whellco_weather:setWeather', function(weather)
     if not weather then
@@ -156,6 +158,53 @@ local function updateHouseLights()
                     end
                 end
             end
+
+            if house.npcs and #house.npcs > 0 then
+                if not houseNpcs[house.id] then
+                    houseNpcs[house.id] = {}
+
+                    for _, npc in ipairs(house.npcs) do
+                        local model = GetHashKey(npc.model)
+
+                        RequestModel(model)
+
+                        while not HasModelLoaded(model) do
+                            Wait(0)
+                        end
+
+                        local ped = CreatePed(4, model, npc.x, npc.y, npc.z, npc.heading or 0.0, false, true)
+
+                        SetEntityAsMissionEntity(ped, true, true)
+                        FreezeEntityPosition(ped, true)
+                        SetBlockingOfNonTemporaryEvents(ped, true)
+
+                        houseNpcs[house.id][#houseNpcs[house.id] + 1] = ped
+                    end
+                end
+            end
+
+            if house.items and #house.items > 0 then
+                if not houseItems[house.id] then
+                    houseItems[house.id] = {}
+
+                    for _, item in ipairs(house.items) do
+                        local model = GetHashKey(item.model)
+
+                        RequestModel(model)
+
+                        while not HasModelLoaded(model) do
+                            Wait(0)
+                        end
+
+                        local object = CreateObject(model, item.x, item.y, item.z, false, false, false)
+
+                        SetEntityHeading(object, item.heading or 0.0)
+                        FreezeEntityPosition(object, true)
+
+                        houseItems[house.id][#houseItems[house.id] + 1] = object
+                    end
+                end
+            end
         else
             if houseLights[house.id] then
                 for _, light in ipairs(houseLights[house.id]) do
@@ -185,6 +234,26 @@ local function updateHouseLights()
                 end
 
                 houseSilhouettes[house.id] = nil
+            end
+
+            if houseNpcs[house.id] then
+                for _, ped in ipairs(houseNpcs[house.id]) do
+                    if DoesEntityExist(ped) then
+                        DeleteEntity(ped)
+                    end
+                end
+
+                houseNpcs[house.id] = nil
+            end
+
+            if houseItems[house.id] then
+                for _, object in ipairs(houseItems[house.id]) do
+                    if DoesEntityExist(object) then
+                        DeleteEntity(object)
+                    end
+                end
+
+                houseItems[house.id] = nil
             end
         end
     end
