@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Report Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="report-dashboard" class="hidden">
+        <div class="dashboard-header">
+            <h1>Report Dashboard</h1>
+            <div class="header-actions">
+                <span id="open-count">0 open</span>
+                <button id="refresh-dashboard">Refresh</button>
+                <button id="close-dashboard">Close</button>
+            </div>
+        </div>
+
+        <div id="report-list"></div>
+
+        <div class="dashboard-footer">
+            <button id="previous-page">Previous</button>
+            <span id="page-label">Page 1/1</span>
+            <button id="next-page">Next</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
