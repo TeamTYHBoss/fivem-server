@@ -38,7 +38,10 @@ CreateThread(function()
             TriggerServerEvent('whellco_player_robbery:handsUp', handsUp)
         end
 
-        if not robberyActive then
+        if robberyActive then
+            Wait(Config.Robbery.DistanceCheckIntervalMs)
+            TriggerServerEvent('whellco_player_robbery:distanceCheck')
+        else
             local target = getClosestPlayer()
 
             if target then
@@ -72,6 +75,8 @@ RegisterNetEvent('whellco_player_robbery:fail', function(reason)
 
     if reason == 'target-lowered-hands' then
         QBCore.Functions.Notify('Robbery failed: the target lowered their hands.', 'error', 10000)
+    elseif reason == 'robber-fled' then
+        QBCore.Functions.Notify('Robbery failed: the robber moved too far away.', 'error', 10000)
     else
         QBCore.Functions.Notify('Robbery failed.', 'error', 10000)
     end

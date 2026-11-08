@@ -57,6 +57,29 @@ RegisterNetEvent('whellco_player_robbery:handsUp', function(state)
     end
 end)
 
+RegisterNetEvent('whellco_player_robbery:distanceCheck', function()
+    local source = source
+    local targetServerId = activeRobberies[source]
+
+    if not targetServerId then
+        return
+    end
+
+    local robberPed = GetPlayerPed(source)
+    local targetPed = GetPlayerPed(targetServerId)
+
+    if not robberPed or not targetPed then
+        endRobbery(source, targetServerId, 'robber-fled')
+        return
+    end
+
+    local distance = #(GetEntityCoords(robberPed) - GetEntityCoords(targetPed))
+
+    if distance > Config.Robbery.CancelDistance then
+        endRobbery(source, targetServerId, 'robber-fled')
+    end
+end)
+
 RegisterNetEvent('whellco_player_robbery:start', function(targetServerId)
     local source = source
     local robber = QBCore.Functions.GetPlayer(source)
@@ -163,5 +186,5 @@ RegisterCommand('robberyinfo', function(source)
         return
     end
 
-    TriggerClientEvent('QBCore:Notify', source, 'Players must keep their hands up during a robbery.', 'primary')
+    TriggerClientEvent('QBCore:Notify', source, 'Robberies cancel if the robber moves more than 5 metres away.', 'primary')
 end, false)

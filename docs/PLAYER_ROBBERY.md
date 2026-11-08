@@ -10,14 +10,21 @@
 - The hands-up requirement is configurable.
 - The hands-up key is configurable.
 
-## Fail state
+## Distance cancellation
 
-- If the target lowers their hands during a robbery, the robbery fails.
-- The robbery ends immediately for both players.
-- The robber receives: `Robbery failed: the target lowered their hands.`
-- The target receives: `Robbery failed: the target lowered their hands.`
+- Robberies cancel if the robber moves more than 5 metres away.
+- Distance checks run every 500 milliseconds.
+- The cancellation distance is configurable.
+- The check interval is configurable.
+- Both players receive a failure notification.
 - No cash or items are transferred.
-- The minigame UI closes for both players.
+
+## Fail states
+
+- Target lowers hands: robbery fails.
+- Robber moves too far away: robbery fails.
+- Both failures close the minigame UI.
+- Both failures clear the active robbery state.
 
 ## Target warning
 
@@ -99,6 +106,7 @@ View robbery help:
 
 - Robbery initiation is validated server-side.
 - Hands-up state is validated server-side.
+- Distance checks are validated server-side.
 - Robbery cooldowns are validated server-side.
 - Protected jobs are validated server-side.
 - Cash transfers are validated server-side.
