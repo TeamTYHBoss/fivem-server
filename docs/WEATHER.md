@@ -1,6 +1,6 @@
 # Weather
 
-`whellco_weather` adds realistic weather and real-time clock sync. When the computer time shows that the sun has gone down, the game mechanics make night time in game.
+`whellco_weather` adds realistic weather and real-time clock sync. Streetlights turn on gradually as it gets darker.
 
 ## Weather
 
@@ -16,6 +16,15 @@
 - Time updates every minute.
 - Time uses the configured timezone.
 - Time is synced across all players.
+
+## Streetlights
+
+- Streetlights begin turning on at 6 PM.
+- Streetlights reach full brightness at 7 PM.
+- Streetlights begin turning off at 6 AM.
+- Streetlights turn off fully at 7 AM.
+- Streetlight brightness changes gradually.
+- Streetlight brightness is based on the server machine clock.
 
 ## Night time
 
