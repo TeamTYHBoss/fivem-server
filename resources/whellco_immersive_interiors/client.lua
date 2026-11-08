@@ -15,17 +15,31 @@ local function requestInterior(name)
         return false
     end
 
-    RequestCollisionAtCoord(interior.entry.x, interior.entry.y, interior.entry.z)
+    local transition = Config.TeleportTransition
+    local attempts = math.max(1, transition.retryAttempts or 1)
+    local timeoutMs = transition.loadTimeoutMs or 10000
+    local retryDelayMs = transition.retryDelayMs or 1000
 
-    local timeout = GetGameTimer() + 10000
+    for attempt = 1, attempts do
+        RequestCollisionAtCoord(interior.entry.x, interior.entry.y, interior.entry.z)
 
-    while not HasCollisionLoadedAroundEntity(PlayerPedId()) and GetGameTimer() < timeout do
-        Wait(50)
+        local deadline = GetGameTimer() + timeoutMs
+
+        while not HasCollisionLoadedAroundEntity(PlayerPedId()) and GetGameTimer() < deadline do
+            Wait(50)
+        end
+
+        if HasCollisionLoadedAroundEntity(PlayerPedId()) then
+            loadedInteriors[name] = true
+            return true
+        end
+
+        if attempt < attempts then
+            Wait(retryDelayMs)
+        end
     end
 
-    loadedInteriors[name] = true
-
-    return true
+    return false
 end
 
 local function releaseInterior(name)
@@ -185,7 +199,14 @@ local function teleportPlayer(interiorId, coords, label)
 
     if not loaded then
         hideLoadingScreen(loading.minimumMs or 0)
-        QBCore.Functions.Notify('Interior could not be loaded.', 'error')
+
+        if transition.enabled then
+            DoScreenFadeIn(transition.fadeInMs)
+        end
+
+        QBCore.Functions.Notify('Interior failed to load. Please try again shortly.', 'error')
+        print(('[whellco_immersive_interiors] Failed to load interior after timeout: %s'):format(interiorId))
+
         return
     end
 

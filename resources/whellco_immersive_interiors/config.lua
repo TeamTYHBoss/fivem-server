@@ -29,7 +29,10 @@ Config.TeleportTransition = {
         subtitle = 'Preparing the environment...',
         backgroundColor = { 10, 10, 15 },
         accentColor = { 0, 150, 255 }
-    }
+    },
+    loadTimeoutMs = 10000,
+    retryAttempts = 2,
+    retryDelayMs = 1000
 }
 
 Config.Interiors = {

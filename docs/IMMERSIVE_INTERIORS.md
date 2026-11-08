@@ -1,6 +1,6 @@
 # Immersive Interiors
 
-`whellco_immersive_interiors` provides QBCore-native custom MLO interiors, seamless entry and exit points, job-gated rooms, interactive interior locations, teleport transitions, audio cues, cooldown protection, and a loading screen for heavy map transitions.
+`whellco_immersive_interiors` provides QBCore-native custom MLO interiors, seamless entry and exit points, job-gated rooms, interactive interior locations, teleport transitions, audio cues, cooldown protection, loading screens, and timeout failsafes.
 
 ## Startup order
 
@@ -10,6 +10,22 @@ ensure oxmysql
 ensure whellco_qbcore
 ensure whellco_immersive_interiors
 ```
+
+## Loading failsafe
+
+```lua
+Config.TeleportTransition = {
+    loadTimeoutMs = 10000,
+    retryAttempts = 2,
+    retryDelayMs = 1000
+}
+```
+
+- The client waits up to 10 seconds for interior collision to load.
+- If loading fails, it retries up to 2 additional times with a 1-second delay.
+- If every attempt fails, the loading screen closes, the screen fades back in, and the player receives an error notification.
+- The player is not teleported into an unloaded or broken interior.
+- The failure is logged in the FiveM client console.
 
 ## Loading screen
 
@@ -24,12 +40,6 @@ Config.TeleportTransition.loadingScreen = {
     accentColor = { 0, 150, 255 }
 }
 ```
-
-- The loading screen appears before a heavy interior transition.
-- It remains visible for at least `minimumMs`.
-- It is automatically hidden after the interior loads and the teleport transition completes.
-- The title, subtitle, background colour, and accent colour are configurable.
-- Set `enabled = false` to disable the loading screen.
 
 ## Teleport transitions
 
