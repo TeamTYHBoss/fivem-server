@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS whellco_auction_tags (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    auction_id INT UNSIGNED NOT NULL,
+    tag VARCHAR(24) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY auction_tag (auction_id, tag)
+);
