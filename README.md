@@ -96,14 +96,14 @@ This repository contains the FiveM server resources and documentation.
 | Donut | $8 | 8 | Donut Worry |
 | Soda | $5 | 5 | All restaurants |
 
-## Controls
+## Fast food controls
 
 | Control | Action |
 |---|---|
 | E | View restaurant menu |
 | G | Eat food from held bag |
 
-## Commands
+## Fast food commands
 
 View fast food information:
 
@@ -117,16 +117,72 @@ View fast food help:
 /foodhelp
 ```
 
-## Purchase rules
+## IPTV
 
-- Players can buy food with cash.
-- Items are added to the player inventory.
-- Purchases are logged in `whellco_fast_food_purchases`.
-- Items are only available at participating restaurants.
-- Food restores hunger when consumed.
-- Cashiers hand over food bags after purchase.
-- Players physically hold the food bag after purchase.
-- Players can eat food from the bag by pressing G.
+`whellco_iptv` adds working TVs that use an M3U playlist. Players need a TV remote to use the TV, can flick through channels, and the last watched channel is saved for each TV.
+
+## IPTV features
+
+- Working TV screens.
+- M3U playlist support.
+- Channel switching.
+- Channel names.
+- Stream playback.
+- TV interaction prompt.
+- TV close prompt.
+- TV remote requirement.
+- Channel selection UI.
+- Last watched channel saving.
+
+## IPTV playlist
+
+The TV system uses this M3U playlist:
+
+```text
+https://raw.githubusercontent.com/TeamTYHBoss/IPTV/refs/heads/main/IPTV.m3u8
+```
+
+## TV remote
+
+- Players need a `tv_remote` item to use the TV.
+- The remote is a usable item.
+- Using the remote enables TV interaction.
+- Without the remote, players cannot open the TV.
+- The server validates remote ownership.
+
+## Channel selection UI
+
+- The TV screen includes a channel list.
+- Players can click a channel to select it.
+- The selected channel is highlighted.
+- The selected channel starts playing.
+- The channel name is shown above the list.
+- Players can still use arrow keys to change channels.
+
+## Last watched channel
+
+- The last watched channel is saved for each TV.
+- The channel is saved per player and per TV.
+- When a player reopens a TV, it returns to the last watched channel.
+- The channel is saved when the TV is closed.
+- The channel is saved in `whellco_iptv_last_channel`.
+
+## IPTV controls
+
+| Control | Action |
+|---|---|
+| E | Watch TV |
+| Right arrow | Next channel |
+| Left arrow | Previous channel |
+| Esc | Close TV |
+| Click | Select channel |
+
+## TV locations
+
+| TV | Location |
+|---|---|
+| Apartment TV | Apartment interior |
+| House TV | House interior |
 
 ## Security
 
@@ -137,6 +193,13 @@ View fast food help:
 - Food items are added server-side.
 - Food items are removed server-side when eaten.
 - Cashier handovers are triggered server-side.
+- The IPTV playlist URL is configured server-side.
+- The IPTV playlist is fetched server-side.
+- The IPTV playlist is parsed server-side.
+- Channel lists are sent to the client.
+- Channel switching is handled client-side.
+- TV remote ownership is validated server-side.
+- Last watched channel is saved server-side.
 
 ## Recent changes
 
@@ -144,4 +207,8 @@ View fast food help:
 - Added cashier food-bag handover.
 - Added player-held food bag.
 - Added eating food directly from the bag.
-- Updated documentation to cover all fast food features.
+- Added working TVs with M3U IPTV channels.
+- Added TV remote control item.
+- Added channel selection UI to the TV screen.
+- Added last watched channel saving for each TV.
+- Updated documentation to cover all fast food and IPTV features.
