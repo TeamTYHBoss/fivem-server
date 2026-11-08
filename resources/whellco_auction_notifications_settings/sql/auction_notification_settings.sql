@@ -1,0 +1,11 @@
+CREATE TABLE IF NOT EXISTS whellco_auction_notification_settings (
+    character_id INT UNSIGNED NOT NULL PRIMARY KEY,
+    alert_channel VARCHAR(16) NOT NULL DEFAULT 'in_game',
+    auction_start TINYINT(1) NOT NULL DEFAULT 1,
+    bid_placed TINYINT(1) NOT NULL DEFAULT 1,
+    outbid TINYINT(1) NOT NULL DEFAULT 1,
+    auction_end TINYINT(1) NOT NULL DEFAULT 1,
+    auction_won TINYINT(1) NOT NULL DEFAULT 1,
+    auction_lost TINYINT(1) NOT NULL DEFAULT 1,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
