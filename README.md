@@ -175,6 +175,92 @@ View fast food help:
 | Apartment TV | Apartment interior |
 | House TV | House interior |
 
+## Weather
+
+`whellco_weather` adds realistic weather, real-time clock sync, streetlights, house window lights, TV-style window flicker, curtains, silhouettes, nearby-only spawning, and entity pooling.
+
+## Weather features
+
+- Realistic weather changes.
+- Seasonal weather.
+- Smooth weather transitions.
+- Weather synced across all players.
+- Real-time clock sync.
+- Timezone-based time.
+- Time synced across all players.
+- Streetlights that turn on gradually.
+- House windows that light up at night.
+- TV-style flickering windows.
+- Subtle blue tint on TV windows.
+- Curtains and blinds on some windows.
+- Silhouettes behind curtains.
+- Nearby-only spawning for buildings, NPCs, and items.
+- Entity pooling to reduce lag.
+- Network traffic optimization for distant players.
+
+## Weather time
+
+- Time is synced to the server machine clock.
+- Time updates every minute.
+- Time uses the configured timezone.
+- Time is synced across all players.
+
+## Streetlights
+
+- Streetlights begin turning on at 6 PM.
+- Streetlights reach full brightness at 7 PM.
+- Streetlights begin turning off at 6 AM.
+- Streetlights turn off fully at 7 AM.
+- Streetlight brightness changes gradually.
+- Streetlight brightness is based on the server machine clock.
+
+## House windows
+
+- House windows light up at night.
+- Windows light up after 6 PM.
+- Windows turn off after 6 AM.
+- Window lights are based on the server machine clock.
+- Window lights only appear when a player is nearby.
+- Window lights are removed when the player moves away.
+
+## TV flicker
+
+- Some house windows flicker like a TV is on inside.
+- The first two windows in each house flicker.
+- Flicker changes every 100 milliseconds.
+- Flicker uses random brightness.
+- Flicker only happens at night.
+- Flicker stops during the day.
+- TV windows use a subtle blue tint.
+- The blue tint uses configurable RGB values.
+
+## Curtains and silhouettes
+
+- Some house windows have curtains or blinds.
+- Silhouettes appear behind the curtains.
+- Curtains, blinds, and silhouettes use configurable models.
+- Curtains, blinds, and silhouettes use configurable positions.
+- Curtains, blinds, and silhouettes use configurable headings.
+- Curtains, blinds, and silhouettes only appear when a player is nearby.
+- Curtains, blinds, and silhouettes are removed when the player moves away.
+
+## Performance
+
+- Nearby buildings, NPCs, and items spawn only.
+- Entities are pooled and reused when possible.
+- Entities are removed when a player moves away.
+- Network traffic is reduced for distant players.
+- Distant players receive fewer updates.
+- Distant players receive less weather, time, and entity data.
+
+## Weather commands
+
+View current weather:
+
+```text
+/weatherinfo
+```
+
 ## Security
 
 - Restaurant and item availability are validated server-side.
@@ -187,6 +273,11 @@ View fast food help:
 - TV channel sources are handled server-side.
 - TV remote ownership is validated server-side.
 - Last watched channel is saved server-side.
+- Weather is selected server-side.
+- Weather is synced server-side.
+- Time is synced server-side.
+- Night time is synced server-side.
+- Weather changes are validated server-side.
 
 ## Recent changes
 
@@ -198,4 +289,11 @@ View fast food help:
 - Added TV remote control item.
 - Added channel selection UI to the TV screen.
 - Added last watched channel saving for each TV.
-- Updated documentation to cover all fast food and IPTV features.
+- Added realistic weather and real-time clock sync.
+- Added streetlights that turn on gradually.
+- Added house window lights at night.
+- Added TV-style flickering windows with a subtle blue tint.
+- Added curtains, blinds, and silhouettes behind curtains.
+- Added nearby-only spawning and entity pooling.
+- Added network traffic optimization for distant players.
+- Updated documentation to cover all fast food, IPTV, and weather features.
