@@ -1,6 +1,6 @@
 # Weather
 
-`whellco_weather` adds realistic weather and real-time clock sync. Streetlights turn on gradually as it gets darker, house windows light up at night, some windows flicker like a TV is on inside, TV windows have a subtle blue tint, some windows have curtains or blinds, silhouettes appear behind the curtains, nearby buildings, NPCs, and items spawn only, and network traffic is optimized for distant players.
+`whellco_weather` adds realistic weather and real-time clock sync. Streetlights turn on gradually as it gets darker, house windows light up at night, some windows flicker like a TV is on inside, TV windows have a subtle blue tint, some windows have curtains or blinds, silhouettes appear behind the curtains, nearby buildings, NPCs, and items spawn only, network traffic is optimized for distant players, and spawned entities are pooled to reduce lag.
 
 ## Weather
 
@@ -84,6 +84,15 @@
 - Distant players receive less entity data.
 - Network traffic is reduced when a player is far away.
 - Network traffic is reduced when a player is in a different area.
+
+## Entity pooling
+
+- Spawned entities are pooled to reduce lag.
+- Entities are reused when possible.
+- Entities are removed when a player moves away.
+- Entities are pooled per house.
+- Entities are pooled per type.
+- Entities are pooled for curtains, silhouettes, NPCs, and items.
 
 ## Night time
 

@@ -2,10 +2,7 @@ local QBCore = exports['qb-core']:GetCoreObject()
 
 local streetLightLevel = 0.0
 local houseLights = {}
-local houseCurtains = {}
-local houseSilhouettes = {}
-local houseNpcs = {}
-local houseItems = {}
+local entityPools = {}
 
 RegisterNetEvent('whellco_weather:setWeather', function(weather)
     if not weather then
@@ -53,6 +50,37 @@ local function updateStreetLights()
     else
         SetArtificialLightsState(false)
     end
+end
+
+local function getOrCreateEntity(pool, key, model, x, y, z, heading, isPed)
+    local entity = pool[key]
+
+    if entity and DoesEntityExist(entity) then
+        return entity
+    end
+
+    local hash = GetHashKey(model)
+
+    RequestModel(hash)
+
+    while not HasModelLoaded(hash) do
+        Wait(0)
+    end
+
+    if isPed then
+        entity = CreatePed(4, hash, x, y, z, heading, false, true)
+        SetEntityAsMissionEntity(entity, true, true)
+        FreezeEntityPosition(entity, true)
+        SetBlockingOfNonTemporaryEvents(entity, true)
+    else
+        entity = CreateObject(hash, x, y, z, false, false, false)
+        SetEntityHeading(entity, heading)
+        FreezeEntityPosition(entity, true)
+    end
+
+    pool[key] = entity
+
+    return entity
 end
 
 local function updateHouseLights()
@@ -114,95 +142,54 @@ local function updateHouseLights()
             end
 
             if house.curtains and #house.curtains > 0 then
-                if not houseCurtains[house.id] then
-                    houseCurtains[house.id] = {}
+                if not entityPools[house.id] then
+                    entityPools[house.id] = {}
+                end
 
-                    for _, curtain in ipairs(house.curtains) do
-                        local model = GetHashKey(curtain.model)
+                if not entityPools[house.id].curtains then
+                    entityPools[house.id].curtains = {}
+                end
 
-                        RequestModel(model)
-
-                        while not HasModelLoaded(model) do
-                            Wait(0)
-                        end
-
-                        local object = CreateObject(model, curtain.x, curtain.y, curtain.z, false, false, false)
-
-                        SetEntityHeading(object, curtain.heading or 0.0)
-                        FreezeEntityPosition(object, true)
-
-                        houseCurtains[house.id][#houseCurtains[house.id] + 1] = object
-                    end
+                for index, curtain in ipairs(house.curtains) do
+                    getOrCreateEntity(entityPools[house.id].curtains, index, curtain.model, curtain.x, curtain.y, curtain.z, curtain.heading or 0.0, false)
                 end
 
                 if house.silhouettes and #house.silhouettes > 0 then
-                    if not houseSilhouettes[house.id] then
-                        houseSilhouettes[house.id] = {}
+                    if not entityPools[house.id].silhouettes then
+                        entityPools[house.id].silhouettes = {}
+                    end
 
-                        for _, silhouette in ipairs(house.silhouettes) do
-                            local model = GetHashKey(silhouette.model)
-
-                            RequestModel(model)
-
-                            while not HasModelLoaded(model) do
-                                Wait(0)
-                            end
-
-                            local object = CreateObject(model, silhouette.x, silhouette.y, silhouette.z, false, false, false)
-
-                            SetEntityHeading(object, silhouette.heading or 0.0)
-                            FreezeEntityPosition(object, true)
-
-                            houseSilhouettes[house.id][#houseSilhouettes[house.id] + 1] = object
-                        end
+                    for index, silhouette in ipairs(house.silhouettes) do
+                        getOrCreateEntity(entityPools[house.id].silhouettes, index, silhouette.model, silhouette.x, silhouette.y, silhouette.z, silhouette.heading or 0.0, false)
                     end
                 end
             end
 
             if house.npcs and #house.npcs > 0 then
-                if not houseNpcs[house.id] then
-                    houseNpcs[house.id] = {}
+                if not entityPools[house.id] then
+                    entityPools[house.id] = {}
+                end
 
-                    for _, npc in ipairs(house.npcs) do
-                        local model = GetHashKey(npc.model)
+                if not entityPools[house.id].npcs then
+                    entityPools[house.id].npcs = {}
+                end
 
-                        RequestModel(model)
-
-                        while not HasModelLoaded(model) do
-                            Wait(0)
-                        end
-
-                        local ped = CreatePed(4, model, npc.x, npc.y, npc.z, npc.heading or 0.0, false, true)
-
-                        SetEntityAsMissionEntity(ped, true, true)
-                        FreezeEntityPosition(ped, true)
-                        SetBlockingOfNonTemporaryEvents(ped, true)
-
-                        houseNpcs[house.id][#houseNpcs[house.id] + 1] = ped
-                    end
+                for index, npc in ipairs(house.npcs) do
+                    getOrCreateEntity(entityPools[house.id].npcs, index, npc.model, npc.x, npc.y, npc.z, npc.heading or 0.0, true)
                 end
             end
 
             if house.items and #house.items > 0 then
-                if not houseItems[house.id] then
-                    houseItems[house.id] = {}
+                if not entityPools[house.id] then
+                    entityPools[house.id] = {}
+                end
 
-                    for _, item in ipairs(house.items) do
-                        local model = GetHashKey(item.model)
+                if not entityPools[house.id].items then
+                    entityPools[house.id].items = {}
+                end
 
-                        RequestModel(model)
-
-                        while not HasModelLoaded(model) do
-                            Wait(0)
-                        end
-
-                        local object = CreateObject(model, item.x, item.y, item.z, false, false, false)
-
-                        SetEntityHeading(object, item.heading or 0.0)
-                        FreezeEntityPosition(object, true)
-
-                        houseItems[house.id][#houseItems[house.id] + 1] = object
-                    end
+                for index, item in ipairs(house.items) do
+                    getOrCreateEntity(entityPools[house.id].items, index, item.model, item.x, item.y, item.z, item.heading or 0.0, false)
                 end
             end
         else
@@ -216,44 +203,16 @@ local function updateHouseLights()
                 houseLights[house.id] = nil
             end
 
-            if houseCurtains[house.id] then
-                for _, object in ipairs(houseCurtains[house.id]) do
-                    if DoesEntityExist(object) then
-                        DeleteEntity(object)
+            if entityPools[house.id] then
+                for _, pool in pairs(entityPools[house.id]) do
+                    for _, entity in pairs(pool) do
+                        if DoesEntityExist(entity) then
+                            DeleteEntity(entity)
+                        end
                     end
                 end
 
-                houseCurtains[house.id] = nil
-            end
-
-            if houseSilhouettes[house.id] then
-                for _, object in ipairs(houseSilhouettes[house.id]) do
-                    if DoesEntityExist(object) then
-                        DeleteEntity(object)
-                    end
-                end
-
-                houseSilhouettes[house.id] = nil
-            end
-
-            if houseNpcs[house.id] then
-                for _, ped in ipairs(houseNpcs[house.id]) do
-                    if DoesEntityExist(ped) then
-                        DeleteEntity(ped)
-                    end
-                end
-
-                houseNpcs[house.id] = nil
-            end
-
-            if houseItems[house.id] then
-                for _, object in ipairs(houseItems[house.id]) do
-                    if DoesEntityExist(object) then
-                        DeleteEntity(object)
-                    end
-                end
-
-                houseItems[house.id] = nil
+                entityPools[house.id] = nil
             end
         end
     end
