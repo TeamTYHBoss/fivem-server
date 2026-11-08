@@ -1,6 +1,6 @@
 # Weather
 
-`whellco_weather` adds realistic weather and real-time clock sync.
+`whellco_weather` adds realistic weather and real-time clock sync. When the computer time shows that the sun has gone down, the game mechanics make night time in game.
 
 ## Weather
 
@@ -16,6 +16,15 @@
 - Time updates every minute.
 - Time uses the configured timezone.
 - Time is synced across all players.
+
+## Night time
+
+- Night time starts at 7 PM.
+- Night time ends at 6 AM.
+- Night time is based on the server machine clock.
+- Night time is synced across all players.
+- Night time enables artificial lights.
+- Night time disables artificial lights during the day.
 
 ## Weather types
 
@@ -53,4 +62,5 @@ View current weather:
 - Weather is selected server-side.
 - Weather is synced server-side.
 - Time is synced server-side.
+- Night time is synced server-side.
 - Weather changes are validated server-side.

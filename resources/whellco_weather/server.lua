@@ -47,6 +47,10 @@ local function syncTime()
     local date = os.date('*t', time)
 
     TriggerClientEvent('whellco_weather:setTime', -1, date.hour, date.minute, date.second)
+
+    local isNight = date.hour >= 19 or date.hour < 6
+
+    TriggerClientEvent('whellco_weather:setNight', -1, isNight)
 end
 
 CreateThread(function()
