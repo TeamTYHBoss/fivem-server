@@ -1,122 +1,32 @@
-local function getIdentifier(source)
-    local identifier = GetPlayerIdentifierByType(source, 'license')
+local QBCore = exports['qb-core']:GetCoreObject()
 
-    if not identifier then
-        identifier = GetPlayerIdentifierByType(source, 'steam')
-    end
-
-    return identifier
+local function getQbPlayer(source)
+    return QBCore.Functions.GetPlayer(source)
 end
-
-local function sendMenu(source)
-    local identifier = getIdentifier(source)
-
-    if not identifier then
-        return
-    end
-
-    local vehicles = MySQL.query.await(
-        [[
-            SELECT id, model, plate
-            FROM whellco_vehicles
-            WHERE owner_id = ?
-            ORDER BY created_at DESC
-        ]],
-        { identifier }
-    ) or {}
-
-    local certificates = MySQL.query.await(
-        [[
-            SELECT id, vehicle_id, owner_id, passed, expiry_date, issued_at
-            FROM whellco_mot_certificates
-            WHERE owner_id = ?
-            ORDER BY issued_at DESC
-        ]],
-        { identifier }
-    ) or {}
-
-    local failures = MySQL.query.await(
-        [[
-            SELECT id, vehicle_id, owner_id, failure_reason, failed_at
-            FROM whellco_mot_failures
-            WHERE owner_id = ?
-            ORDER BY failed_at DESC
-            LIMIT 25
-        ]],
-        { identifier }
-    ) or {}
-
-    TriggerClientEvent('whellco_mot:openMenu', source, {
-        vehicles = vehicles,
-        certificates = certificates,
-        failures = failures
-    })
-end
-
-RegisterNetEvent('whellco_mot:openMenu', function()
-    sendMenu(source)
-end)
-
-RegisterNetEvent('whellco_mot:closeMenu', function()
-    TriggerClientEvent('whellco_mot:closeMenu', source)
-end)
 
 RegisterNetEvent('whellco_mot:bookMot', function(vehicleId)
     local source = source
-    local identifier = getIdentifier(source)
+    local Player = getQbPlayer(source)
 
-    if not identifier then
+    if not Player then
         return
     end
 
-    local vehicle = MySQL.single.await(
+    local cost = Config.MotCost or 1500
+
+    if not Player.Functions.RemoveMoney('bank', cost, 'Vehicle MOT booking') then
+        TriggerClientEvent('QBCore:Notify', source, 'You do not have enough money.', 'error')
+        return
+    end
+
+    MySQL.insert.await(
         [[
-            SELECT id
-            FROM whellco_vehicles
-            WHERE id = ? AND owner_id = ?
-            LIMIT 1
+            INSERT INTO whellco_mot_records
+                (character_id, vehicle_id, cost)
+            VALUES (?, ?, ?)
         ]],
-        { vehicleId, identifier }
+        { Player.PlayerData.citizenid, vehicleId, cost }
     )
 
-    if not vehicle then
-        return
-    end
-
-    local passed = math.random(1, 10) > 2
-
-    if passed then
-        MySQL.query.await(
-            [[
-                INSERT INTO whellco_mot_certificates
-                    (vehicle_id, owner_id, passed, expiry_date)
-                VALUES (?, ?, 1, DATE_ADD(NOW(), INTERVAL ? DAY))
-            ]],
-            { vehicleId, identifier, Config.MOTPeriodDays }
-        )
-
-        TriggerClientEvent('whellco_mot:notify', source, ('MOT passed for £%s. Valid for %s days.'):format(Config.MOTPrice, Config.MOTPeriodDays))
-    else
-        local reasons = {
-            'Brake condition failed.',
-            'Tyre condition failed.',
-            'Lights and indicators failed.',
-            'Emissions failed.'
-        }
-
-        local reason = reasons[math.random(1, #reasons)]
-
-        MySQL.insert.await(
-            [[
-                INSERT INTO whellco_mot_failures
-                    (vehicle_id, owner_id, failure_reason)
-                VALUES (?, ?, ?)
-            ]],
-            { vehicleId, identifier, reason }
-        )
-
-        TriggerClientEvent('whellco_mot:notify', source, ('MOT failed: %s'):format(reason))
-    end
-
-    sendMenu(source)
+    TriggerClientEvent('QBCore:Notify', source, 'MOT booked.', 'success')
 end)

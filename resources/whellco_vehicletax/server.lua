@@ -1,118 +1,32 @@
-local function getIdentifier(source)
-    local identifier = GetPlayerIdentifierByType(source, 'license')
+local QBCore = exports['qb-core']:GetCoreObject()
 
-    if not identifier then
-        identifier = GetPlayerIdentifierByType(source, 'steam')
-    end
-
-    return identifier
+local function getQbPlayer(source)
+    return QBCore.Functions.GetPlayer(source)
 end
-
-local function sendMenu(source)
-    local identifier = getIdentifier(source)
-
-    if not identifier then
-        return
-    end
-
-    local vehicles = MySQL.query.await(
-        [[
-            SELECT id, model, plate
-            FROM whellco_vehicles
-            WHERE owner_id = ?
-            ORDER BY created_at DESC
-        ]],
-        { identifier }
-    ) or {}
-
-    local taxRecords = MySQL.query.await(
-        [[
-            SELECT id, vehicle_id, owner_id, tax_amount, paid_until, paid_at
-            FROM whellco_vehicle_tax_records
-            WHERE owner_id = ?
-            ORDER BY paid_at DESC
-        ]],
-        { identifier }
-    ) or {}
-
-    local penalties = MySQL.query.await(
-        [[
-            SELECT id, vehicle_id, owner_id, penalty_amount, reason, created_at
-            FROM whellco_vehicle_tax_penalties
-            WHERE owner_id = ?
-            ORDER BY created_at DESC
-            LIMIT 25
-        ]],
-        { identifier }
-    ) or {}
-
-    TriggerClientEvent('whellco_vehicletax:openMenu', source, {
-        vehicles = vehicles,
-        taxRecords = taxRecords,
-        penalties = penalties
-    })
-end
-
-RegisterNetEvent('whellco_vehicletax:openMenu', function()
-    sendMenu(source)
-end)
-
-RegisterNetEvent('whellco_vehicletax:closeMenu', function()
-    TriggerClientEvent('whellco_vehicletax:closeMenu', source)
-end)
 
 RegisterNetEvent('whellco_vehicletax:payTax', function(vehicleId)
     local source = source
-    local identifier = getIdentifier(source)
+    local Player = getQbPlayer(source)
 
-    if not identifier then
+    if not Player then
         return
     end
 
-    local vehicle = MySQL.single.await(
-        [[
-            SELECT id
-            FROM whellco_vehicles
-            WHERE id = ? AND owner_id = ?
-            LIMIT 1
-        ]],
-        { vehicleId, identifier }
-    )
+    local tax = Config.TaxAmount or 2500
 
-    if not vehicle then
+    if not Player.Functions.RemoveMoney('bank', tax, 'Vehicle tax payment') then
+        TriggerClientEvent('QBCore:Notify', source, 'You do not have enough money.', 'error')
         return
     end
 
-    MySQL.query.await(
+    MySQL.insert.await(
         [[
-            INSERT INTO whellco_vehicle_tax_records
-                (vehicle_id, owner_id, tax_amount, paid_until)
-            VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL ? DAY))
-            ON DUPLICATE KEY UPDATE tax_amount = VALUES(tax_amount), paid_until = VALUES(paid_until), paid_at = CURRENT_TIMESTAMP
+            INSERT INTO whellco_vehicle_taxes
+                (character_id, vehicle_id, amount)
+            VALUES (?, ?, ?)
         ]],
-        { vehicleId, identifier, Config.TaxAmount, Config.TaxPeriodDays }
+        { Player.PlayerData.citizenid, vehicleId, tax }
     )
 
-    TriggerClientEvent('whellco_vehicletax:notify', source, ('Vehicle tax paid for £%s.'):format(Config.TaxAmount))
-    sendMenu(source)
-end)
-
-RegisterNetEvent('whellco_vehicletax:payPenalty', function(penaltyId)
-    local source = source
-    local identifier = getIdentifier(source)
-
-    if not identifier then
-        return
-    end
-
-    MySQL.query.await(
-        [[
-            DELETE FROM whellco_vehicle_tax_penalties
-            WHERE id = ? AND owner_id = ?
-        ]],
-        { penaltyId, identifier }
-    )
-
-    TriggerClientEvent('whellco_vehicletax:notify', source, 'Penalty paid.')
-    sendMenu(source)
+    TriggerClientEvent('QBCore:Notify', source, 'Vehicle tax paid.', 'success')
 end)
