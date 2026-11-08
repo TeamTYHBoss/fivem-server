@@ -1,44 +1,13 @@
-local function getIdentifier(source)
-    local identifier = GetPlayerIdentifierByType(source, 'license')
+local QBCore = exports['qb-core']:GetCoreObject()
 
-    if not identifier then
-        identifier = GetPlayerIdentifierByType(source, 'steam')
+RegisterCommand('whellcorelease', function(source)
+    if source > 0 then
+        local Player = QBCore.Functions.GetPlayer(source)
+
+        if not Player or not QBCore.Functions.HasPermission(source, 'admin') then
+            return
+        end
     end
 
-    return identifier
-end
-
-local function sendMenu(source)
-    TriggerClientEvent('whellco_release:openMenu', source, {
-        version = Config.Version,
-        releases = Config.ReleaseNotes
-    })
-end
-
-RegisterNetEvent('whellco_release:openMenu', function()
-    sendMenu(source)
-end)
-
-RegisterNetEvent('whellco_release:closeMenu', function()
-    TriggerClientEvent('whellco_release:closeMenu', source)
-end)
-
-RegisterNetEvent('whellco_release:viewRelease', function(version)
-    local source = source
-    local identifier = getIdentifier(source)
-
-    if not identifier then
-        return
-    end
-
-    MySQL.insert.await(
-        [[
-            INSERT INTO whellco_release_views
-                (character_id, version)
-            VALUES (?, ?)
-        ]],
-        { identifier, version }
-    )
-
-    TriggerClientEvent('whellco_release:notify', source, ('Viewed release %s.'):format(version))
-end)
+    print('[WhellCo Release] Release check complete.')
+end, false)

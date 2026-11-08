@@ -67,10 +67,15 @@ Player.Functions.SetMetaData('whellco_level', value)
 - `whellco_banking`: migrated.
 - Vehicle systems: migrated.
 - Service systems: migrated.
-- Auction notifications and settings: migrated.
-- Auction reports, moderation, audit, archive, insights, exports, recommendations, and dashboard: migrated.
-- Auction history, stats, leaderboard, watchlist, search, favorites, categories, and tags: migrated.
-- Remaining utility systems: batch migration pending.
+- Auction systems: migrated.
+- `whellco_docs`: migrated.
+- `whellco_release`: migrated.
+- `whellco_restore`: migrated.
+- `whellco_polish`: migrated.
+- `whellco_handover`: migrated.
+- `whellco_completion`: migrated.
+- `whellco_project_close`: migrated.
+- Remaining vehicle customisation systems: batch migration pending.
 
 ## Compatibility bridge
 
@@ -88,8 +93,8 @@ Player.Functions.SetMetaData('whellco_level', value)
 
 New and migrated resources should use these exports or call QBCore directly.
 
-## Batch 5c migration
+## Batch 6 migration
 
-- Auction history, stats, leaderboard, watchlist, search, favorites, categories, and tags now use QBCore citizen IDs.
-- All player-facing auction actions use QBCore notifications.
-- Auction tags remain auction-scoped and use QBCore player validation before changes.
+- Documentation, release, restore, polish, handover, completion, and project-close systems now use QBCore identity and permissions.
+- Admin-only commands validate QBCore admin permission before running.
+- Documentation commands return QBCore citizen ID and character name.
