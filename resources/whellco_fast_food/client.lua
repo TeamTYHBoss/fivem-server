@@ -1,5 +1,7 @@
 local QBCore = exports['qb-core']:GetCoreObject()
 
+local restaurantPeds = {}
+
 local function getAvailableItems(restaurantId)
     local items = {}
 
@@ -18,14 +20,61 @@ local function getAvailableItems(restaurantId)
     return items
 end
 
+local function clearRestaurantPeds()
+    for _, ped in ipairs(restaurantPeds) do
+        if DoesEntityExist(ped) then
+            DeletePed(ped)
+        end
+    end
+
+    restaurantPeds = {}
+end
+
+local function spawnRestaurantCustomers(restaurant)
+    clearRestaurantPeds()
+
+    local customerCount = 4
+    local seatOffsets = {
+        vector3(1.5, 1.0, 0.0),
+        vector3(-1.5, 1.0, 0.0),
+        vector3(1.5, -1.0, 0.0),
+        vector3(-1.5, -1.0, 0.0)
+    }
+
+    for index = 1, customerCount do
+        local offset = seatOffsets[index] or vector3(0.0, 0.0, 0.0)
+        local spawnCoords = restaurant.coords + offset
+        local ped = CreatePed(4, GetHashKey('a_f_y_business_02'), spawnCoords.x, spawnCoords.y, spawnCoords.z, restaurant.heading, false, true)
+
+        if ped and ped ~= 0 then
+            SetEntityAsMissionEntity(ped, true, true)
+            SetBlockingOfNonTemporaryEvents(ped, true)
+            SetPedFleeAttributes(ped, 0, false)
+            SetPedCanRagdollFromPlayerImpact(ped, false)
+
+            TaskStartScenarioInPlace(ped, 'WORLD_HUMAN_SEAT_WALL_EATING', 0, true)
+
+            restaurantPeds[#restaurantPeds + 1] = ped
+        end
+    end
+end
+
 CreateThread(function()
     while true do
-        Wait(0)
+        Wait(1000)
 
         local playerCoords = GetEntityCoords(PlayerPedId())
 
         for _, restaurant in ipairs(Config.Restaurants) do
             local distance = #(playerCoords - restaurant.coords)
+
+            if distance < 30.0 then
+                if #restaurantPeds == 0 then
+                    spawnRestaurantCustomers(restaurant)
+                end
+            elseif #restaurantPeds > 0 then
+                clearRestaurantPeds()
+            end
 
             if distance < 2.0 then
                 QBCore.Functions.DrawText3D(
@@ -52,6 +101,14 @@ CreateThread(function()
             end
         end
     end
+end)
+
+AddEventHandler('onResourceStop', function(resource)
+    if resource ~= GetCurrentResourceName() then
+        return
+    end
+
+    clearRestaurantPeds()
 end)
 
 RegisterCommand('foodhelp', function()

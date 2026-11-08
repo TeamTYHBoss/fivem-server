@@ -1,6 +1,6 @@
 # Fast Food Restaurants
 
-`whellco_fast_food` adds fast food restaurants where players can purchase food and drinks.
+`whellco_fast_food` adds fast food restaurants where players can purchase food and drinks. NPCs sit and eat inside restaurants to create a busy restaurant atmosphere.
 
 ## Restaurant names
 
@@ -14,6 +14,15 @@
 - Fry-Days
 - Wrap Star
 - Donut Worry
+
+## Restaurant customers
+
+- Each restaurant spawns up to 4 NPC customers.
+- Customers sit and eat inside the restaurant.
+- Customers use the `WORLD_HUMAN_SEAT_WALL_EATING` scenario.
+- Customers spawn when a player comes within 30 metres.
+- Customers are removed when the player moves more than 30 metres away.
+- Customers are non-hostile and cannot be knocked over by player impacts.
 
 ## Restaurant locations
 
