@@ -1,16 +1,11 @@
-local playerAccounts = {}
-local lastRequest = {}
+local QBCore = exports['qb-core']:GetCoreObject()
+
 local activeJobs = {}
 local jobCooldowns = {}
+local lastRequest = {}
 
-local function getIdentifier(source)
-    local identifier = GetPlayerIdentifierByType(source, 'license')
-
-    if not identifier then
-        identifier = GetPlayerIdentifierByType(source, 'steam')
-    end
-
-    return identifier
+local function getQbPlayer(source)
+    return QBCore.Functions.GetPlayer(source)
 end
 
 local function canRequest(source)
@@ -41,31 +36,30 @@ local function getLevel(xp)
     return level
 end
 
-local function getAccount(source)
-    local identifier = getIdentifier(source)
-    local characterId = playerAccounts[identifier] and playerAccounts[identifier].characterId
+local function getCharacterId(Player)
+    local row = MySQL.single.await(
+        [[
+            SELECT character_id
+            FROM whellco_players
+            WHERE identifier = ?
+            ORDER BY created_at DESC
+            LIMIT 1
+        ]],
+        { Player.PlayerData.identifier }
+    )
 
-    if not identifier or not characterId then
-        return nil
+    if row then
+        return row.character_id
     end
 
-    return playerAccounts[identifier]
-end
-
-local function sendAccount(source)
-    local account = getAccount(source)
-
-    if not account then
-        return
-    end
-
-    TriggerClientEvent('whellco_economy:updateAccount', source, {
-        cash = account.cash,
-        bank = account.bank,
-        xp = account.xp,
-        level = account.level,
-        transactions = account.transactions
-    })
+    return MySQL.insert.await(
+        [[
+            INSERT INTO whellco_players
+                (identifier, player_name, cash, bank, xp, level)
+            VALUES (?, ?, 0, 0, 0, 1)
+        ]],
+        { Player.PlayerData.identifier, Player.PlayerData.charinfo.firstname .. ' ' .. Player.PlayerData.charinfo.lastname }
+    )
 end
 
 local function getInventoryItems(characterId)
@@ -80,14 +74,43 @@ local function getInventoryItems(characterId)
     ) or {}
 end
 
-local function sendInventory(source)
-    local account = getAccount(source)
+local function sendAccount(source)
+    local Player = getQbPlayer(source)
 
-    if not account then
+    if not Player then
         return
     end
 
-    local items = getInventoryItems(account.characterId)
+    local characterId = getCharacterId(Player)
+    local transactions = MySQL.query.await(
+        [[
+            SELECT type, amount, balance_after, description, created_at
+            FROM whellco_transactions
+            WHERE character_id = ?
+            ORDER BY created_at DESC
+            LIMIT 25
+        ]],
+        { characterId }
+    ) or {}
+
+    TriggerClientEvent('whellco_economy:updateAccount', source, {
+        cash = Player.Functions.GetMoney('cash'),
+        bank = Player.Functions.GetMoney('bank'),
+        xp = Player.PlayerData.metadata.whellco_xp or 0,
+        level = Player.PlayerData.metadata.whellco_level or 1,
+        transactions = transactions
+    })
+end
+
+local function sendInventory(source)
+    local Player = getQbPlayer(source)
+
+    if not Player then
+        return
+    end
+
+    local characterId = getCharacterId(Player)
+    local items = getInventoryItems(characterId)
     local inventory = {}
 
     for _, row in ipairs(items) do
@@ -118,60 +141,11 @@ end
 
 RegisterNetEvent('whellco_economy:characterSelected', function(characterId)
     local source = source
-    local identifier = getIdentifier(source)
+    local Player = getQbPlayer(source)
 
-    if not identifier or not characterId then
+    if not Player or not characterId then
         return
     end
-
-    local existing = MySQL.single.await(
-        [[
-            SELECT cash, bank, xp, level
-            FROM whellco_players
-            WHERE character_id = ?
-            LIMIT 1
-        ]],
-        { characterId }
-    )
-
-    if not existing then
-        MySQL.insert.await(
-            [[
-                INSERT INTO whellco_players
-                    (character_id, identifier, player_name, cash, bank, xp, level)
-                VALUES (?, ?, ?, ?, ?, 0, 1)
-            ]],
-            { characterId, identifier, GetPlayerName(source) or 'Unknown Player', Config.StartingCash, Config.StartingBank }
-        )
-
-        existing = {
-            cash = Config.StartingCash,
-            bank = Config.StartingBank,
-            xp = 0,
-            level = 1
-        }
-    end
-
-    local transactions = MySQL.query.await(
-        [[
-            SELECT type, amount, balance_after, description, created_at
-            FROM whellco_transactions
-            WHERE character_id = ?
-            ORDER BY created_at DESC
-            LIMIT 25
-        ]],
-        { characterId }
-    ) or {}
-
-    playerAccounts[identifier] = {
-        characterId = characterId,
-        identifier = identifier,
-        cash = tonumber(existing.cash) or 0,
-        bank = tonumber(existing.bank) or 0,
-        xp = tonumber(existing.xp) or 0,
-        level = tonumber(existing.level) or 1,
-        transactions = transactions
-    }
 
     sendAccount(source)
 end)
@@ -204,8 +178,9 @@ RegisterNetEvent('whellco_economy:openShop', function(shopId)
     end
 
     local shop = Config.Shops[shopId]
+    local Player = getQbPlayer(source)
 
-    if not shop then
+    if not shop or not Player then
         return
     end
 
@@ -215,20 +190,14 @@ RegisterNetEvent('whellco_economy:openShop', function(shopId)
         return
     end
 
-    local account = getAccount(source)
-
-    if not account then
-        return
-    end
-
     SetNuiFocus(source, true, true)
 
     TriggerClientEvent('whellco_economy:openShop', source, {
         shopId = shopId,
         label = shop.label,
         items = shop.items,
-        cash = account.cash,
-        bank = account.bank
+        cash = Player.Functions.GetMoney('cash'),
+        bank = Player.Functions.GetMoney('bank')
     })
 end)
 
@@ -241,10 +210,10 @@ end)
 
 RegisterNuiCallback('purchaseItem', function(data, cb)
     local source = source
-    local account = getAccount(source)
+    local Player = getQbPlayer(source)
 
-    if not account then
-        cb({ ok = false, error = 'Select a character first.' })
+    if not Player then
+        cb({ ok = false, error = 'You must be logged in.' })
         return
     end
 
@@ -277,59 +246,49 @@ RegisterNuiCallback('purchaseItem', function(data, cb)
 
     local total = item.price * quantity
 
-    if account.cash < total then
+    if Player.Functions.GetMoney('cash') < total then
         cb({ ok = false, error = 'You do not have enough cash.' })
         return
     end
 
-    local success = MySQL.transaction.await({
-        {
-            query = 'UPDATE whellco_players SET cash = cash - ? WHERE character_id = ? AND cash >= ?',
-            values = { total, account.characterId, total }
-        },
-        {
-            query = [[
-                INSERT INTO whellco_inventory (character_id, item_id, quantity)
-                VALUES (?, ?, ?)
-                ON DUPLICATE KEY UPDATE quantity = quantity + VALUES(quantity)
-            ]],
-            values = { account.characterId, data.itemId, quantity }
-        },
-        {
-            query = [[
-                INSERT INTO whellco_transactions
-                    (character_id, type, amount, balance_after, description)
-                VALUES (?, 'purchase', ?, ?, ?)
-            ]],
-            values = {
-                account.characterId,
-                total,
-                account.cash - total,
-                ('Purchased %dx %s'):format(quantity, item.label)
-            }
-        }
-    })
-
-    if not success then
-        cb({ ok = false, error = 'Purchase failed. Please try again.' })
+    if not Player.Functions.RemoveMoney('cash', total, ('Purchased %s'):format(item.label)) then
+        cb({ ok = false, error = 'Purchase failed.' })
         return
     end
 
-    account.cash = account.cash - total
-    account.xp = account.xp + (item.xp * quantity)
+    local characterId = getCharacterId(Player)
 
-    local newLevel = getLevel(account.xp)
-    local levelledUp = newLevel > account.level
-
-    account.level = newLevel
-
-    MySQL.update.await(
-        'UPDATE whellco_players SET cash = ?, xp = ?, level = ? WHERE character_id = ?',
-        { account.cash, account.xp, account.level, account.characterId }
+    MySQL.query.await(
+        [[
+            INSERT INTO whellco_inventory (character_id, item_id, quantity)
+            VALUES (?, ?, ?)
+            ON DUPLICATE KEY UPDATE quantity = quantity + VALUES(quantity)
+        ]],
+        { characterId, data.itemId, quantity }
     )
 
-    if levelledUp then
-        TriggerClientEvent('whellco_economy:levelUp', source, account.level)
+    MySQL.insert.await(
+        [[
+            INSERT INTO whellco_transactions
+                (character_id, type, amount, balance_after, description)
+            VALUES (?, 'purchase', ?, ?, ?)
+        ]],
+        {
+            characterId,
+            total,
+            Player.Functions.GetMoney('cash'),
+            ('Purchased %dx %s'):format(quantity, item.label)
+        }
+    )
+
+    local xp = (Player.PlayerData.metadata.whellco_xp or 0) + (item.xp * quantity)
+    local level = getLevel(xp)
+
+    Player.Functions.SetMetaData('whellco_xp', xp)
+    Player.Functions.SetMetaData('whellco_level', level)
+
+    if level > (Player.PlayerData.metadata.whellco_level or 1) then
+        TriggerClientEvent('whellco_economy:levelUp', source, level)
     end
 
     sendAccount(source)
@@ -340,19 +299,19 @@ RegisterNuiCallback('purchaseItem', function(data, cb)
             item = item.label,
             quantity = quantity,
             total = total,
-            cash = account.cash,
-            xp = account.xp,
-            level = account.level
+            cash = Player.Functions.GetMoney('cash'),
+            xp = xp,
+            level = level
         }
     })
 end)
 
 RegisterNuiCallback('useItem', function(data, cb)
     local source = source
-    local account = getAccount(source)
+    local Player = getQbPlayer(source)
 
-    if not account then
-        cb({ ok = false, error = 'Select a character first.' })
+    if not Player then
+        cb({ ok = false, error = 'You must be logged in.' })
         return
     end
 
@@ -376,13 +335,15 @@ RegisterNuiCallback('useItem', function(data, cb)
         return
     end
 
+    local characterId = getCharacterId(Player)
+
     local updated = MySQL.update.await(
         [[
             UPDATE whellco_inventory
             SET quantity = quantity - 1
             WHERE character_id = ? AND item_id = ? AND quantity > 0
         ]],
-        { account.characterId, itemId }
+        { characterId, itemId }
     )
 
     if not updated or updated == 0 then
@@ -407,22 +368,17 @@ RegisterNetEvent('whellco_economy:openJobBoard', function()
         return
     end
 
-    local ped = GetPlayerPed(source)
+    local Player = getQbPlayer(source)
 
-    if #(GetEntityCoords(ped) - Config.JobBoard.coords) > 10.0 then
+    if not Player then
         return
     end
 
-    local account = getAccount(source)
-
-    if not account then
-        return
-    end
-
+    local characterId = getCharacterId(Player)
     local jobs = {}
 
     for id, job in pairs(Config.Jobs) do
-        local remaining = math.max(0, job.cooldown - (GetGameTimer() - (jobCooldowns[account.characterId] or 0)))
+        local remaining = math.max(0, job.cooldown - (GetGameTimer() - (jobCooldowns[characterId] or 0)))
 
         jobs[#jobs + 1] = {
             id = id,
@@ -446,37 +402,34 @@ RegisterNetEvent('whellco_economy:startJob', function(jobId)
     end
 
     local job = Config.Jobs[jobId]
+    local Player = getQbPlayer(source)
 
-    if not job then
+    if not job or not Player then
         return
     end
 
-    local account = getAccount(source)
+    local characterId = getCharacterId(Player)
 
-    if not account then
-        return
-    end
-
-    if activeJobs[account.characterId] then
-        TriggerClientEvent('whellco_economy:notify', source, 'You are already on a job.')
+    if activeJobs[characterId] then
+        TriggerClientEvent('QBCore:Notify', source, 'You are already on a job.', 'error')
         return
     end
 
     local now = GetGameTimer()
 
-    if now - (jobCooldowns[account.characterId] or 0) < job.cooldown then
-        TriggerClientEvent('whellco_economy:notify', source, 'You need to wait before starting this job again.')
+    if now - (jobCooldowns[characterId] or 0) < job.cooldown then
+        TriggerClientEvent('QBCore:Notify', source, 'You need to wait before starting this job again.', 'error')
         return
     end
 
     local ped = GetPlayerPed(source)
 
     if #(GetEntityCoords(ped) - job.start) > 10.0 then
-        TriggerClientEvent('whellco_economy:notify', source, 'You are too far from the job start location.')
+        TriggerClientEvent('QBCore:Notify', source, 'You are too far from the job start location.', 'error')
         return
     end
 
-    activeJobs[account.characterId] = {
+    activeJobs[characterId] = {
         id = jobId,
         startedAt = now,
         routeIndex = 1
@@ -496,8 +449,14 @@ RegisterNetEvent('whellco_economy:advanceRoute', function()
         return
     end
 
-    local account = getAccount(source)
-    local active = account and activeJobs[account.characterId]
+    local Player = getQbPlayer(source)
+
+    if not Player then
+        return
+    end
+
+    local characterId = getCharacterId(Player)
+    local active = activeJobs[characterId]
 
     if not active then
         return
@@ -506,7 +465,7 @@ RegisterNetEvent('whellco_economy:advanceRoute', function()
     local job = Config.Jobs[active.id]
 
     if not job then
-        activeJobs[account.characterId] = nil
+        activeJobs[characterId] = nil
         return
     end
 
@@ -531,7 +490,7 @@ RegisterNetEvent('whellco_economy:advanceRoute', function()
             completed = true
         })
 
-        TriggerClientEvent('whellco_economy:notify', source, 'Route complete. Return to the depot to finish.')
+        TriggerClientEvent('QBCore:Notify', source, 'Route complete. Return to the depot to finish.', 'primary')
     else
         TriggerClientEvent('whellco_economy:routeAdvanced', source, {
             routeIndex = active.routeIndex,
@@ -547,74 +506,76 @@ RegisterNetEvent('whellco_economy:completeJob', function()
         return
     end
 
-    local account = getAccount(source)
-    local active = account and activeJobs[account.characterId]
+    local Player = getQbPlayer(source)
+
+    if not Player then
+        return
+    end
+
+    local characterId = getCharacterId(Player)
+    local active = activeJobs[characterId]
 
     if not active then
-        TriggerClientEvent('whellco_economy:notify', source, 'You do not have an active job.')
+        TriggerClientEvent('QBCore:Notify', source, 'You do not have an active job.', 'error')
         return
     end
 
     local job = Config.Jobs[active.id]
 
     if not job then
-        activeJobs[account.characterId] = nil
+        activeJobs[characterId] = nil
         return
     end
 
     if active.routeIndex <= #job.route then
-        TriggerClientEvent('whellco_economy:notify', source, 'Complete the delivery route first.')
+        TriggerClientEvent('QBCore:Notify', source, 'Complete the delivery route first.', 'error')
         return
     end
 
     local ped = GetPlayerPed(source)
 
     if #(GetEntityCoords(ped) - job.complete) > 10.0 then
-        TriggerClientEvent('whellco_economy:notify', source, 'Go to the job completion point.')
+        TriggerClientEvent('QBCore:Notify', source, 'Go to the job completion point.', 'error')
         return
     end
 
     local payout = job.payout
     local xpGain = job.xp
 
-    account.bank = account.bank + payout
-    account.xp = account.xp + xpGain
+    if not Player.Functions.AddMoney('bank', payout, ('Completed %s job'):format(job.label)) then
+        return
+    end
 
-    local newLevel = getLevel(account.xp)
-    local levelledUp = newLevel > account.level
+    local xp = (Player.PlayerData.metadata.whellco_xp or 0) + xpGain
+    local level = getLevel(xp)
 
-    account.level = newLevel
+    Player.Functions.SetMetaData('whellco_xp', xp)
+    Player.Functions.SetMetaData('whellco_level', level)
 
-    MySQL.transaction.await({
+    MySQL.insert.await(
+        [[
+            INSERT INTO whellco_transactions
+                (character_id, type, amount, balance_after, description)
+            VALUES (?, 'wage', ?, ?, ?)
+        ]],
         {
-            query = 'UPDATE whellco_players SET bank = ?, xp = ?, level = ? WHERE character_id = ?',
-            values = { account.bank, account.xp, account.level, account.characterId }
-        },
-        {
-            query = [[
-                INSERT INTO whellco_transactions
-                    (character_id, type, amount, balance_after, description)
-                VALUES (?, 'wage', ?, ?, ?)
-            ]],
-            values = {
-                account.characterId,
-                payout,
-                account.bank,
-                ('Completed %s job'):format(job.label)
-            }
+            characterId,
+            payout,
+            Player.Functions.GetMoney('bank'),
+            ('Completed %s job'):format(job.label)
         }
-    })
+    )
 
-    jobCooldowns[account.characterId] = GetGameTimer()
-    activeJobs[account.characterId] = nil
+    jobCooldowns[characterId] = GetGameTimer()
+    activeJobs[characterId] = nil
 
-    if levelledUp then
-        TriggerClientEvent('whellco_economy:levelUp', source, account.level)
+    if level > (Player.PlayerData.metadata.whellco_level or 1) then
+        TriggerClientEvent('whellco_economy:levelUp', source, level)
     end
 
     sendAccount(source)
 
-    TriggerClientEvent('whellco_economy:notify', source, ('Job complete! %s%d added to bank.'):format(Config.Currency, payout))
+    TriggerClientEvent('QBCore:Notify', source, ('Job complete! %s%d added to bank.'):format(Config.Currency, payout), 'success')
     TriggerClientEvent('whellco_economy:jobCompleted', source)
 end)
 
@@ -623,10 +584,15 @@ RegisterCommand('cash', function(source)
         return
     end
 
-    local account = getAccount(source)
+    local Player = getQbPlayer(source)
 
-    if account then
-        TriggerClientEvent('whellco_economy:notify', source, ('Cash: %s%d | Bank: %s%d'):format(Config.Currency, account.cash, Config.Currency, account.bank))
+    if Player then
+        TriggerClientEvent('QBCore:Notify', source, ('Cash: %s%d | Bank: %s%d'):format(
+            Config.Currency,
+            Player.Functions.GetMoney('cash'),
+            Config.Currency,
+            Player.Functions.GetMoney('bank')
+        ), 'primary')
     end
 end, false)
 
@@ -635,10 +601,13 @@ RegisterCommand('bank', function(source)
         return
     end
 
-    local account = getAccount(source)
+    local Player = getQbPlayer(source)
 
-    if account then
-        TriggerClientEvent('whellco_economy:notify', source, ('Bank balance: %s%d'):format(Config.Currency, account.bank))
+    if Player then
+        TriggerClientEvent('QBCore:Notify', source, ('Bank balance: %s%d'):format(
+            Config.Currency,
+            Player.Functions.GetMoney('bank')
+        ), 'primary')
     end
 end, false)
 
@@ -651,16 +620,12 @@ RegisterCommand('inventory', function(source)
 end, false)
 
 AddEventHandler('playerDropped', function()
-    local identifier = getIdentifier(source)
+    local Player = getQbPlayer(source)
 
-    if identifier and playerAccounts[identifier] then
-        local characterId = playerAccounts[identifier].characterId
+    if Player then
+        local characterId = getCharacterId(Player)
 
-        if characterId then
-            activeJobs[characterId] = nil
-        end
-
-        playerAccounts[identifier] = nil
+        activeJobs[characterId] = nil
     end
 
     lastRequest[source] = nil
