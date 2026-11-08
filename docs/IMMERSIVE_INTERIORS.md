@@ -1,6 +1,6 @@
 # Immersive Interiors
 
-`whellco_immersive_interiors` provides QBCore-native custom MLO interiors, seamless entry and exit points, job-gated rooms, and interactive interior locations.
+`whellco_immersive_interiors` provides QBCore-native custom MLO interiors, seamless entry and exit points, job-gated rooms, interactive interior locations, and polished teleport transitions.
 
 ## Startup order
 
@@ -10,6 +10,28 @@ ensure oxmysql
 ensure whellco_qbcore
 ensure whellco_immersive_interiors
 ```
+
+## Teleport transitions
+
+Teleports can use a screen fade and particle effect:
+
+```lua
+Config.TeleportTransition = {
+    enabled = true,
+    fadeOutMs = 400,
+    fadeInMs = 500,
+    particleEffect = 'scr_reconstructiontrust',
+    particleName = 'scr_reconstruction_trust',
+    particleDurationMs = 900
+}
+```
+
+- Set `enabled = false` to disable all transition effects.
+- `fadeOutMs` controls how quickly the screen fades to black.
+- `fadeInMs` controls how quickly the screen returns after teleporting.
+- `particleEffect` is the particle asset requested by the client.
+- `particleName` is the particle effect played at the destination.
+- `particleDurationMs` controls how long the client waits before fading back in.
 
 ## Admin teleport commands
 
@@ -34,8 +56,6 @@ Teleport to an interior exit:
 /interiortp mansion exit
 /interiortp hidden_room exit
 ```
-
-The command requires QBCore admin permission when run in-game. Server-console administrators can also use it.
 
 ## QBCore integration
 

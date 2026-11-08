@@ -57,6 +57,65 @@ local function hasInteractionAccess(Player, interaction)
     return job and job.name == interaction.requiredJob and (job.grade.level or 0) >= (interaction.jobGrade or 0)
 end
 
+local function playTeleportEffect(coords)
+    if not Config.TeleportTransition.enabled then
+        return
+    end
+
+    local effect = Config.TeleportTransition
+
+    RequestNamedPtfxAsset(effect.particleEffect)
+
+    local timeout = GetGameTimer() + 3000
+
+    while not HasNamedPtfxAssetLoaded(effect.particleEffect) and GetGameTimer() < timeout do
+        Wait(25)
+    end
+
+    if HasNamedPtfxAssetLoaded(effect.particleEffect) then
+        UseParticleFxAssetNextCall(effect.particleEffect)
+        StartParticleFxNonLoopedAtCoord(
+            effect.particleName,
+            coords.x,
+            coords.y,
+            coords.z,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            false,
+            false,
+            false
+        )
+    end
+end
+
+local function teleportPlayer(interiorId, coords, label)
+    local transition = Config.TeleportTransition
+
+    if transition.enabled then
+        DoScreenFadeOut(transition.fadeOutMs)
+
+        while not IsScreenFadedOut() do
+            Wait(10)
+        end
+    end
+
+    local playerPed = PlayerPedId()
+
+    SetEntityCoords(playerPed, coords.x, coords.y, coords.z, false, false, false, false)
+    currentInterior = interiorId
+
+    playTeleportEffect(coords)
+
+    if transition.enabled then
+        Wait(math.max(0, transition.particleDurationMs - transition.fadeOutMs))
+        DoScreenFadeIn(transition.fadeInMs)
+    end
+
+    QBCore.Functions.Notify(('Teleported to %s.'):format(label), 'success')
+end
+
 RegisterNetEvent('whellco_immersive_interiors:teleport', function(data)
     if not data or not data.coords then
         return
@@ -69,12 +128,7 @@ RegisterNetEvent('whellco_immersive_interiors:teleport', function(data)
         return
     end
 
-    local playerPed = PlayerPedId()
-
-    SetEntityCoords(playerPed, data.coords.x, data.coords.y, data.coords.z, false, false, false, false)
-    currentInterior = interiorId
-
-    QBCore.Functions.Notify(('Teleported to %s.'):format(data.label), 'success')
+    teleportPlayer(interiorId, data.coords, data.label)
 end)
 
 RegisterNetEvent('whellco_immersive_interiors:notify', function(message, type)
@@ -104,8 +158,7 @@ CreateThread(function()
                 QBCore.Functions.DrawText3D(interior.entry.x, interior.entry.y, interior.entry.z, ('[E] Enter %s'):format(interior.label))
 
                 if IsControlJustReleased(0, 38) then
-                    SetEntityCoords(playerPed, interior.exit.x, interior.exit.y, interior.exit.z, false, false, false, false)
-                    currentInterior = id
+                    teleportPlayer(id, interior.exit, interior.label)
                 end
             end
 
@@ -115,8 +168,7 @@ CreateThread(function()
                 QBCore.Functions.DrawText3D(interior.exit.x, interior.exit.y, interior.exit.z, ('[E] Exit %s'):format(interior.label))
 
                 if IsControlJustReleased(0, 38) then
-                    SetEntityCoords(playerPed, interior.entry.x, interior.entry.y, interior.entry.z, false, false, false, false)
-                    currentInterior = nil
+                    teleportPlayer(id, interior.entry, interior.label)
                 end
             end
 

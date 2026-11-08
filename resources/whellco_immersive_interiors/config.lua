@@ -4,6 +4,15 @@ Config.InteractionDistance = 2.0
 Config.LoadDistance = 150.0
 Config.UnloadDistance = 200.0
 
+Config.TeleportTransition = {
+    enabled = true,
+    fadeOutMs = 400,
+    fadeInMs = 500,
+    particleEffect = 'scr_reconstructiontrust',
+    particleName = 'scr_reconstruction_trust',
+    particleDurationMs = 900
+}
+
 Config.Interiors = {
     ['police_station'] = {
         label = 'Mission Row Police Station',
