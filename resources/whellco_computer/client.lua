@@ -7,9 +7,14 @@ local function openComputer()
         return
     end
 
+    local playerData = QBCore.Functions.GetPlayerData()
+
     computerOpen = true
     SetNuiFocus(true, true)
-    SendNUIMessage({ action = 'open' })
+    SendNUIMessage({
+        action = 'open',
+        citizenId = playerData and playerData.citizenid or ''
+    })
 end
 
 local function closeComputer()
@@ -141,12 +146,8 @@ CreateThread(function()
     end
 end)
 
-CreateThread(function()
-    while true do
-        if computerOpen and IsControlJustReleased(0, 200) then
-            closeComputer()
-        end
-
-        Wait(0)
+AddEventHandler('onResourceStop', function(resource)
+    if resource == GetCurrentResourceName() and computerOpen then
+        SetNuiFocus(false, false)
     end
 end)
