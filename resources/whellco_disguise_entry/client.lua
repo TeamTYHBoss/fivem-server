@@ -3,11 +3,19 @@ local QBCore = exports['qb-core']:GetCoreObject()
 local disguiseActive = false
 local currentArea = nil
 local guardPromptActive = false
+local suspicion = 0
 
 local function isInsideArea(area)
     local playerCoords = GetEntityCoords(PlayerPedId())
 
     return #(playerCoords - area.coords) <= area.radius
+end
+
+local function updateSuspicionHud()
+    SendNUIMessage({
+        action = 'suspicion',
+        value = suspicion
+    })
 end
 
 CreateThread(function()
@@ -33,6 +41,7 @@ end)
 RegisterNetEvent('whellco_disguise_entry:apply', function(data)
     disguiseActive = true
     currentArea = data.area
+    suspicion = 0
 
     local playerPed = PlayerPedId()
 
@@ -40,7 +49,16 @@ RegisterNetEvent('whellco_disguise_entry:apply', function(data)
 
     CreateThread(function()
         while disguiseActive do
-            Wait(Config.Disguise.DetectionIntervalSeconds * 1000)
+            Wait(1000)
+
+            suspicion = math.min(Config.Disguise.SuspicionMax, suspicion + Config.Disguise.SuspicionPerSecond)
+            updateSuspicionHud()
+
+            if suspicion >= Config.Disguise.SuspicionMax then
+                disguiseActive = false
+                TriggerServerEvent('whellco_disguise_entry:detect')
+                break
+            end
 
             if os.time() > data.expiresAt then
                 disguiseActive = false
@@ -56,10 +74,6 @@ RegisterNetEvent('whellco_disguise_entry:apply', function(data)
 
             if math.random(100) <= Config.Disguise.GuardChallengeChance then
                 TriggerServerEvent('whellco_disguise_entry:guardChallenge')
-            elseif math.random(100) <= Config.Disguise.DetectionChance then
-                disguiseActive = false
-                TriggerServerEvent('whellco_disguise_entry:detect')
-                break
             end
         end
     end)
@@ -90,6 +104,8 @@ RegisterNetEvent('whellco_disguise_entry:guardPrompt', function()
     guardPromptActive = false
 
     if response then
+        suspicion = math.max(0, suspicion - 25)
+        updateSuspicionHud()
         TriggerServerEvent('whellco_disguise_entry:guardResponse', response)
     else
         TriggerServerEvent('whellco_disguise_entry:guardResponse', 'fail')
@@ -100,6 +116,9 @@ RegisterNetEvent('whellco_disguise_entry:remove', function()
     disguiseActive = false
     currentArea = nil
     guardPromptActive = false
+    suspicion = 0
+
+    SendNUIMessage({ action = 'suspicion', value = 0 })
 end)
 
 RegisterNetEvent('whellco_disguise_entry:alert', function(job, coords)
@@ -121,5 +140,5 @@ RegisterNetEvent('whellco_disguise_entry:alert', function(job, coords)
 end)
 
 RegisterCommand('disguisehelp', function()
-    QBCore.Functions.Notify('Stand in a restricted area and press E to use a disguise kit. Guards may challenge you.', 'primary')
+    QBCore.Functions.Notify('Stand in a restricted area and press E to use a disguise kit. Suspicion rises while disguised.', 'primary')
 end, false)

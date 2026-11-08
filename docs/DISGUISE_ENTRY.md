@@ -1,6 +1,17 @@
 # Disguised Entry for Restricted Areas
 
-`whellco_disguise_entry` lets players use disguise kits to enter restricted areas with a chance of detection and guard challenges.
+`whellco_disguise_entry` lets players use disguise kits to enter restricted areas with a suspicion meter, guard challenges, and detection risk.
+
+## Suspicion meter
+
+- Suspicion rises by 2 points per second while disguised.
+- Suspicion maximum is 100.
+- Reaching 100 suspicion triggers detection.
+- The meter changes colour as suspicion rises.
+- Blue indicates low suspicion.
+- Orange indicates medium suspicion.
+- Red indicates high suspicion.
+- Passing a guard challenge reduces suspicion by 25 points.
 
 ## Guard challenges
 
@@ -9,7 +20,7 @@
 - Guard challenge cooldown is 20 seconds.
 - The guard prompt says: `Guard: "State your business." Press [E] to convince them.`
 - Players have 5 seconds to respond.
-- Pressing E convinces the guard.
+- Pressing E convinces the guard and reduces suspicion.
 - Failing to respond removes the disguise and marks the entry as detected.
 
 ## Startup order
@@ -42,8 +53,8 @@ source database/whellco_disguise_entries.sql
 - Required item: `disguise_kit`.
 - Entry duration: 120 seconds.
 - Cooldown: 300 seconds.
-- Detection chance: 25% per detection check.
-- Detection interval: 10 seconds.
+- Suspicion rises by 2 points per second.
+- Suspicion maximum is 100.
 - Maximum active disguises: 1.
 - Leaving the area triggers detection.
 - Expiring disguise triggers detection.
@@ -57,8 +68,7 @@ source database/whellco_disguise_entries.sql
 
 ## Detection
 
-- Detection checks run every 10 seconds.
-- Detection chance is 25% per check.
+- Reaching 100 suspicion triggers detection.
 - Detection removes the disguise.
 - Detection logs the entry as detected.
 - Nearby police receive an alert.

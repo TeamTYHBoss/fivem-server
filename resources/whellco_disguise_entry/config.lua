@@ -11,6 +11,9 @@ Config.Disguise = {
     MaxActiveDisguises = 1,
     GuardChallengeChance = 35,
     GuardChallengeCooldownSeconds = 20,
+    SuspicionPerSecond = 2,
+    SuspicionDecayPerSecond = 1,
+    SuspicionMax = 100,
     AlertJobs = {
         police = true
     }

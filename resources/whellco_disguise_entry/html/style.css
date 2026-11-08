@@ -1,0 +1,39 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: transparent;
+}
+
+.hidden {
+    display: none;
+}
+
+#suspicion-meter {
+    position: fixed;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 320px;
+    background: rgba(20, 22, 28, 0.85);
+    color: #fff;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+.suspicion-label {
+    font-size: 12px;
+    margin-bottom: 6px;
+}
+
+.suspicion-track {
+    height: 10px;
+    background: #2b303a;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+#suspicion-fill {
+    height: 100%;
+    width: 0%;
+    background: #ffb347;
+}
