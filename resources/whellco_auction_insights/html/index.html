@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Vehicle Auction Insights</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="auction-insights" id="auction-insights">
+        <div class="window">
+            <header>
+                <h1>Vehicle Auction Insights</h1>
+                <p>View and add auction insights.</p>
+            </header>
+
+            <div class="insight-options">
+                <input id="auction-input" placeholder="Enter auction ID">
+                <select id="category-select"></select>
+                <input id="insight-input" maxlength="255" placeholder="Enter insight">
+                <input id="score-input" type="number" min="0" max="100" placeholder="Score">
+                <button id="add-button">Add Insight</button>
+            </div>
+
+            <div class="insight-list" id="insight-list"></div>
+
+            <button id="close-button">Close</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
