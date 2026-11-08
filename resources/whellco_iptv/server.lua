@@ -69,3 +69,45 @@ QBCore.Functions.CreateUseableItem('tv_remote', function(source)
     TriggerClientEvent('whellco_iptv:remoteStatus', source, true)
     TriggerClientEvent('QBCore:Notify', source, 'TV remote ready.', 'success')
 end)
+
+QBCore.Functions.CreateCallback('whellco_iptv:getLastChannel', function(source, cb, tvId)
+    local Player = QBCore.Functions.GetPlayer(source)
+
+    if not Player or not tvId then
+        cb({ channel = 1 })
+        return
+    end
+
+    local result = MySQL.query.await(
+        'SELECT channel FROM whellco_iptv_last_channel WHERE citizenid = ? AND tv_id = ?',
+        { Player.PlayerData.citizenid, tvId }
+    )
+
+    if result and result[1] then
+        cb({ channel = result[1].channel })
+    else
+        cb({ channel = 1 })
+    end
+end)
+
+RegisterNetEvent('whellco_iptv:saveChannel', function(tvId, channel)
+    local source = source
+    local Player = QBCore.Functions.GetPlayer(source)
+
+    if not Player or not tvId or not channel then
+        return
+    end
+
+    MySQL.query.await(
+        [[INSERT INTO whellco_iptv_last_channel
+            (citizenid, tv_id, channel)
+          VALUES (?, ?, ?)
+          ON DUPLICATE KEY UPDATE
+            channel = VALUES(channel)]],
+        {
+            Player.PlayerData.citizenid,
+            tvId,
+            channel
+        }
+    )
+end)

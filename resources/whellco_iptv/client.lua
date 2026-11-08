@@ -1,6 +1,7 @@
 local QBCore = exports['qb-core']:GetCoreObject()
 
 local tvOpen = false
+local currentTv = nil
 local currentChannel = 1
 local channels = {}
 local hasRemote = false
@@ -23,7 +24,7 @@ local function loadChannels()
     end, playlist)
 end
 
-local function openTv()
+local function openTv(tv)
     if tvOpen then
         return
     end
@@ -33,13 +34,21 @@ local function openTv()
         return
     end
 
+    currentTv = tv
     tvOpen = true
-    SetNuiFocus(true, true)
-    SendNUIMessage({
-        action = 'open',
-        channels = channels,
-        currentChannel = currentChannel
-    })
+
+    QBCore.Functions.TriggerCallback('whellco_iptv:getLastChannel', function(result)
+        if result and result.channel then
+            currentChannel = result.channel
+        end
+
+        SetNuiFocus(true, true)
+        SendNUIMessage({
+            action = 'open',
+            channels = channels,
+            currentChannel = currentChannel
+        })
+    end, tv.id)
 end
 
 local function closeTv()
@@ -50,6 +59,10 @@ local function closeTv()
     tvOpen = false
     SetNuiFocus(false, false)
     SendNUIMessage({ action = 'close' })
+
+    if currentTv then
+        TriggerServerEvent('whellco_iptv:saveChannel', currentTv.id, currentChannel)
+    end
 end
 
 local function nextChannel()
@@ -109,7 +122,7 @@ CreateThread(function()
                 )
 
                 if IsControlJustReleased(0, Config.Controls.interact) then
-                    openTv()
+                    openTv(tv)
                 end
             end
         end
