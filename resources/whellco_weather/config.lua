@@ -11,6 +11,7 @@ Config.Houses = {
         coords = vector3(-268.0, -955.0, 31.0),
         lightDistance = 50.0,
         tvWindowCount = 2,
+        tvColour = { r = 0.3, g = 0.5, b = 1.0 },
         windows = {
             vector3(-268.0, -953.0, 32.0),
             vector3(-270.0, -953.0, 32.0),

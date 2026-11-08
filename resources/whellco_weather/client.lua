@@ -94,6 +94,7 @@ local function updateHouseLights()
                     if light.isTv and DoesParticleFxLoopedExist(light.handle) then
                         local flicker = math.random(50, 100) / 100
                         SetParticleFxLoopedScale(light.handle, 0.3 * flicker, 0.3 * flicker, 0.3 * flicker)
+                        SetParticleFxLoopedColour(light.handle, 0.3, 0.5, 1.0, false)
                     end
                 end
             else

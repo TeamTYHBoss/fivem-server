@@ -1,6 +1,6 @@
 # Weather
 
-`whellco_weather` adds realistic weather and real-time clock sync. Streetlights turn on gradually as it gets darker, house windows light up at night, and some windows flicker like a TV is on inside.
+`whellco_weather` adds realistic weather and real-time clock sync. Streetlights turn on gradually as it gets darker, house windows light up at night, some windows flicker like a TV is on inside, and TV windows have a subtle blue tint.
 
 ## Weather
 
@@ -43,6 +43,8 @@
 - Flicker uses random brightness.
 - Flicker only happens at night.
 - Flicker stops during the day.
+- TV windows use a subtle blue tint.
+- The blue tint uses configurable RGB values.
 
 ## Night time
 
