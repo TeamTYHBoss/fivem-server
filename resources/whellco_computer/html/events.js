@@ -5,6 +5,165 @@ document.addEventListener('click', async event => {
         return;
     }
 
+    if (target.id === 'close') {
+        ComputerState.isOpen = false;
+        document.getElementById('computer').classList.add('hidden');
+        postNui('escape');
+        return;
+    }
+
+    if (target.classList.contains('tab')) {
+        const tabName = target.dataset.tab;
+
+        if (!tabName) {
+            return;
+        }
+
+        setActiveTab(tabName);
+
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.tab === tabName);
+        });
+
+        document.querySelectorAll('.panel').forEach(panel => {
+            panel.classList.toggle('active', panel.id === tabName);
+        });
+
+        if (tabName === 'bank') {
+            await refreshBank();
+        } elseif (tabName === 'shop') {
+            await refreshShop();
+        } elseif (tabName === 'marketplace') {
+            await refreshMarketplace();
+        } elseif (tabName === 'social') {
+            await refreshSocial();
+        } elseif (tabName === 'notifications') {
+            await refreshNotifications();
+        }
+
+        return;
+    }
+
+    if (target.id === 'refresh-balance') {
+        setPendingRequest(true);
+        await refreshBank();
+        setPendingRequest(false);
+        return;
+    }
+
+    if (target.id === 'send-transfer') {
+        const recipientInput = document.getElementById('transfer-recipient');
+        const amountInput = document.getElementById('transfer-amount');
+
+        const recipientId = recipientInput ? recipientInput.value.trim() : '';
+        const amount = amountInput ? amountInput.value : 0;
+
+        if (!recipientId || !amount) {
+            showMessage('Enter a recipient citizen ID and transfer amount.', 'error');
+            return;
+        }
+
+        setPendingRequest(true);
+
+        const result = await transferMoney({
+            recipientId,
+            amount: Number(amount)
+        });
+
+        setPendingRequest(false);
+        showMessage(result.message, result.success ? 'success' : 'error');
+
+        if (recipientInput) {
+            recipientInput.value = '';
+        }
+
+        if (amountInput) {
+            amountInput.value = '';
+        }
+
+        await refreshBank();
+        return;
+    }
+
+    if (target.id === 'refresh-marketplace') {
+        setPendingRequest(true);
+        await refreshMarketplace();
+        setPendingRequest(false);
+        return;
+    }
+
+    if (target.id === 'create-listing') {
+        const itemInput = document.getElementById('listing-item');
+        const quantityInput = document.getElementById('listing-quantity');
+        const priceInput = document.getElementById('listing-price');
+
+        const itemName = itemInput ? itemInput.value.trim() : '';
+        const quantity = quantityInput ? Number(quantityInput.value) : 0;
+        const price = priceInput ? Number(priceInput.value) : 0;
+
+        if (!itemName || !quantity || !price) {
+            showMessage('Enter an item name, quantity, and price.', 'error');
+            return;
+        }
+
+        setPendingRequest(true);
+
+        const result = await createListing({
+            itemName,
+            quantity,
+            price
+        });
+
+        setPendingRequest(false);
+        showMessage(result.message, result.success ? 'success' : 'error');
+
+        if (itemInput) {
+            itemInput.value = '';
+        }
+
+        if (quantityInput) {
+            quantityInput.value = '';
+        }
+
+        if (priceInput) {
+            priceInput.value = '';
+        }
+
+        await refreshMarketplace();
+        return;
+    }
+
+    if (target.id === 'create-post') {
+        const contentInput = document.getElementById('post-content');
+        const content = contentInput ? contentInput.value.trim() : '';
+
+        if (!content) {
+            showMessage('Enter a post before publishing.', 'error');
+            return;
+        }
+
+        setPendingRequest(true);
+
+        const result = await createPost(content);
+
+        setPendingRequest(false);
+        showMessage(result.message, result.success ? 'success' : 'error');
+
+        if (contentInput) {
+            contentInput.value = '';
+        }
+
+        await refreshSocial();
+        return;
+    }
+
+    if (target.id === 'refresh-notifications') {
+        setPendingRequest(true);
+        await refreshNotifications();
+        setPendingRequest(false);
+        return;
+    }
+
     if (target.dataset.itemId) {
         setPendingRequest(true);
 
@@ -12,7 +171,7 @@ document.addEventListener('click', async event => {
 
         setPendingRequest(false);
         showMessage(result.message, result.success ? 'success' : 'error');
-        await refreshBank();
+        await refreshShop();
     }
 
     if (target.dataset.cancelId) {
@@ -106,6 +265,8 @@ window.addEventListener('message', async event => {
 
 document.addEventListener('keydown', event => {
     if (event.key === 'Escape' && ComputerState.isOpen) {
+        ComputerState.isOpen = false;
+        document.getElementById('computer').classList.add('hidden');
         postNui('escape');
     }
 });
