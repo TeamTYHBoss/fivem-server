@@ -119,12 +119,11 @@ View fast food help:
 
 ## IPTV
 
-`whellco_iptv` adds working TVs that use an M3U playlist. Players need a TV remote to use the TV, can flick through channels, and the last watched channel is saved for each TV.
+`whellco_iptv` adds working TVs that players can use to watch channels and flick through them.
 
 ## IPTV features
 
 - Working TV screens.
-- M3U playlist support.
 - Channel switching.
 - Channel names.
 - Stream playback.
@@ -133,14 +132,6 @@ View fast food help:
 - TV remote requirement.
 - Channel selection UI.
 - Last watched channel saving.
-
-## IPTV playlist
-
-The TV system uses this M3U playlist:
-
-```text
-https://raw.githubusercontent.com/TeamTYHBoss/IPTV/refs/heads/main/IPTV.m3u8
-```
 
 ## TV remote
 
@@ -193,11 +184,7 @@ https://raw.githubusercontent.com/TeamTYHBoss/IPTV/refs/heads/main/IPTV.m3u8
 - Food items are added server-side.
 - Food items are removed server-side when eaten.
 - Cashier handovers are triggered server-side.
-- The IPTV playlist URL is configured server-side.
-- The IPTV playlist is fetched server-side.
-- The IPTV playlist is parsed server-side.
-- Channel lists are sent to the client.
-- Channel switching is handled client-side.
+- TV channel sources are handled server-side.
 - TV remote ownership is validated server-side.
 - Last watched channel is saved server-side.
 
@@ -207,7 +194,7 @@ https://raw.githubusercontent.com/TeamTYHBoss/IPTV/refs/heads/main/IPTV.m3u8
 - Added cashier food-bag handover.
 - Added player-held food bag.
 - Added eating food directly from the bag.
-- Added working TVs with M3U IPTV channels.
+- Added working TVs with channel switching.
 - Added TV remote control item.
 - Added channel selection UI to the TV screen.
 - Added last watched channel saving for each TV.

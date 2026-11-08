@@ -1,14 +1,6 @@
 # IPTV
 
-`whellco_iptv` adds working TVs that use an M3U playlist. Players need a TV remote to use the TV, can flick through channels, and the last watched channel is saved for each TV.
-
-## Playlist
-
-The TV system uses this M3U playlist:
-
-```text
-https://raw.githubusercontent.com/TeamTYHBoss/IPTV/refs/heads/main/IPTV.m3u8
-```
+`whellco_iptv` adds working TVs that players can use to watch channels and flick through them.
 
 ## TV remote
 
@@ -37,9 +29,7 @@ https://raw.githubusercontent.com/TeamTYHBoss/IPTV/refs/heads/main/IPTV.m3u8
 
 ## TV channels
 
-- The server fetches the M3U playlist.
-- The server parses channel names and stream URLs.
-- The client receives the channel list.
+- The server provides the available channels.
 - Players can flick through channels.
 - Players can watch the selected channel.
 
@@ -63,7 +53,6 @@ https://raw.githubusercontent.com/TeamTYHBoss/IPTV/refs/heads/main/IPTV.m3u8
 ## TV features
 
 - Working TV screens.
-- M3U playlist support.
 - Channel switching.
 - Channel names.
 - Stream playback.
@@ -75,10 +64,6 @@ https://raw.githubusercontent.com/TeamTYHBoss/IPTV/refs/heads/main/IPTV.m3u8
 
 ## Security
 
-- The playlist URL is configured server-side.
-- The playlist is fetched server-side.
-- The playlist is parsed server-side.
-- Channel lists are sent to the client.
-- Channel switching is handled client-side.
-- Remote ownership is validated server-side.
+- TV channel sources are handled server-side.
+- TV remote ownership is validated server-side.
 - Last watched channel is saved server-side.

@@ -52,7 +52,7 @@ This guide explains how to use the TVs in the server.
 - If you cannot open the TV, make sure you have a `tv_remote` item.
 - If a channel does not play, try another channel.
 - If the TV does not respond, move away and come back.
-- If the channel list is empty, the playlist may be unavailable.
+- If the channel list is empty, try again later.
 
 ## Tips
 
