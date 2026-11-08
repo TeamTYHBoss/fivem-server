@@ -10,16 +10,19 @@ This guide explains how to use the TVs in the server.
 ## How to use a TV
 
 1. Search the house for the TV remote.
-2. Walk close to the remote and press **E** to pick it up.
-3. Walk close to a TV.
-4. Press **E** to open the TV.
-5. Use the channel list or arrow keys to change channels.
-6. Press **Esc** to close the TV.
+2. When you get close, you will see a proximity hint.
+3. Walk closer and press **E** to pick it up.
+4. Walk close to a TV.
+5. Press **E** to open the TV.
+6. Use the channel list or arrow keys to change channels.
+7. Press **Esc** to close the TV.
 
 ## TV remote
 
 - The remote can spawn anywhere in the house.
 - Players must search the house to find it.
+- When close to the remote, players see **“TV remote nearby.”**
+- When very close, players see **“[E] Pick up TV remote.”**
 - The remote is required to use the TV.
 - Once picked up, the remote is added to the player inventory.
 - If the player leaves the house, the remote is dropped.
@@ -69,6 +72,7 @@ This guide explains how to use the TVs in the server.
 ## Tips
 
 - Search different areas of the house to find the remote.
+- Watch for the “TV remote nearby” hint.
 - Use the channel list to find a channel quickly.
 - Use the arrow keys to flick through channels.
 - Close the TV when you are done.

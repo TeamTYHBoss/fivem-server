@@ -170,6 +170,15 @@ CreateThread(function()
             local remoteCoords = GetEntityCoords(remoteProp)
             local remoteDistance = #(playerCoords - remoteCoords)
 
+            if remoteDistance < Config.RemoteHintDistance then
+                QBCore.Functions.DrawText3D(
+                    remoteCoords.x,
+                    remoteCoords.y,
+                    remoteCoords.z,
+                    'TV remote nearby'
+                )
+            end
+
             if remoteDistance < 1.5 then
                 QBCore.Functions.DrawText3D(
                     remoteCoords.x,
