@@ -68,14 +68,10 @@ Player.Functions.SetMetaData('whellco_level', value)
 - Vehicle systems: migrated.
 - Service systems: migrated.
 - Auction systems: migrated.
-- `whellco_docs`: migrated.
-- `whellco_release`: migrated.
-- `whellco_restore`: migrated.
-- `whellco_polish`: migrated.
-- `whellco_handover`: migrated.
-- `whellco_completion`: migrated.
-- `whellco_project_close`: migrated.
-- Remaining vehicle customisation systems: batch migration pending.
+- Admin, Discord, monitoring, backup, deployment: migrated.
+- Documentation, release, restore, polish, handover, completion, project close: migrated.
+- Vehicle plates, plate text, preview, history, transfer, market, rarity, tuning, paint, wheels, windows, neon, and audio: migrated.
+- **QBCore migration complete.**
 
 ## Compatibility bridge
 
@@ -93,8 +89,16 @@ Player.Functions.SetMetaData('whellco_level', value)
 
 New and migrated resources should use these exports or call QBCore directly.
 
-## Batch 6 migration
+## Batch 7 migration
 
-- Documentation, release, restore, polish, handover, completion, and project-close systems now use QBCore identity and permissions.
-- Admin-only commands validate QBCore admin permission before running.
-- Documentation commands return QBCore citizen ID and character name.
+- Vehicle plates, plate text, preview, history, transfer, market, rarity, tuning, paint, wheels, windows, neon, and audio now use QBCore citizen IDs.
+- Vehicle ownership checks use `player_vehicles.citizenid`.
+- All vehicle customisation actions use QBCore notifications.
+- All migrated resources declare `qb-core` as a dependency.
+
+## Final validation
+
+- All remaining WhellCo systems now use QBCore identity and permissions.
+- All vehicle ownership checks use QBCore citizen IDs.
+- All player-facing actions use QBCore notifications.
+- The migration is complete.
