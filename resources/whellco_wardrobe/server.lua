@@ -1,3 +1,5 @@
+local QBCore = exports['qb-core']:GetCoreObject()
+
 local validModels = {
     male = true,
     female = true
@@ -5,8 +7,9 @@ local validModels = {
 
 RegisterNetEvent('whellco_wardrobe:confirm', function(appearance)
     local source = source
+    local Player = QBCore.Functions.GetPlayer(source)
 
-    if type(appearance) ~= 'table' then
+    if not Player or type(appearance) ~= 'table' then
         return
     end
 
@@ -14,11 +17,24 @@ RegisterNetEvent('whellco_wardrobe:confirm', function(appearance)
 
     appearance.model = model
 
-    -- Store this in MySQL, a JSON file, or your framework's identity system.
-    -- For now, return it to the client and open the spawn selector.
+    Player.Functions.SetMetaData('whellco_appearance', appearance)
+
     TriggerClientEvent('whellco_wardrobe:confirmed', source, appearance)
 
     SetTimeout(500, function()
         TriggerClientEvent('whellco_spawn_selector:open', source)
     end)
+end)
+
+RegisterNetEvent('whellco_wardrobe:requestAppearance', function()
+    local source = source
+    local Player = QBCore.Functions.GetPlayer(source)
+
+    if not Player then
+        return
+    end
+
+    TriggerClientEvent('whellco_wardrobe:confirmed', source, Player.PlayerData.metadata.whellco_appearance or {
+        model = 'male'
+    })
 end)

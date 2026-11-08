@@ -61,8 +61,8 @@ Player.Functions.SetMetaData('whellco_level', value)
 - `whellco_economy`: migrated.
 - `whellco_casino`: migrated.
 - `whellco_characters`: migrated.
-- `whellco_spawn_selector`: QBCore dependency declared; server logic migration pending.
-- `whellco_wardrobe`: QBCore dependency declared; server logic migration pending.
+- `whellco_spawn_selector`: migrated.
+- `whellco_wardrobe`: migrated.
 - `whellco_housing`: QBCore dependency declared; server logic migration pending.
 - Remaining WhellCo resources: use the compatibility bridge while being migrated in batches.
 
@@ -85,3 +85,9 @@ New and migrated resources should use these exports or call QBCore directly.
 Run `resources/whellco_characters/sql/qbcore_migration.sql` once.
 
 It converts existing character and player identifier values from FiveM license identifiers to QBCore citizen IDs.
+
+## Batch 1b migration
+
+- `whellco_spawn_selector` now validates the QBCore player before opening and returns the player’s citizen ID when a spawn is selected.
+- `whellco_wardrobe` now stores appearance in QBCore player metadata under `whellco_appearance`.
+- `whellco_wardrobe` can return a saved appearance through `whellco_wardrobe:requestAppearance`.

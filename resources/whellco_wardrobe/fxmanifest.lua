@@ -2,8 +2,11 @@ fx_version 'cerulean'
 game 'gta5'
 
 author 'Chris Wheller'
-description 'Character wardrobe and customization before spawning'
-version '1.0.0'
+description 'QBCore-native character appearance and wardrobe'
+version '2.0.0'
+
+server_script 'server.lua'
+client_script 'client.lua'
 
 ui_page 'html/index.html'
 
@@ -13,9 +16,7 @@ files {
     'html/script.js'
 }
 
-client_script 'client.lua'
-server_script 'server.lua'
-
 dependencies {
-    'spawnmanager'
+    'qb-core',
+    'oxmysql'
 }

@@ -2,8 +2,11 @@ fx_version 'cerulean'
 game 'gta5'
 
 author 'Chris Wheller'
-description 'Custom spawn selector for FiveM'
-version '1.0.0'
+description 'QBCore-native spawn selector'
+version '2.0.0'
+
+server_script 'server.lua'
+client_script 'client.lua'
 
 ui_page 'html/index.html'
 
@@ -13,8 +16,7 @@ files {
     'html/script.js'
 }
 
-client_script 'client.lua'
-
 dependencies {
-    'spawnmanager'
+    'qb-core',
+    'whellco_characters'
 }
