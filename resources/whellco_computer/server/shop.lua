@@ -1,5 +1,5 @@
 QBCore.Functions.CreateCallback('whellco_computer:getShop', function(source, cb)
-    cb(Config.ShopItems or {})
+    cb(Config.Shop or {})
 end)
 
 QBCore.Functions.CreateCallback('whellco_computer:buyItem', function(source, cb, itemId)
@@ -15,29 +15,31 @@ QBCore.Functions.CreateCallback('whellco_computer:buyItem', function(source, cb,
         return
     end
 
-    local item = Config.ShopItems and Config.ShopItems[itemId]
+    local shopItem = Config.Shop and Config.Shop[itemId]
 
-    if not item or type(item.price) ~= 'number' or item.price < 0 then
+    if not shopItem or type(shopItem.item) ~= 'string' or type(shopItem.price) ~= 'number' or shopItem.price < 0 then
         cb(false, 'That item is not available.')
         return
     end
 
-    if (Player.PlayerData.money.bank or 0) < item.price then
+    local inventoryItemName = shopItem.item
+
+    if (Player.PlayerData.money.bank or 0) < shopItem.price then
         cb(false, 'You do not have enough money in your bank account.')
         return
     end
 
-    if not Player.Functions.AddItem(itemId, 1) then
+    if not Player.Functions.AddItem(inventoryItemName, 1) then
         cb(false, 'Your inventory is full.')
         return
     end
 
-    if not Player.Functions.RemoveMoney('bank', item.price, 'computer-shop-purchase') then
-        Player.Functions.RemoveItem(itemId, 1)
+    if not Player.Functions.RemoveMoney('bank', shopItem.price, 'computer-shop-purchase') then
+        Player.Functions.RemoveItem(inventoryItemName, 1)
         cb(false, 'Purchase failed.')
         return
     end
 
     Computer.Cooldown.SetCooldown(source)
-    cb(true, ('Purchased %s.'):format(item.label or itemId))
+    cb(true, ('Purchased %s.'):format(shopItem.label or itemId))
 end)
