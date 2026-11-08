@@ -16,6 +16,22 @@ Config.Houses = {
             vector3(-268.0, -953.0, 32.0),
             vector3(-270.0, -953.0, 32.0),
             vector3(-266.0, -953.0, 32.0)
+        },
+        curtains = {
+            {
+                model = 'prop_curtain_01',
+                x = -268.0,
+                y = -953.0,
+                z = 32.0,
+                heading = 0.0
+            },
+            {
+                model = 'prop_blind_01',
+                x = -270.0,
+                y = -953.0,
+                z = 32.0,
+                heading = 0.0
+            }
         }
     }
 }

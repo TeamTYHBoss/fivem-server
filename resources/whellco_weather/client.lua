@@ -2,6 +2,7 @@ local QBCore = exports['qb-core']:GetCoreObject()
 
 local streetLightLevel = 0.0
 local houseLights = {}
+local houseCurtains = {}
 
 RegisterNetEvent('whellco_weather:setWeather', function(weather)
     if not weather then
@@ -94,7 +95,7 @@ local function updateHouseLights()
                     if light.isTv and DoesParticleFxLoopedExist(light.handle) then
                         local flicker = math.random(50, 100) / 100
                         SetParticleFxLoopedScale(light.handle, 0.3 * flicker, 0.3 * flicker, 0.3 * flicker)
-                        SetParticleFxLoopedColour(light.handle, 0.3, 0.5, 1.0, false)
+                        SetParticleFxLoopedColour(light.handle, house.tvColour.r, house.tvColour.g, house.tvColour.b, false)
                     end
                 end
             else
@@ -108,6 +109,29 @@ local function updateHouseLights()
                     houseLights[house.id] = nil
                 end
             end
+
+            if house.curtains and #house.curtains > 0 then
+                if not houseCurtains[house.id] then
+                    houseCurtains[house.id] = {}
+
+                    for _, curtain in ipairs(house.curtains) do
+                        local model = GetHashKey(curtain.model)
+
+                        RequestModel(model)
+
+                        while not HasModelLoaded(model) do
+                            Wait(0)
+                        end
+
+                        local object = CreateObject(model, curtain.x, curtain.y, curtain.z, false, false, false)
+
+                        SetEntityHeading(object, curtain.heading or 0.0)
+                        FreezeEntityPosition(object, true)
+
+                        houseCurtains[house.id][#houseCurtains[house.id] + 1] = object
+                    end
+                end
+            end
         else
             if houseLights[house.id] then
                 for _, light in ipairs(houseLights[house.id]) do
@@ -117,6 +141,16 @@ local function updateHouseLights()
                 end
 
                 houseLights[house.id] = nil
+            end
+
+            if houseCurtains[house.id] then
+                for _, object in ipairs(houseCurtains[house.id]) do
+                    if DoesEntityExist(object) then
+                        DeleteEntity(object)
+                    end
+                end
+
+                houseCurtains[house.id] = nil
             end
         end
     end
