@@ -70,6 +70,51 @@ Config.Houses = {
     }
 }
 
+Config.SwimmingPools = {
+    {
+        id = 'pool_1',
+        label = 'Swimming Pool',
+        coords = vector3(-268.0, -960.0, 31.0),
+        activateDistance = 50.0,
+        maxNpcs = 4,
+        npcChance = 60,
+        npcs = {
+            {
+                model = 'a_f_y_bevhills_02',
+                x = -268.0,
+                y = -960.0,
+                z = 30.0,
+                heading = 0.0,
+                swimming = true
+            },
+            {
+                model = 'a_m_y_beach_01',
+                x = -270.0,
+                y = -960.0,
+                z = 30.0,
+                heading = 0.0,
+                swimming = true
+            },
+            {
+                model = 'a_f_y_tourist_01',
+                x = -266.0,
+                y = -960.0,
+                z = 30.0,
+                heading = 0.0,
+                swimming = true
+            },
+            {
+                model = 'a_m_y_stbla_02',
+                x = -268.0,
+                y = -962.0,
+                z = 31.0,
+                heading = 0.0,
+                swimming = false
+            }
+        }
+    }
+}
+
 Config.WeatherTypes = {
     'CLEAR',
     'EXTRASUNNY',

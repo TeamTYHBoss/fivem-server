@@ -3,6 +3,7 @@ local QBCore = exports['qb-core']:GetCoreObject()
 local streetLightLevel = 0.0
 local houseLights = {}
 local entityPools = {}
+local swimmingNpcs = {}
 
 RegisterNetEvent('whellco_weather:setWeather', function(weather)
     if not weather then
@@ -218,11 +219,66 @@ local function updateHouseLights()
     end
 end
 
+local function updateSwimmingPools()
+    local playerCoords = GetEntityCoords(PlayerPedId())
+
+    for _, pool in ipairs(Config.SwimmingPools) do
+        local distance = #(playerCoords - pool.coords)
+
+        if distance < pool.activateDistance then
+            if not swimmingNpcs[pool.id] then
+                swimmingNpcs[pool.id] = {}
+
+                for index = 1, pool.maxNpcs do
+                    if math.random(1, 100) <= pool.npcChance then
+                        local npc = pool.npcs[math.random(#pool.npcs)]
+                        local model = GetHashKey(npc.model)
+
+                        RequestModel(model)
+
+                        while not HasModelLoaded(model) do
+                            Wait(0)
+                        end
+
+                        local ped = CreatePed(4, model, npc.x, npc.y, npc.z, npc.heading or 0.0, false, true)
+
+                        SetEntityAsMissionEntity(ped, true, true)
+                        SetBlockingOfNonTemporaryEvents(ped, true)
+                        SetPedDiesWhenInjured(ped, false)
+                        SetPedCanRagdollFromPlayerImpact(ped, false)
+
+                        if npc.swimming then
+                            SetPedCoordsNoOffset(ped, npc.x, npc.y, npc.z, false, false, false)
+                            SetPedConfigFlag(ped, 1, true)
+                            TaskSwimToCoord(ped, npc.x + math.random(-5, 5), npc.y + math.random(-5, 5), npc.z)
+                        else
+                            FreezeEntityPosition(ped, true)
+                        end
+
+                        swimmingNpcs[pool.id][#swimmingNpcs[pool.id] + 1] = ped
+                    end
+                end
+            end
+        else
+            if swimmingNpcs[pool.id] then
+                for _, ped in ipairs(swimmingNpcs[pool.id]) do
+                    if DoesEntityExist(ped) then
+                        DeleteEntity(ped)
+                    end
+                end
+
+                swimmingNpcs[pool.id] = nil
+            end
+        end
+    end
+end
+
 CreateThread(function()
     while true do
         Wait(100)
 
         updateStreetLights()
         updateHouseLights()
+        updateSwimmingPools()
     end
 end)
