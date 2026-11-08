@@ -37,7 +37,8 @@ local function spawnChicken(config)
             panicking = false,
             lastSquawk = 0,
             lastFeather = 0,
-            lastFootprint = 0
+            lastFootprint = 0,
+            lastFlour = 0
         }
     end
 end
@@ -141,6 +142,33 @@ local function leaveFootprints(chicken)
     }
 end
 
+local function kickUpFlour(chicken)
+    local currentTime = GetGameTimer()
+
+    if currentTime - chicken.lastFlour < chicken.config.flourInterval then
+        return
+    end
+
+    chicken.lastFlour = currentTime
+
+    local chickenCoords = GetEntityCoords(chicken.ped)
+
+    UseParticleFxAssetNextCall('core')
+    StartParticleFxNonLoopedAtCoord(
+        'exp_grd_bzgas_smoke',
+        chickenCoords.x,
+        chickenCoords.y,
+        chickenCoords.z - 0.9,
+        0.0,
+        0.0,
+        0.0,
+        0.8,
+        false,
+        false,
+        false
+    )
+end
+
 local function updateFootprints()
     local currentTime = GetGameTimer()
 
@@ -188,6 +216,10 @@ local function panicChicken(chicken, playerCoords)
     playPanicSound(chicken)
     dropFeathers(chicken)
     leaveFootprints(chicken)
+
+    if chicken.onCounter then
+        kickUpFlour(chicken)
+    end
 end
 
 CreateThread(function()
@@ -226,6 +258,18 @@ CreateThread(function()
                 local chickenCoords = GetEntityCoords(chicken.ped)
                 local distance = #(playerCoords - chickenCoords)
 
+                local onCounter = false
+
+                for _, counter in ipairs(chicken.config.counters) do
+                    local counterDistance = #(chickenCoords - counter)
+
+                    if counterDistance < 1.0 then
+                        onCounter = true
+                    end
+                end
+
+                chicken.onCounter = onCounter
+
                 if distance < chicken.config.panicDistance then
                     if not chicken.panicking then
                         panicChicken(chicken, playerCoords)
@@ -233,6 +277,10 @@ CreateThread(function()
                         playPanicSound(chicken)
                         dropFeathers(chicken)
                         leaveFootprints(chicken)
+
+                        if onCounter then
+                            kickUpFlour(chicken)
+                        end
                     end
                 elseif chicken.panicking and distance > chicken.config.calmDistance then
                     chicken.panicking = false

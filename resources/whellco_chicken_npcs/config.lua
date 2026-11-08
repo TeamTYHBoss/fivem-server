@@ -14,7 +14,12 @@ Config.Chickens = {
         calmDistance = 6.0,
         squawkInterval = 1500,
         featherInterval = 400,
-        footprintInterval = 600
+        footprintInterval = 600,
+        flourInterval = 700,
+        counters = {
+            vector3(-268.0, -953.0, 31.5),
+            vector3(-266.0, -955.0, 31.5)
+        }
     }
 }
 

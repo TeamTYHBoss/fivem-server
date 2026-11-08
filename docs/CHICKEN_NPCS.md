@@ -26,6 +26,8 @@
 - Footprints fade out gradually over time.
 - Footprints last for 10 seconds.
 - Footprints fade over the final 3 seconds.
+- Chickens kick up flour when on the counter.
+- Flour effects repeat every 0.7 seconds while on the counter.
 - Chickens calm down when the player is more than 6 metres away.
 - Calm chickens return to normal wandering.
 
@@ -50,6 +52,8 @@
 | `squawkInterval` | Time between panic sounds |
 | `featherInterval` | Time between feather effects |
 | `footprintInterval` | Time between footprint effects |
+| `flourInterval` | Time between flour effects |
+| `counters` | Counter locations that trigger flour |
 | `FootprintLifetime` | Total footprint lifetime |
 | `FootprintFadeTime` | Time spent fading out |
 
