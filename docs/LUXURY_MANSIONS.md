@@ -67,6 +67,16 @@ source database/whellco_mansion_staff.sql
 - Owners can dismiss staff at any time.
 - Staff records are stored in `whellco_mansion_staff`.
 
+## Security guard behaviour
+
+- Security guards patrol the mansion interior.
+- Guards choose random patrol points every 5 seconds.
+- Guards confront players who come within 10 metres.
+- Guards move toward nearby players to investigate.
+- Guards use stun guns rather than lethal weapons.
+- Guards have 50 armour.
+- Guards are removed when the player leaves the mansion.
+
 ## Private events
 
 - Owners can host private parties or events.
