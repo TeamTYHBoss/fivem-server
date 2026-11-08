@@ -31,6 +31,11 @@
 - Flour particles fade out gradually over time.
 - Flour effects last for 8 seconds.
 - Flour effects fade over the final 2.5 seconds.
+- Chickens leave wet footprints near the sink.
+- Wet footprints appear every 0.7 seconds near the sink.
+- Wet footprints fade out gradually over time.
+- Wet footprints last for 12 seconds.
+- Wet footprints fade over the final 4 seconds.
 - Chickens calm down when the player is more than 6 metres away.
 - Calm chickens return to normal wandering.
 
@@ -56,11 +61,15 @@
 | `featherInterval` | Time between feather effects |
 | `footprintInterval` | Time between footprint effects |
 | `flourInterval` | Time between flour effects |
+| `wetFootprintInterval` | Time between wet footprint effects |
 | `counters` | Counter locations that trigger flour |
+| `sinks` | Sink locations that trigger wet footprints |
 | `FootprintLifetime` | Total footprint lifetime |
 | `FootprintFadeTime` | Time spent fading out |
 | `FlourLifetime` | Total flour effect lifetime |
 | `FlourFadeTime` | Time spent fading out |
+| `WetFootprintLifetime` | Total wet footprint lifetime |
+| `WetFootprintFadeTime` | Time spent fading out |
 
 ## Security
 
@@ -70,3 +79,4 @@
 - Chickens are removed when the resource stops.
 - Footprints are removed when the resource stops.
 - Flour effects are removed when the resource stops.
+- Wet footprints are removed when the resource stops.

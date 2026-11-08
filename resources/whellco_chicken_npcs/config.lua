@@ -16,9 +16,13 @@ Config.Chickens = {
         featherInterval = 400,
         footprintInterval = 600,
         flourInterval = 700,
+        wetFootprintInterval = 700,
         counters = {
             vector3(-268.0, -953.0, 31.5),
             vector3(-266.0, -955.0, 31.5)
+        },
+        sinks = {
+            vector3(-270.0, -953.0, 31.0)
         }
     }
 }
@@ -29,3 +33,5 @@ Config.FootprintLifetime = 10000
 Config.FootprintFadeTime = 3000
 Config.FlourLifetime = 8000
 Config.FlourFadeTime = 2500
+Config.WetFootprintLifetime = 12000
+Config.WetFootprintFadeTime = 4000

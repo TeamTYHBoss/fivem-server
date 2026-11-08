@@ -1,6 +1,7 @@
 local chickens = {}
 local footprints = {}
 local flourEffects = {}
+local wetFootprints = {}
 
 local function clearChickens()
     for _, chicken in ipairs(chickens) do
@@ -32,6 +33,16 @@ local function clearFlourEffects()
     flourEffects = {}
 end
 
+local function clearWetFootprints()
+    for _, footprint in ipairs(wetFootprints) do
+        if DoesParticleFxLoopedExist(footprint.handle) then
+            StopParticleFxLooped(footprint.handle, false)
+        end
+    end
+
+    wetFootprints = {}
+end
+
 local function spawnChicken(config)
     local ped = CreatePed(28, GetHashKey(config.model), config.coords.x, config.coords.y, config.coords.z, config.heading, false, true)
 
@@ -49,7 +60,8 @@ local function spawnChicken(config)
             lastSquawk = 0,
             lastFeather = 0,
             lastFootprint = 0,
-            lastFlour = 0
+            lastFlour = 0,
+            lastWetFootprint = 0
         }
     end
 end
@@ -185,6 +197,41 @@ local function kickUpFlour(chicken)
     }
 end
 
+local function leaveWetFootprints(chicken)
+    local currentTime = GetGameTimer()
+
+    if currentTime - chicken.lastWetFootprint < chicken.config.wetFootprintInterval then
+        return
+    end
+
+    chicken.lastWetFootprint = currentTime
+
+    local chickenCoords = GetEntityCoords(chicken.ped)
+    local heading = GetEntityHeading(chicken.ped)
+    local offsetX = math.random(-20, 20) / 100
+    local offsetY = math.random(-20, 20) / 100
+
+    UseParticleFxAssetNextCall('core')
+    local handle = StartParticleFxLoopedAtCoord(
+        'exp_grd_bzgas_smoke',
+        chickenCoords.x + offsetX,
+        chickenCoords.y + offsetY,
+        chickenCoords.z - 0.95,
+        0.0,
+        0.0,
+        heading,
+        0.2,
+        false,
+        false,
+        false
+    )
+
+    wetFootprints[#wetFootprints + 1] = {
+        handle = handle,
+        created = currentTime
+    }
+end
+
 local function updateFootprints()
     local currentTime = GetGameTimer()
 
@@ -233,6 +280,30 @@ local function updateFlourEffects()
     end
 end
 
+local function updateWetFootprints()
+    local currentTime = GetGameTimer()
+
+    for index = #wetFootprints, 1, -1 do
+        local footprint = wetFootprints[index]
+        local age = currentTime - footprint.created
+
+        if age >= Config.WetFootprintLifetime then
+            if DoesParticleFxLoopedExist(footprint.handle) then
+                StopParticleFxLooped(footprint.handle, false)
+            end
+
+            table.remove(wetFootprints, index)
+        elseif age > Config.WetFootprintLifetime - Config.WetFootprintFadeTime then
+            local fadeProgress = (age - (Config.WetFootprintLifetime - Config.WetFootprintFadeTime)) / Config.WetFootprintFadeTime
+            local scale = 0.2 * (1.0 - fadeProgress)
+
+            if DoesParticleFxLoopedExist(footprint.handle) then
+                SetParticleFxLoopedScale(footprint.handle, scale, scale, scale)
+            end
+        end
+    end
+end
+
 local function panicChicken(chicken, playerCoords)
     local config = chicken.config
     local chickenCoords = GetEntityCoords(chicken.ped)
@@ -259,6 +330,10 @@ local function panicChicken(chicken, playerCoords)
 
     if chicken.onCounter then
         kickUpFlour(chicken)
+    end
+
+    if chicken.nearSink then
+        leaveWetFootprints(chicken)
     end
 end
 
@@ -299,6 +374,7 @@ CreateThread(function()
                 local distance = #(playerCoords - chickenCoords)
 
                 local onCounter = false
+                local nearSink = false
 
                 for _, counter in ipairs(chicken.config.counters) do
                     local counterDistance = #(chickenCoords - counter)
@@ -308,7 +384,16 @@ CreateThread(function()
                     end
                 end
 
+                for _, sink in ipairs(chicken.config.sinks) do
+                    local sinkDistance = #(chickenCoords - sink)
+
+                    if sinkDistance < 2.0 then
+                        nearSink = true
+                    end
+                end
+
                 chicken.onCounter = onCounter
+                chicken.nearSink = nearSink
 
                 if distance < chicken.config.panicDistance then
                     if not chicken.panicking then
@@ -321,6 +406,10 @@ CreateThread(function()
                         if onCounter then
                             kickUpFlour(chicken)
                         end
+
+                        if nearSink then
+                            leaveWetFootprints(chicken)
+                        end
                     end
                 elseif chicken.panicking and distance > chicken.config.calmDistance then
                     chicken.panicking = false
@@ -331,6 +420,7 @@ CreateThread(function()
 
         updateFootprints()
         updateFlourEffects()
+        updateWetFootprints()
     end
 end)
 
@@ -342,4 +432,5 @@ AddEventHandler('onResourceStop', function(resource)
     clearChickens()
     clearFootprints()
     clearFlourEffects()
+    clearWetFootprints()
 end)
