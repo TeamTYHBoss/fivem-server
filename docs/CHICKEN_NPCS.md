@@ -21,6 +21,8 @@
 - Chickens repeat the sound every 1.5 seconds while panicking.
 - Chickens drop feathers while running.
 - Feathers drop every 0.4 seconds while panicking.
+- Chickens leave footprints on the kitchen floor while running.
+- Footprints appear every 0.6 seconds while panicking.
 - Chickens calm down when the player is more than 6 metres away.
 - Calm chickens return to normal wandering.
 
@@ -44,6 +46,7 @@
 | `calmDistance` | Distance required to calm down |
 | `squawkInterval` | Time between panic sounds |
 | `featherInterval` | Time between feather effects |
+| `footprintInterval` | Time between footprint effects |
 
 ## Security
 
