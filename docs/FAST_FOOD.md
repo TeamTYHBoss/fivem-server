@@ -1,15 +1,22 @@
 # Fast Food Restaurants
 
-`whellco_fast_food` adds fast food restaurants where players can purchase food and drinks. Cashiers hand over food bags, while NPCs order at the counter and sit and eat inside restaurants.
+`whellco_fast_food` adds fast food restaurants where players can purchase food and drinks. Cashiers hand over food bags, and players physically hold the food bag after purchase.
+
+## Player food bag
+
+- After buying food, the player physically holds a food bag.
+- The food bag uses `prop_food_bag_01`.
+- The bag is attached to the player’s right hand.
+- The player holds the bag for 10 seconds.
+- The bag is removed automatically after 10 seconds.
+- The player’s animation changes while holding the bag.
 
 ## Cashier handover
 
 - Each restaurant has a cashier NPC.
 - The cashier uses the `WORLD_HUMAN_CLIPBOARD` scenario.
 - When a player buys food, the cashier turns toward the player.
-- The cashier holds a food bag using `prop_food_bag_01`.
-- The food bag is attached to the cashier’s hand.
-- The food bag is removed after the handover animation.
+- The cashier triggers the player food-bag handover.
 - The cashier returns to the clipboard scenario.
 
 ## Restaurant customers
@@ -72,6 +79,7 @@
 - Items are only available at participating restaurants.
 - Food restores hunger when consumed.
 - Cashiers hand over food bags after purchase.
+- Players physically hold the food bag after purchase.
 
 ## Commands
 

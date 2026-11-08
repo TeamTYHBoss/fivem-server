@@ -2,6 +2,7 @@ local QBCore = exports['qb-core']:GetCoreObject()
 
 local restaurantPeds = {}
 local cashierPed = nil
+local heldFoodBag = nil
 
 local function getAvailableItems(restaurantId)
     local items = {}
@@ -30,6 +31,14 @@ local function clearRestaurantPeds()
 
     restaurantPeds = {}
     cashierPed = nil
+end
+
+local function clearHeldFoodBag()
+    if heldFoodBag and DoesEntityExist(heldFoodBag) then
+        DeleteEntity(heldFoodBag)
+    end
+
+    heldFoodBag = nil
 end
 
 local function spawnCashier(restaurant)
@@ -65,14 +74,16 @@ local function handOverFoodBag(itemId)
     TaskTurnPedToFaceEntity(cashierPed, playerPed, 1500)
     Wait(500)
 
-    local foodBag = CreateObject(GetHashKey('prop_food_bag_01'), 0.0, 0.0, 0.0, true, true, false)
+    clearHeldFoodBag()
 
-    if foodBag and foodBag ~= 0 then
+    heldFoodBag = CreateObject(GetHashKey('prop_food_bag_01'), 0.0, 0.0, 0.0, true, true, false)
+
+    if heldFoodBag and heldFoodBag ~= 0 then
         AttachEntityToEntity(
-            foodBag,
-            cashierPed,
-            GetPedBoneIndex(cashierPed, 57005),
-            0.10,
+            heldFoodBag,
+            playerPed,
+            GetPedBoneIndex(playerPed, 57005),
+            0.12,
             0.0,
             0.0,
             90.0,
@@ -86,10 +97,12 @@ local function handOverFoodBag(itemId)
             true
         )
 
-        Wait(1000)
+        TaskStartScenarioInPlace(playerPed, 'WORLD_HUMAN_STAND_IMPATIENT', 0, true)
 
-        DetachEntity(foodBag, true, true)
-        DeleteEntity(foodBag)
+        SetTimeout(10000, function()
+            clearHeldFoodBag()
+            ClearPedTasks(PlayerPedId())
+        end)
     end
 
     TaskStartScenarioInPlace(cashierPed, 'WORLD_HUMAN_CLIPBOARD', 0, true)
@@ -196,6 +209,7 @@ AddEventHandler('onResourceStop', function(resource)
     end
 
     clearRestaurantPeds()
+    clearHeldFoodBag()
 end)
 
 RegisterCommand('foodhelp', function()
