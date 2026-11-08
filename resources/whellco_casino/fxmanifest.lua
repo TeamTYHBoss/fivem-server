@@ -3,7 +3,7 @@ game 'gta5'
 
 author 'Chris Wheller'
 description 'WhellCo Casino: slots, wheel spin, NPCs, penthouse, garage and membership passes'
-version '1.0.0'
+version '1.1.0'
 
 shared_script 'config.lua'
 
@@ -20,4 +20,7 @@ files {
     'html/script.js'
 }
 
-dependency 'oxmysql'
+dependencies {
+    'qb-core',
+    'oxmysql'
+}

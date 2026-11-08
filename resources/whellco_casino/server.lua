@@ -1,14 +1,10 @@
+local QBCore = exports['qb-core']:GetCoreObject()
+
 local activeMemberships = {}
 local lastGameRequest = {}
 
-local function getIdentifier(source)
-    local identifier = GetPlayerIdentifierByType(source, 'license')
-
-    if not identifier then
-        identifier = GetPlayerIdentifierByType(source, 'steam')
-    end
-
-    return identifier
+local function getQbPlayer(source)
+    return QBCore.Functions.GetPlayer(source)
 end
 
 local function canAct(source)
@@ -28,13 +24,14 @@ local function canAct(source)
 end
 
 local function getMembership(source)
-    local identifier = getIdentifier(source)
+    local Player = getQbPlayer(source)
 
-    if not identifier then
+    if not Player then
         return Config.Memberships.free
     end
 
-    local cached = activeMemberships[identifier]
+    local citizenId = Player.PlayerData.citizenid
+    local cached = activeMemberships[citizenId]
 
     if cached then
         return cached
@@ -49,13 +46,13 @@ local function getMembership(source)
             )
             LIMIT 1
         ]],
-        { identifier }
+        { Player.PlayerData.identifier }
     )
 
     local tier = row and row.tier or 'free'
     local membership = Config.Memberships[tier] or Config.Memberships.free
 
-    activeMemberships[identifier] = {
+    activeMemberships[citizenId] = {
         tier = tier,
         label = membership.label,
         winRateMultiplier = membership.winRateMultiplier,
@@ -63,66 +60,105 @@ local function getMembership(source)
         garageSpaces = membership.garageSpaces
     }
 
-    return activeMemberships[identifier]
+    return activeMemberships[citizenId]
 end
 
 local function getAccount(source)
-    local identifier = getIdentifier(source)
+    local Player = getQbPlayer(source)
 
-    if not identifier then
+    if not Player then
         return nil
     end
 
     return MySQL.single.await(
         [[
-            SELECT character_id, cash, bank
+            SELECT character_id
             FROM whellco_players
             WHERE identifier = ?
             ORDER BY created_at DESC
             LIMIT 1
         ]],
-        { identifier }
+        { Player.PlayerData.identifier }
     )
 end
 
-local function adjustCash(account, amount, description)
-    if amount > 0 then
-        local updated = MySQL.update.await(
-            'UPDATE whellco_players SET cash = cash + ? WHERE character_id = ?',
-            { amount, account.character_id }
-        )
+local function spendCash(source, amount, description)
+    local Player = getQbPlayer(source)
 
-        if not updated or updated == 0 then
-            return false
-        end
-    elseif amount < 0 then
-        local cost = math.abs(amount)
-
-        local updated = MySQL.update.await(
-            'UPDATE whellco_players SET cash = cash - ? WHERE character_id = ? AND cash >= ?',
-            { cost, account.character_id, cost }
-        )
-
-        if not updated or updated == 0 then
-            return false
-        end
+    if not Player then
+        return false
     end
 
-    if description then
+    amount = math.floor(tonumber(amount) or 0)
+
+    if amount <= 0 then
+        return false
+    end
+
+    if Player.Functions.GetMoney('cash') < amount then
+        return false
+    end
+
+    if not Player.Functions.RemoveMoney('cash', amount, description or 'WhellCo Casino') then
+        return false
+    end
+
+    local account = getAccount(source)
+
+    if account then
         MySQL.insert.await(
             [[
                 INSERT INTO whellco_casino_transactions
                     (character_id, type, amount, description)
-                VALUES (?, ?, ?, ?)
+                VALUES (?, 'casino_spend', ?, ?)
             ]],
-            { account.character_id, amount >= 0 and 'casino_win' or 'casino_spend', amount, description }
+            { account.character_id, -amount, description or 'WhellCo Casino' }
         )
     end
 
     return true
 end
 
-local function recordGame(account, game, bet, payout, result)
+local function giveCash(source, amount, description)
+    local Player = getQbPlayer(source)
+
+    if not Player then
+        return false
+    end
+
+    amount = math.floor(tonumber(amount) or 0)
+
+    if amount <= 0 then
+        return false
+    end
+
+    if not Player.Functions.AddMoney('cash', amount, description or 'WhellCo Casino') then
+        return false
+    end
+
+    local account = getAccount(source)
+
+    if account then
+        MySQL.insert.await(
+            [[
+                INSERT INTO whellco_casino_transactions
+                    (character_id, type, amount, description)
+                VALUES (?, 'casino_win', ?, ?)
+            ]],
+            { account.character_id, amount, description or 'WhellCo Casino' }
+        )
+    end
+
+    return true
+end
+
+local function recordGame(source, game, bet, payout, result)
+    local account = getAccount(source)
+
+    if not account then
+        return
+    end
+
     MySQL.insert.await(
         [[
             INSERT INTO whellco_casino_game_history
@@ -134,10 +170,11 @@ local function recordGame(account, game, bet, payout, result)
 end
 
 local function sendCasinoData(source)
+    local Player = getQbPlayer(source)
     local account = getAccount(source)
     local membership = getMembership(source)
 
-    if not account then
+    if not Player or not account then
         return
     end
 
@@ -162,8 +199,8 @@ local function sendCasinoData(source)
     ) or {}
 
     TriggerClientEvent('whellco_casino:openMenu', source, {
-        cash = account.cash,
-        bank = account.bank,
+        cash = Player.Functions.GetMoney('cash'),
+        bank = Player.Functions.GetMoney('bank'),
         membership = membership,
         penthouse = penthouse,
         garageSpaces = garageSpaces,
@@ -197,33 +234,37 @@ RegisterNetEvent('whellco_casino:purchaseMembership', function(tier)
     end
 
     local membership = Config.Memberships[tier]
-    local account = getAccount(source)
+    local current = getMembership(source)
 
-    if not membership or not account then
+    if not membership or not current then
         return
     end
 
     if tier == 'free' then
-        TriggerClientEvent('whellco_casino:notify', source, 'You already have the free membership.')
+        TriggerClientEvent('QBCore:Notify', source, 'You already have the free membership.', 'error')
         return
     end
 
-    local current = getMembership(source)
-
     if current.tier == tier then
-        TriggerClientEvent('whellco_casino:notify', source, 'You already own this membership.')
+        TriggerClientEvent('QBCore:Notify', source, 'You already own this membership.', 'error')
         return
     end
 
     if current.tier == 'vip' then
-        TriggerClientEvent('whellco_casino:notify', source, 'You already own the highest membership.')
+        TriggerClientEvent('QBCore:Notify', source, 'You already own the highest membership.', 'error')
         return
     end
 
     local price = math.floor(membership.price * (1 - current.discount))
 
-    if not adjustCash(account, -price, ('Purchased %s'):format(membership.label)) then
-        TriggerClientEvent('whellco_casino:notify', source, 'You do not have enough cash.')
+    if not spendCash(source, price, ('Purchased %s'):format(membership.label)) then
+        TriggerClientEvent('QBCore:Notify', source, 'You do not have enough cash.', 'error')
+        return
+    end
+
+    local account = getAccount(source)
+
+    if not account then
         return
     end
 
@@ -237,9 +278,13 @@ RegisterNetEvent('whellco_casino:purchaseMembership', function(tier)
         { account.character_id, tier }
     )
 
-    activeMemberships[getIdentifier(source)] = nil
+    local Player = getQbPlayer(source)
 
-    TriggerClientEvent('whellco_casino:notify', source, ('%s activated.'):format(membership.label))
+    if Player then
+        activeMemberships[Player.PlayerData.citizenid] = nil
+    end
+
+    TriggerClientEvent('QBCore:Notify', source, ('%s activated.'):format(membership.label), 'success')
 
     sendCasinoData(source)
 end)
@@ -252,10 +297,9 @@ RegisterNetEvent('whellco_casino:spinSlots', function(bet)
     end
 
     bet = math.floor(tonumber(bet) or 0)
-    local account = getAccount(source)
     local membership = getMembership(source)
 
-    if not account or not membership then
+    if not membership then
         return
     end
 
@@ -272,8 +316,8 @@ RegisterNetEvent('whellco_casino:spinSlots', function(bet)
         return
     end
 
-    if not adjustCash(account, -bet, 'Slot machine bet') then
-        TriggerClientEvent('whellco_casino:notify', source, 'You do not have enough cash.')
+    if not spendCash(source, bet, 'Slot machine bet') then
+        TriggerClientEvent('QBCore:Notify', source, 'You do not have enough cash.', 'error')
         return
     end
 
@@ -294,10 +338,10 @@ RegisterNetEvent('whellco_casino:spinSlots', function(bet)
         payout = math.floor(bet * Config.SlotPayouts[symbol])
         result = ('Win: %s x%d'):format(symbol, Config.SlotPayouts[symbol])
 
-        adjustCash(account, payout, ('Slot machine win: %s'):format(symbol))
+        giveCash(source, payout, ('Slot machine win: %s'):format(symbol))
     end
 
-    recordGame(account, 'slots', bet, payout, result)
+    recordGame(source, 'slots', bet, payout, result)
 
     TriggerClientEvent('whellco_casino:slotResult', source, {
         reels = reels,
@@ -315,17 +359,16 @@ RegisterNetEvent('whellco_casino:spinWheel', function()
         return
     end
 
-    local account = getAccount(source)
     local membership = getMembership(source)
 
-    if not account or not membership then
+    if not membership then
         return
     end
 
     local cost = math.floor(Config.WheelSpinCost * (1 - membership.discount))
 
-    if not adjustCash(account, -cost, 'Wheel spin') then
-        TriggerClientEvent('whellco_casino:notify', source, 'You do not have enough cash.')
+    if not spendCash(source, cost, 'Wheel spin') then
+        TriggerClientEvent('QBCore:Notify', source, 'You do not have enough cash.', 'error')
         return
     end
 
@@ -350,10 +393,10 @@ RegisterNetEvent('whellco_casino:spinWheel', function()
     local payout = selected.amount
 
     if payout > 0 then
-        adjustCash(account, payout, ('Wheel spin prize: %s'):format(selected.label))
+        giveCash(source, payout, ('Wheel spin prize: %s'):format(selected.label))
     end
 
-    recordGame(account, 'wheel', cost, payout, selected.label)
+    recordGame(source, 'wheel', cost, payout, selected.label)
 
     TriggerClientEvent('whellco_casino:wheelResult', source, {
         label = selected.label,
@@ -388,14 +431,14 @@ RegisterNetEvent('whellco_casino:purchasePenthouse', function()
     )
 
     if existing then
-        TriggerClientEvent('whellco_casino:notify', source, 'You already own a penthouse.')
+        TriggerClientEvent('QBCore:Notify', source, 'You already own a penthouse.', 'error')
         return
     end
 
     local price = math.floor(Config.Penthouse.price * (1 - membership.discount))
 
-    if not adjustCash(account, -price, 'Purchased casino penthouse') then
-        TriggerClientEvent('whellco_casino:notify', source, 'You do not have enough cash.')
+    if not spendCash(source, price, 'Purchased casino penthouse') then
+        TriggerClientEvent('QBCore:Notify', source, 'You do not have enough cash.', 'error')
         return
     end
 
@@ -408,7 +451,7 @@ RegisterNetEvent('whellco_casino:purchasePenthouse', function()
         { account.character_id }
     )
 
-    TriggerClientEvent('whellco_casino:notify', source, 'Penthouse purchased.')
+    TriggerClientEvent('QBCore:Notify', source, 'Penthouse purchased.', 'success')
 
     sendCasinoData(source)
 end)
@@ -422,15 +465,10 @@ RegisterNetEvent('whellco_casino:customisePenthouse', function(optionType, optio
 
     local account = getAccount(source)
     local membership = getMembership(source)
-
-    if not account or not membership then
-        return
-    end
-
     local optionGroup = Config.PenthouseOptions[optionType]
     local option = optionGroup and optionGroup.options[optionId]
 
-    if not option then
+    if not account or not membership or not option then
         return
     end
 
@@ -445,14 +483,14 @@ RegisterNetEvent('whellco_casino:customisePenthouse', function(optionType, optio
     )
 
     if not owned then
-        TriggerClientEvent('whellco_casino:notify', source, 'You need to buy a penthouse first.')
+        TriggerClientEvent('QBCore:Notify', source, 'You need to buy a penthouse first.', 'error')
         return
     end
 
     local price = math.floor(option.price * (1 - membership.discount))
 
-    if not adjustCash(account, -price, ('Penthouse customisation: %s'):format(option.label)) then
-        TriggerClientEvent('whellco_casino:notify', source, 'You do not have enough cash.')
+    if not spendCash(source, price, ('Penthouse customisation: %s'):format(option.label)) then
+        TriggerClientEvent('QBCore:Notify', source, 'You do not have enough cash.', 'error')
         return
     end
 
@@ -461,7 +499,7 @@ RegisterNetEvent('whellco_casino:customisePenthouse', function(optionType, optio
         { optionId, account.character_id }
     )
 
-    TriggerClientEvent('whellco_casino:notify', source, ('Penthouse updated: %s.'):format(option.label))
+    TriggerClientEvent('QBCore:Notify', source, ('Penthouse updated: %s.'):format(option.label), 'success')
 
     sendCasinoData(source)
 end)
@@ -492,14 +530,14 @@ RegisterNetEvent('whellco_casino:purchaseGarageSpace', function(spaceType)
     )
 
     if owned then
-        TriggerClientEvent('whellco_casino:notify', source, 'You already own this garage space.')
+        TriggerClientEvent('QBCore:Notify', source, 'You already own this garage space.', 'error')
         return
     end
 
     local price = math.floor(space.price * (1 - membership.discount))
 
-    if not adjustCash(account, -price, ('Purchased %s'):format(space.label)) then
-        TriggerClientEvent('whellco_casino:notify', source, 'You do not have enough cash.')
+    if not spendCash(source, price, ('Purchased %s'):format(space.label)) then
+        TriggerClientEvent('QBCore:Notify', source, 'You do not have enough cash.', 'error')
         return
     end
 
@@ -512,16 +550,17 @@ RegisterNetEvent('whellco_casino:purchaseGarageSpace', function(spaceType)
         { account.character_id, spaceType }
     )
 
-    TriggerClientEvent('whellco_casino:notify', source, ('%s purchased.'):format(space.label))
+    TriggerClientEvent('QBCore:Notify', source, ('%s purchased.'):format(space.label), 'success')
 
     sendCasinoData(source)
 end)
 
 AddEventHandler('playerDropped', function()
-    local identifier = getIdentifier(source)
+    local Player = getQbPlayer(source)
 
-    if identifier then
-        activeMemberships[identifier] = nil
-        lastGameRequest[source] = nil
+    if Player then
+        activeMemberships[Player.PlayerData.citizenid] = nil
     end
+
+    lastGameRequest[source] = nil
 end)
