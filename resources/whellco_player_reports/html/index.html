@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Player Report</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="report-menu" class="hidden">
+        <div class="report-header">
+            <h1>Submit a Report</h1>
+            <button id="close-report">Close</button>
+        </div>
+
+        <label>Report Type</label>
+        <select id="report-type">
+            <option value="cheating">Cheating or Exploiting</option>
+            <option value="harassment">Harassment or Toxic Behaviour</option>
+            <option value="bug">Bug or Technical Issue</option>
+            <option value="griefing">Griefing or Disruptive Behaviour</option>
+            <option value="other">Other Staff Assistance</option>
+        </select>
+
+        <label>Reported Player ID</label>
+        <input id="target-source" type="number" placeholder="Leave blank if not reporting a player">
+
+        <label>Title</label>
+        <input id="report-title" type="text" maxlength="100" placeholder="Short summary">
+
+        <label>Description</label>
+        <textarea id="report-description" maxlength="2000" placeholder="Include what happened, when it happened, player IDs, evidence, and any other useful details."></textarea>
+
+        <button id="submit-report">Submit Report</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
