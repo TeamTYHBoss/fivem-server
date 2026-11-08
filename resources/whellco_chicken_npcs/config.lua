@@ -11,7 +11,8 @@ Config.Chickens = {
         wanderInterval = 8000,
         panicDistance = 3.0,
         panicSpeed = 3.0,
-        calmDistance = 6.0
+        calmDistance = 6.0,
+        squawkInterval = 1500
     }
 }
 

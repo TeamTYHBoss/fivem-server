@@ -23,7 +23,8 @@ local function spawnChicken(config)
         chickens[#chickens + 1] = {
             ped = ped,
             config = config,
-            panicking = false
+            panicking = false,
+            lastSquawk = 0
         }
     end
 end
@@ -37,6 +38,30 @@ local function wanderChicken(chicken)
     local targetZ = config.coords.z
 
     TaskGoToCoordAnyMeans(chicken.ped, targetX, targetY, targetZ, 1.0, 0, 0, 786603, 0.0)
+end
+
+local function playPanicSound(chicken)
+    local currentTime = GetGameTimer()
+
+    if currentTime - chicken.lastSquawk < chicken.config.squawkInterval then
+        return
+    end
+
+    chicken.lastSquawk = currentTime
+
+    local chickenCoords = GetEntityCoords(chicken.ped)
+
+    PlaySoundFromCoord(
+        -1,
+        'SELECT',
+        chickenCoords.x,
+        chickenCoords.y,
+        chickenCoords.z,
+        'HUD_FRONTEND_DEFAULT_SOUNDSET',
+        false,
+        80,
+        false
+    )
 end
 
 local function panicChicken(chicken, playerCoords)
@@ -59,6 +84,7 @@ local function panicChicken(chicken, playerCoords)
     TaskGoToCoordAnyMeans(chicken.ped, runX, runY, runZ, config.panicSpeed, 0, 0, 786603, 0.0)
 
     chicken.panicking = true
+    playPanicSound(chicken)
 end
 
 CreateThread(function()
@@ -100,6 +126,8 @@ CreateThread(function()
                 if distance < chicken.config.panicDistance then
                     if not chicken.panicking then
                         panicChicken(chicken, playerCoords)
+                    else
+                        playPanicSound(chicken)
                     end
                 elseif chicken.panicking and distance > chicken.config.calmDistance then
                     chicken.panicking = false
