@@ -11,7 +11,7 @@ This repository contains the FiveM server resources and documentation.
 - Bank balance display.
 - Shop purchases.
 - Marketplace listings, purchases, and cancellations.
-- Bank transfers with request IDs and transfer history.
+- Bank transfers with transfer history.
 - Persistent social posts and comments.
 - Comment notifications.
 - Notification bell, unread count, and mark-as-read support.
@@ -31,7 +31,7 @@ This repository contains the FiveM server resources and documentation.
 
 ### Bank
 
-Displays the bank balance and supports transfers to online players. Transfers use request IDs to prevent duplicate submissions and are completed through a database transaction. Transfer history shows sender, recipient, amount, and status.
+Displays the bank balance and supports transfers to online players. A durable pending transfer record is created before the sender is debited. The server revalidates both players after asynchronous database operations, and failed completion or reversal paths are marked `failed` or `recovery`.
 
 ### Shop
 
@@ -39,7 +39,7 @@ Displays configured shop items and purchases them with bank money. The item is a
 
 ### Marketplace
 
-Lets players create, browse, buy, and cancel listings. A purchase first conditionally claims the active listing in the database; only the player whose update affects a row can continue. The listing then moves through `pending` to `sold`, with rollback and recovery handling for failures.
+Lets players create, browse, buy, and cancel listings. A purchase first conditionally claims the active listing; only a request that changes exactly one row can continue. The buyer receives the item only after the claim succeeds. Payment, notification, and payout failures use checked rollback or recovery states.
 
 ### Social
 
@@ -47,7 +47,7 @@ Posts and comments are stored in the database, so they survive resource and serv
 
 ### Notifications
 
-Shows transfer, marketplace, and comment notifications. Players can mark notifications as read, and the notification tab displays an unread count.
+Shows transfer, marketplace, and comment notifications. Players can mark notifications as read. The unread badge uses a dedicated server-side count, so it is not limited to the latest 50 notifications.
 
 ## Database setup
 
@@ -58,35 +58,60 @@ Run `resources/whellco_computer/sql/upgrade.sql` before starting the resource. I
 - `qb-core`
 - `oxmysql`
 
-## Recent computer fixes
+## Completed computer fixes
 
-- Added `/computer` command.
+- Fixed `/computer` so it works anywhere.
 - Added Escape support to close the computer.
 - Added `getShop` NUI callback.
 - Added Marketplace tab with listing creation, purchase, and cancellation.
 - Added Bank transfer form and transfer-history list.
-- Added request-ID generation for transfers.
+- Added server-generated transfer request IDs.
 - Added Notifications tab, notification bell, unread count, and mark-as-read support.
 - Added ownership checks for notification updates.
 - Added persistent social posts and comments.
 - Added database-backed comment notifications.
 - Added transactional transfer completion and notification creation.
-- Added conditional marketplace listing claims to prevent duplicate purchases.
-- Added rollback and recovery states for failed marketplace purchases and cancellations.
+- Added marketplace listing claims before item delivery and payment.
+- Added checked rollback and recovery states for failed marketplace purchases and cancellations.
 - Added server-side limits for transfer amounts, listing quantities, and listing prices.
-- Added metadata validation for marketplace listings.
+- Added action cooldowns for shop purchases, transfers, listings, purchases, posts, and comments.
 - Added oxmysql dependency and MySQL library loading.
 - Made configuration shared between client and server.
 - Improved client proximity-loop performance.
 - Fixed shop purchases so inventory-full purchases do not charge the player.
 - Fixed social post and comment rendering to use safe DOM text updates.
+- Fixed JavaScript `elseif` syntax.
 - Fixed oxmysql transaction parameter format.
-- Added automatic notification refresh while the computer is open.
+- Added UI success/error messages and request-button disabling.
+- Added marketplace ownership-aware Buy and Cancel controls.
+- Added dedicated unread-notification count.
+- Added NUI focus cleanup on resource stop.
+- Replaced invalid server-side player lookup in `client.lua` with client-side QBCore player data.
+- Sent the local player’s citizen ID to the UI for ownership-aware marketplace controls.
+- Removed the duplicate Escape polling thread.
+- Changed transfers to create a durable pending record before debiting the sender.
+- Added post-database sender and recipient revalidation for transfers.
+- Added checked reversal and recovery handling for failed transfers.
+- Changed marketplace purchases to claim listings before item delivery or payment.
+- Added checked marketplace rollback and recovery handling.
+- Rejected client-supplied listing metadata and stored empty metadata only.
+- Updated the UI to show Buy only for other players’ listings and Cancel only for the local player’s listings.
+- Updated the UI to disable buttons during requests and display server success/error messages.
+- Updated the UI to use the dedicated unread-notification count endpoint.
+
+## Marketplace metadata
+
+Marketplace listings currently store empty metadata. This prevents clients from injecting arbitrary metadata, but it also means item-specific metadata is not preserved when listing an item. Future work should use a server-side inventory lookup to preserve verified metadata.
+
+## Recovery states
+
+- `pending`: a marketplace purchase or transfer is in progress.
+- `recovery`: an operation could not be safely completed and requires administrator reconciliation.
+- On resource restart, incomplete `pending` marketplace listings are marked `recovery` to prevent duplicate sales.
 
 ## Remaining limitations
 
-- Marketplace and transfer money/inventory operations still depend on QBCore runtime state; a server crash between database and QBCore operations may require manual reconciliation.
-- On resource restart, incomplete `pending` marketplace listings are marked `recovery` to prevent duplicate sales; administrators should inspect and resolve those records manually.
+- A server crash between a QBCore inventory/money operation and its database record can still require manual reconciliation.
 - The mini browser is not yet implemented.
 
 ## Fast Food Restaurants
@@ -401,8 +426,8 @@ View current weather:
 - Night time is synced server-side.
 - Weather changes are validated server-side.
 - Computer purchases, listings, transfers, posts, comments, and notifications are validated server-side.
-- Marketplace purchases use conditional database claims and transactions.
-- Bank transfers use request IDs and transactional completion.
+- Marketplace purchases claim listings before item delivery and payment.
+- Bank transfers create durable records before debiting senders.
 - Notification ownership is validated server-side.
 
 ## Recent changes
