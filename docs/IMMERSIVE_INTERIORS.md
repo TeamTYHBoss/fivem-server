@@ -1,6 +1,6 @@
 # Immersive Interiors
 
-`whellco_immersive_interiors` provides QBCore-native custom MLO interiors, seamless entry and exit points, job-gated rooms, interactive interior locations, and polished teleport transitions with audio cues.
+`whellco_immersive_interiors` provides QBCore-native custom MLO interiors, seamless entry and exit points, job-gated rooms, interactive interior locations, and polished teleport transitions with audio cues and cooldown protection.
 
 ## Startup order
 
@@ -21,6 +21,7 @@ Config.TeleportTransition = {
     particleEffect = 'scr_reconstructiontrust',
     particleName = 'scr_reconstruction_trust',
     particleDurationMs = 900,
+    cooldownMs = 5000,
     audio = {
         enabled = true,
         departureSound = 'CHECKPOINT_PERFECT',
@@ -33,12 +34,11 @@ Config.TeleportTransition = {
 }
 ```
 
-- Set `enabled = false` to disable the visual transition.
-- Set `audio.enabled = false` to disable only the audio cues.
-- `departureSound` plays before the screen fade begins.
-- `arrivalSound` plays after the player reaches the destination.
-- `departureDelayMs` delays the departure sound.
-- `arrivalDelayMs` delays the arrival sound.
+- `cooldownMs` prevents teleport spam.
+- The default cooldown is 5 seconds.
+- Set `cooldownMs = 0` to disable the cooldown.
+- The cooldown applies to both normal interior entry/exit and `/interiortp`.
+- Players receive a QBCore notification showing the remaining cooldown.
 
 ## Admin teleport commands
 

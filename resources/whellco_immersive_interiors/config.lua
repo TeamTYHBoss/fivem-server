@@ -11,6 +11,7 @@ Config.TeleportTransition = {
     particleEffect = 'scr_reconstructiontrust',
     particleName = 'scr_reconstruction_trust',
     particleDurationMs = 900,
+    cooldownMs = 5000,
     audio = {
         enabled = true,
         departureSound = 'CHECKPOINT_PERFECT',

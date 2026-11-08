@@ -2,6 +2,7 @@ local QBCore = exports['qb-core']:GetCoreObject()
 
 local currentInterior = nil
 local loadedInteriors = {}
+local lastTeleport = 0
 
 local function requestInterior(name)
     if loadedInteriors[name] then
@@ -98,7 +99,27 @@ local function playTeleportEffect(coords)
     end
 end
 
+local function canTeleport()
+    local now = GetGameTimer()
+    local cooldown = Config.TeleportTransition.cooldownMs or 0
+
+    if cooldown > 0 and now - lastTeleport < cooldown then
+        local remaining = math.ceil((cooldown - (now - lastTeleport)) / 1000)
+
+        QBCore.Functions.Notify(('Please wait %d second(s) before teleporting again.'):format(remaining), 'error')
+        return false
+    end
+
+    return true
+end
+
 local function teleportPlayer(interiorId, coords, label)
+    if not canTeleport() then
+        return
+    end
+
+    lastTeleport = GetGameTimer()
+
     local transition = Config.TeleportTransition
     local audio = transition.audio or {}
 
