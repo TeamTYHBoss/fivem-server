@@ -21,8 +21,8 @@ function showMessage(message, kind) {
 }
 
 function renderBank() {
-    const balanceElement = document.getElementById('bank-balance');
-    const transferList = document.getElementById('transfer-history');
+    const balanceElement = document.getElementById('balance');
+    const transferList = document.getElementById('transfers');
 
     if (balanceElement) {
         balanceElement.textContent = formatMoney(ComputerState.bankBalance);
@@ -56,7 +56,7 @@ function renderShop() {
 }
 
 function renderMarketplace() {
-    const marketplaceList = document.getElementById('marketplace-items');
+    const marketplaceList = document.getElementById('listings');
 
     if (!marketplaceList) {
         return;
@@ -77,7 +77,7 @@ function renderMarketplace() {
 }
 
 function renderSocial() {
-    const postList = document.getElementById('social-posts');
+    const postList = document.getElementById('posts');
 
     if (!postList) {
         return;
@@ -93,8 +93,8 @@ function renderSocial() {
 }
 
 function renderNotifications() {
-    const notificationList = document.getElementById('notification-list');
-    const notificationBadge = document.getElementById('notification-count');
+    const notificationList = document.getElementById('notifications-list');
+    const notificationBadge = document.getElementById('unread-count');
 
     if (notificationList) {
         notificationList.innerHTML = ComputerState.notifications.map(notification => `
