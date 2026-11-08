@@ -10,6 +10,14 @@
 - The hands-up requirement is configurable.
 - The hands-up key is configurable.
 
+## Target warning
+
+- The target receives a notification when a robbery starts.
+- The notification says: `Someone is attempting to rob you. Keep your hands up!`
+- The notification lasts 10 seconds.
+- The notification uses an error-style alert.
+- A sound effect plays alongside the notification.
+
 ## Startup order
 
 ```cfg

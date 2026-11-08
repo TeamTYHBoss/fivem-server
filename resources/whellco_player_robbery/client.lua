@@ -60,7 +60,8 @@ RegisterNetEvent('whellco_player_robbery:start', function(targetServerId)
 end)
 
 RegisterNetEvent('whellco_player_robbery:victim', function(robberServerId)
-    QBCore.Functions.Notify('Someone is attempting to rob you.', 'error', 10000)
+    QBCore.Functions.Notify('Someone is attempting to rob you. Keep your hands up!', 'error', 10000)
+    PlaySoundFrontend(-1, 'CHECKPOINT_PERFECT', 'HUD_MINI_GAME_SOUNDSET', true)
 end)
 
 RegisterNetEvent('whellco_player_robbery:policeAlert', function(coords)
