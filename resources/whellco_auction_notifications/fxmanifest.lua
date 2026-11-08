@@ -2,8 +2,8 @@ fx_version 'cerulean'
 game 'gta5'
 
 author 'Chris Wheller'
-description 'Vehicle auction notification system with auction alerts, notification types and notification NUI'
-version '1.0.0'
+description 'QBCore-native vehicle auction notifications'
+version '2.0.0'
 
 shared_script 'config.lua'
 
@@ -20,4 +20,8 @@ files {
     'html/script.js'
 }
 
-dependency 'oxmysql'
+dependencies {
+    'qb-core',
+    'oxmysql',
+    'whellco_qbcore'
+}

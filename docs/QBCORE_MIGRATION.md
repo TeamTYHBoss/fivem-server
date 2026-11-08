@@ -65,19 +65,15 @@ Player.Functions.SetMetaData('whellco_level', value)
 - `whellco_wardrobe`: migrated.
 - `whellco_housing`: migrated.
 - `whellco_banking`: migrated.
-- `whellco_vehicles`: migrated.
-- `whellco_dealership`: migrated.
-- `whellco_insurance`: migrated.
-- `whellco_registration`: migrated.
-- `whellco_vehicletax`: migrated.
-- `whellco_mot`: migrated.
-- `whellco_impound`: migrated.
-- `whellco_police`: migrated.
-- `whellco_medical`: migrated.
-- `whellco_mechanic`: migrated.
-- `whellco_phone`: migrated.
-- `whellco_jobcenter`: migrated.
-- `whellco_immersion`: migrated.
+- Vehicle systems: migrated.
+- Service systems: migrated.
+- `whellco_auction_notifications`: migrated.
+- `whellco_auction_notifications_settings`: migrated.
+- `whellco_admin`: migrated.
+- `whellco_discord`: migrated.
+- `whellco_monitoring`: migrated.
+- `whellco_backup`: migrated.
+- `whellco_deployment`: migrated.
 - Remaining systems: batch migration pending.
 
 ## Compatibility bridge
@@ -96,10 +92,9 @@ Player.Functions.SetMetaData('whellco_level', value)
 
 New and migrated resources should use these exports or call QBCore directly.
 
-## Batch 3 migration
+## Batch 4 migration
 
-- Police duty, fines, medical revival and treatment now use QBCore jobs and money.
-- Mechanic repairs validate the QBCore mechanic job.
-- Phone identity and messages use QBCore player data.
-- Job-center applications use QBCore jobs.
-- Immersion activity payouts use QBCore bank money.
+- Auction notification records and settings now use QBCore citizen IDs.
+- Admin cash and bank payments use QBCore money functions and permissions.
+- Discord integration uses QBCore identity and job data.
+- Monitoring, backup, and deployment commands validate QBCore admin permissions.

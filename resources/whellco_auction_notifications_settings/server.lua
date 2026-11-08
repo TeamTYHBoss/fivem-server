@@ -1,17 +1,13 @@
-local function getIdentifier(source)
-    local identifier = GetPlayerIdentifierByType(source, 'license')
+local QBCore = exports['qb-core']:GetCoreObject()
 
-    if not identifier then
-        identifier = GetPlayerIdentifierByType(source, 'steam')
-    end
-
-    return identifier
+local function getQbPlayer(source)
+    return QBCore.Functions.GetPlayer(source)
 end
 
 local function sendMenu(source)
-    local identifier = getIdentifier(source)
+    local Player = getQbPlayer(source)
 
-    if not identifier then
+    if not Player then
         return
     end
 
@@ -19,12 +15,10 @@ local function sendMenu(source)
         [[
             SELECT alert_channel, auction_start, bid_placed, outbid, auction_end, auction_won, auction_lost
             FROM whellco_auction_notification_settings
-            WHERE character_id = (
-                SELECT character_id FROM whellco_players WHERE identifier = ? ORDER BY created_at DESC LIMIT 1
-            )
+            WHERE character_id = ?
             LIMIT 1
         ]],
-        { identifier }
+        { Player.PlayerData.citizenid }
     ) or {}
 
     TriggerClientEvent('whellco_auction_notifications_settings:openMenu', source, {
@@ -44,24 +38,9 @@ end)
 
 RegisterNetEvent('whellco_auction_notifications_settings:saveSettings', function(data)
     local source = source
-    local identifier = getIdentifier(source)
+    local Player = getQbPlayer(source)
 
-    if not identifier then
-        return
-    end
-
-    local account = MySQL.single.await(
-        [[
-            SELECT character_id
-            FROM whellco_players
-            WHERE identifier = ?
-            ORDER BY created_at DESC
-            LIMIT 1
-        ]],
-        { identifier }
-    )
-
-    if not account then
+    if not Player then
         return
     end
 
@@ -92,7 +71,7 @@ RegisterNetEvent('whellco_auction_notifications_settings:saveSettings', function
                 auction_lost = VALUES(auction_lost)
         ]],
         {
-            account.character_id,
+            Player.PlayerData.citizenid,
             channel,
             enabled.auction_start,
             enabled.bid_placed,
@@ -103,7 +82,7 @@ RegisterNetEvent('whellco_auction_notifications_settings:saveSettings', function
         }
     )
 
-    TriggerClientEvent('whellco_auction_notifications_settings:notify', source, 'Notification settings saved.')
+    TriggerClientEvent('QBCore:Notify', source, 'Notification settings saved.', 'success')
 
     sendMenu(source)
 end)

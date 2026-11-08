@@ -1,17 +1,13 @@
-local function getIdentifier(source)
-    local identifier = GetPlayerIdentifierByType(source, 'license')
+local QBCore = exports['qb-core']:GetCoreObject()
 
-    if not identifier then
-        identifier = GetPlayerIdentifierByType(source, 'steam')
-    end
-
-    return identifier
+local function getQbPlayer(source)
+    return QBCore.Functions.GetPlayer(source)
 end
 
 local function sendMenu(source)
-    local identifier = getIdentifier(source)
+    local Player = getQbPlayer(source)
 
-    if not identifier then
+    if not Player then
         return
     end
 
@@ -19,13 +15,11 @@ local function sendMenu(source)
         [[
             SELECT id, auction_id, notification_type, message, read_at, created_at
             FROM whellco_auction_notifications
-            WHERE character_id = (
-                SELECT character_id FROM whellco_players WHERE identifier = ? ORDER BY created_at DESC LIMIT 1
-            )
+            WHERE character_id = ?
             ORDER BY created_at DESC
             LIMIT ?
         ]],
-        { identifier, Config.MaxNotifications }
+        { Player.PlayerData.citizenid, Config.MaxNotifications }
     ) or {}
 
     TriggerClientEvent('whellco_auction_notifications:openMenu', source, {
@@ -44,9 +38,9 @@ end)
 
 RegisterNetEvent('whellco_auction_notifications:markRead', function(notificationId)
     local source = source
-    local identifier = getIdentifier(source)
+    local Player = getQbPlayer(source)
 
-    if not identifier then
+    if not Player then
         return
     end
 
@@ -54,11 +48,9 @@ RegisterNetEvent('whellco_auction_notifications:markRead', function(notification
         [[
             UPDATE whellco_auction_notifications
             SET read_at = CURRENT_TIMESTAMP
-            WHERE id = ? AND character_id = (
-                SELECT character_id FROM whellco_players WHERE identifier = ? ORDER BY created_at DESC LIMIT 1
-            ) AND read_at IS NULL
+            WHERE id = ? AND character_id = ? AND read_at IS NULL
         ]],
-        { notificationId, identifier }
+        { notificationId, Player.PlayerData.citizenid }
     )
 
     sendMenu(source)
@@ -66,13 +58,9 @@ end)
 
 RegisterNetEvent('whellco_auction_notifications:createNotification', function(auctionId, notificationType, message)
     local source = source
-    local identifier = getIdentifier(source)
+    local Player = getQbPlayer(source)
 
-    if not identifier then
-        return
-    end
-
-    if not Config.NotificationTypes[notificationType] then
+    if not Player or not Config.NotificationTypes[notificationType] then
         return
     end
 
@@ -80,16 +68,12 @@ RegisterNetEvent('whellco_auction_notifications:createNotification', function(au
         [[
             INSERT INTO whellco_auction_notifications
                 (character_id, auction_id, notification_type, message)
-            SELECT character_id, ?, ?, ?
-            FROM whellco_players
-            WHERE identifier = ?
-            ORDER BY created_at DESC
-            LIMIT 1
+            VALUES (?, ?, ?, ?)
         ]],
-        { auctionId, notificationType, message, identifier }
+        { Player.PlayerData.citizenid, auctionId, notificationType, message }
     )
 
-    TriggerClientEvent('whellco_auction_notifications:notify', source, 'Notification created.')
+    TriggerClientEvent('QBCore:Notify', source, 'Notification created.', 'success')
 
     sendMenu(source)
 end)

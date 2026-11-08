@@ -2,8 +2,8 @@ fx_version 'cerulean'
 game 'gta5'
 
 author 'Chris Wheller'
-description 'Admin system with panel, player management, bans and admin NUI'
-version '1.0.0'
+description 'QBCore-native admin system'
+version '2.0.0'
 
 shared_script 'config.lua'
 
@@ -20,4 +20,8 @@ files {
     'html/script.js'
 }
 
-dependency 'oxmysql'
+dependencies {
+    'qb-core',
+    'oxmysql',
+    'whellco_qbcore'
+}
