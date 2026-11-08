@@ -3,6 +3,8 @@ local QBCore = exports['qb-core']:GetCoreObject()
 local restaurantPeds = {}
 local cashierPed = nil
 local heldFoodBag = nil
+local heldItemId = nil
+local canEat = false
 
 local function getAvailableItems(restaurantId)
     local items = {}
@@ -39,6 +41,8 @@ local function clearHeldFoodBag()
     end
 
     heldFoodBag = nil
+    heldItemId = nil
+    canEat = false
 end
 
 local function spawnCashier(restaurant)
@@ -56,6 +60,29 @@ local function spawnCashier(restaurant)
         cashierPed = cashier
         restaurantPeds[#restaurantPeds + 1] = cashier
     end
+end
+
+local function eatFromBag()
+    if not canEat or not heldItemId then
+        return
+    end
+
+    local item = Config.Menu[heldItemId]
+
+    if not item then
+        return
+    end
+
+    TriggerServerEvent('whellco_fast_food:eat', heldItemId)
+
+    QBCore.Functions.Notify(
+        ('You ate %s and restored %d hunger.'):format(item.label, item.hunger),
+        'success',
+        5000
+    )
+
+    clearHeldFoodBag()
+    ClearPedTasks(PlayerPedId())
 end
 
 local function handOverFoodBag(itemId)
@@ -96,6 +123,9 @@ local function handOverFoodBag(itemId)
             1,
             true
         )
+
+        heldItemId = itemId
+        canEat = true
 
         TaskStartScenarioInPlace(playerPed, 'WORLD_HUMAN_STAND_IMPATIENT', 0, true)
 
@@ -194,6 +224,19 @@ CreateThread(function()
 
                     QBCore.Functions.Notify(menuText, 'primary', 10000)
                 end
+            end
+        end
+
+        if canEat then
+            QBCore.Functions.DrawText3D(
+                playerCoords.x,
+                playerCoords.y,
+                playerCoords.z,
+                '[G] Eat food from bag'
+            )
+
+            if IsControlJustReleased(0, 47) then
+                eatFromBag()
             end
         end
     end

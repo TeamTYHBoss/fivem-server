@@ -1,6 +1,6 @@
 # Fast Food Restaurants
 
-`whellco_fast_food` adds fast food restaurants where players can purchase food and drinks. Cashiers hand over food bags, and players physically hold the food bag after purchase.
+`whellco_fast_food` adds fast food restaurants where players can purchase food and drinks. Cashiers hand over food bags, players physically hold the food bag, and players can eat the food from the bag.
 
 ## Player food bag
 
@@ -8,8 +8,11 @@
 - The food bag uses `prop_food_bag_01`.
 - The bag is attached to the player’s right hand.
 - The player holds the bag for 10 seconds.
-- The bag is removed automatically after 10 seconds.
-- The player’s animation changes while holding the bag.
+- The player can eat the food from the bag by pressing **G**.
+- Eating removes the food item from the player inventory.
+- Eating restores hunger.
+- The food bag is removed after eating.
+- The food bag is removed automatically after 10 seconds if the player does not eat.
 
 ## Cashier handover
 
@@ -80,6 +83,7 @@
 - Food restores hunger when consumed.
 - Cashiers hand over food bags after purchase.
 - Players physically hold the food bag after purchase.
+- Players can eat food from the bag by pressing G.
 
 ## Commands
 
@@ -102,4 +106,5 @@ View fast food help:
 - Purchase prices are validated server-side.
 - Purchases are logged server-side.
 - Food items are added server-side.
+- Food items are removed server-side when eaten.
 - Cashier handovers are triggered server-side.
