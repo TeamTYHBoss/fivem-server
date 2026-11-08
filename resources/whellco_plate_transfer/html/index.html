@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Vehicle Plate Transfer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="plate-transfer" id="plate-transfer">
+        <div class="window">
+            <header>
+                <h1>Vehicle Plate Transfer</h1>
+                <p>Transfer plates between vehicles.</p>
+            </header>
+
+            <div class="vehicles" id="vehicles"></div>
+
+            <div class="transfer-options">
+                <input id="target-input" placeholder="Enter target character ID">
+                <input id="plate-input" maxlength="8" placeholder="Enter plate text">
+                <button id="transfer-button">Transfer Plate</button>
+            </div>
+
+            <div class="transfer-list" id="transfer-list"></div>
+
+            <button id="close-button">Close</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

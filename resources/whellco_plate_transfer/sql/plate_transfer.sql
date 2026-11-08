@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS whellco_plate_transfers (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    vehicle_id INT UNSIGNED NOT NULL,
+    from_owner_id VARCHAR(64) NOT NULL,
+    to_owner_id VARCHAR(64) NOT NULL,
+    plate VARCHAR(8) NOT NULL,
+    transfer_fee INT UNSIGNED NOT NULL DEFAULT 750,
+    transferred_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
