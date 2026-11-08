@@ -24,6 +24,7 @@
 - A visual indicator shows when crowd blending is active.
 - The indicator says: `Crowd blend active`.
 - Leaving the crowd or moving too fast resumes suspicion growth.
+- Nearby NPCs turn to look at the player when blend state breaks.
 
 ## Guard challenges
 

@@ -12,15 +12,9 @@ local function isInsideArea(area)
     return #(playerCoords - area.coords) <= area.radius
 end
 
-local function isBlendingIntoCrowd()
-    local playerPed = PlayerPedId()
-    local playerCoords = GetEntityCoords(playerPed)
-    local playerSpeed = GetEntitySpeed(playerPed)
-    local nearbyPeds = 0
-
-    if playerSpeed > Config.Disguise.CrowdBlendMaxSpeed then
-        return false
-    end
+local function getNearbyPeds()
+    local playerCoords = GetEntityCoords(PlayerPedId())
+    local nearbyPeds = {}
 
     local handle, ped = FindFirstPed()
 
@@ -29,7 +23,7 @@ local function isBlendingIntoCrowd()
             local distance = #(playerCoords - GetEntityCoords(ped))
 
             if distance <= Config.Disguise.CrowdBlendRadius then
-                nearbyPeds = nearbyPeds + 1
+                nearbyPeds[#nearbyPeds + 1] = ped
             end
         end
 
@@ -38,7 +32,30 @@ local function isBlendingIntoCrowd()
 
     EndFindPed(handle)
 
-    return nearbyPeds >= Config.Disguise.CrowdBlendMinimumPeds
+    return nearbyPeds
+end
+
+local function isBlendingIntoCrowd()
+    local playerPed = PlayerPedId()
+    local playerSpeed = GetEntitySpeed(playerPed)
+
+    if playerSpeed > Config.Disguise.CrowdBlendMaxSpeed then
+        return false
+    end
+
+    return #getNearbyPeds() >= Config.Disguise.CrowdBlendMinimumPeds
+end
+
+local function makePedsReact()
+    local playerPed = PlayerPedId()
+    local nearbyPeds = getNearbyPeds()
+
+    for _, ped in ipairs(nearbyPeds) do
+        if DoesEntityExist(ped) then
+            TaskLookAtEntity(ped, playerPed, 3000, 2048, 3)
+            TaskTurnPedToFaceEntity(ped, playerPed, 2000)
+        end
+    end
 end
 
 local function updateSuspicionHud()
@@ -83,11 +100,16 @@ RegisterNetEvent('whellco_disguise_entry:apply', function(data)
         while disguiseActive do
             Wait(1000)
 
+            local wasBlending = crowdBlending
             crowdBlending = isBlendingIntoCrowd()
 
             if crowdBlending then
                 updateSuspicionHud()
             else
+                if wasBlending then
+                    makePedsReact()
+                end
+
                 suspicion = math.min(Config.Disguise.SuspicionMax, suspicion + Config.Disguise.SuspicionPerSecond)
                 updateSuspicionHud()
             end
