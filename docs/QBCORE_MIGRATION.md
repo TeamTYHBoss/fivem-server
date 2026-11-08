@@ -67,14 +67,10 @@ Player.Functions.SetMetaData('whellco_level', value)
 - `whellco_banking`: migrated.
 - Vehicle systems: migrated.
 - Service systems: migrated.
-- `whellco_auction_notifications`: migrated.
-- `whellco_auction_notifications_settings`: migrated.
-- `whellco_admin`: migrated.
-- `whellco_discord`: migrated.
-- `whellco_monitoring`: migrated.
-- `whellco_backup`: migrated.
-- `whellco_deployment`: migrated.
-- Remaining systems: batch migration pending.
+- Auction notification systems: migrated.
+- Auction report, moderation, audit, archive, insight, export, recommendation, dashboard, history, stats, leaderboard, watchlist, search, favorites, categories, and tag systems: QBCore migration SQL added.
+- Remaining auction server logic: batch migration pending.
+- Remaining utility systems: batch migration pending.
 
 ## Compatibility bridge
 
@@ -92,9 +88,8 @@ Player.Functions.SetMetaData('whellco_level', value)
 
 New and migrated resources should use these exports or call QBCore directly.
 
-## Batch 4 migration
+## Batch 5 SQL fix
 
-- Auction notification records and settings now use QBCore citizen IDs.
-- Admin cash and bank payments use QBCore money functions and permissions.
-- Discord integration uses QBCore identity and job data.
-- Monitoring, backup, and deployment commands validate QBCore admin permissions.
+Run every `qbcore_migration.sql` file under `resources/whellco_auction_*` once.
+
+The migration changes integer player-ownership columns to `VARCHAR(64)`, converts existing license identifiers to QBCore citizen IDs, and prepares all auction systems for QBCore-native server logic.
