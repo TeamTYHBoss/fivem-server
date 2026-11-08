@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Vehicle Plate Preview</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="plate-preview" id="plate-preview">
+        <div class="window">
+            <header>
+                <h1>Vehicle Plate Preview</h1>
+                <p>Preview plate types, colors and text.</p>
+            </header>
+
+            <div class="vehicles" id="vehicles"></div>
+
+            <div class="plate-options">
+                <select id="type-select"></select>
+                <select id="color-select"></select>
+                <input id="plate-input" maxlength="8" placeholder="Enter plate text">
+                <button id="preview-button">Preview Plate</button>
+            </div>
+
+            <div class="preview-list" id="preview-list"></div>
+
+            <button id="close-button">Close</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
