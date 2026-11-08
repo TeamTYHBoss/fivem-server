@@ -23,6 +23,8 @@ Config.Houses = {
     {
         id = 'house_1',
         label = 'House',
+        center = vector3(-268.0, -955.0, 31.0),
+        radius = 30.0,
         remoteSpawnPoints = {
             vector3(-268.0, -953.0, 31.0),
             vector3(-270.0, -957.0, 31.0),

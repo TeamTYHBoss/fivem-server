@@ -137,6 +137,7 @@ CreateThread(function()
 
         local playerCoords = GetEntityCoords(PlayerPedId())
         local nearTv = false
+        local nearHouse = false
 
         for _, tv in ipairs(Config.TVs) do
             local distance = #(playerCoords - tv.coords)
@@ -154,6 +155,14 @@ CreateThread(function()
                 if IsControlJustReleased(0, Config.Controls.interact) then
                     openTv(tv)
                 end
+            end
+        end
+
+        for _, house in ipairs(Config.Houses) do
+            local distance = #(playerCoords - house.center)
+
+            if distance < house.radius then
+                nearHouse = true
             end
         end
 
@@ -193,6 +202,13 @@ CreateThread(function()
 
         if not nearTv and tvOpen then
             closeTv()
+        end
+
+        if not nearHouse and remoteFound then
+            TriggerServerEvent('whellco_iptv:dropRemote')
+            remoteFound = false
+            hasRemote = false
+            spawnRemoteProp()
         end
     end
 end)

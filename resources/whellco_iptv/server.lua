@@ -72,6 +72,23 @@ RegisterNetEvent('whellco_iptv:pickUpRemote', function()
     TriggerClientEvent('QBCore:Notify', source, 'You found the TV remote.', 'success')
 end)
 
+RegisterNetEvent('whellco_iptv:dropRemote', function()
+    local source = source
+    local Player = QBCore.Functions.GetPlayer(source)
+
+    if not Player then
+        return
+    end
+
+    if not hasRemote(Player) then
+        return
+    end
+
+    Player.Functions.RemoveItem('tv_remote', 1)
+    TriggerClientEvent('whellco_iptv:remoteStatus', source, false)
+    TriggerClientEvent('QBCore:Notify', source, 'You left the house and dropped the TV remote.', 'primary')
+end)
+
 QBCore.Functions.CreateCallback('whellco_iptv:getLastChannel', function(source, cb, tvId)
     local Player = QBCore.Functions.GetPlayer(source)
 
