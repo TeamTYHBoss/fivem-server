@@ -28,6 +28,7 @@ The following bugs, errors, and reliability issues have been fixed and pushed to
 - Preserved recovery states and rollback behavior for failed transfers and marketplace purchases.
 - Split the computer server into `bank`, `shop`, `marketplace`, `social`, and `notifications` modules.
 - Added a shared `whellco_utils` resource for notifications, player lookup, cooldowns, validation, JSON handling, and money formatting.
+- Wired the modular computer UI into `index.html`.
 
 ### Fast food
 
@@ -89,7 +90,27 @@ The server is now modular:
 - `server/social.lua` handles posts and comments.
 - `server/notifications.lua` handles notification retrieval and read state.
 
-The UI is split into `state.js`, `api.js`, `render.js`, and `events.js`. The existing `script.js` remains available until the modular UI is wired into `index.html`.
+## Computer UI modules
+
+`index.html` now loads the modular UI files:
+
+```html
+<script src="state.js"></script>
+<script src="api.js"></script>
+<script src="render.js"></script>
+<script src="events.js"></script>
+```
+
+The former `script.js` is no longer loaded by the computer UI.
+
+- `state.js` stores shared client state and provides state setters.
+- `api.js` wraps NUI callbacks for bank, shop, marketplace, transfers, social, and notifications.
+- `render.js` renders lists and values, escapes HTML, and displays status messages.
+- `events.js` handles shop purchases, marketplace cancel and purchase actions, notification read actions, opening/closing the computer, and refreshing loaded data.
+
+## Known UI limitation
+
+`events.js` currently handles shop purchases, marketplace cancel/buy actions, and notification read actions. Bank transfers, marketplace listing creation, social posts, refresh buttons, tab switching, and the close button still need their handlers migrated from the former `script.js` before those controls are fully functional in the modular UI.
 
 ## Shared utilities
 
