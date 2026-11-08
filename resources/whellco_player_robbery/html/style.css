@@ -1,0 +1,86 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: transparent;
+}
+
+.hidden {
+    display: none;
+}
+
+#robbery-minigame {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 420px;
+    background: #14161c;
+    color: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.6);
+}
+
+.minigame-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.minigame-header h1 {
+    margin: 0;
+    font-size: 20px;
+}
+
+#timer {
+    color: #ffb347;
+    font-size: 18px;
+}
+
+.progress-track {
+    height: 8px;
+    background: #2b303a;
+    border-radius: 4px;
+    margin-bottom: 16px;
+}
+
+#progress-bar {
+    height: 100%;
+    width: 100%;
+    background: #2f81f7;
+    border-radius: 4px;
+}
+
+.instructions {
+    font-size: 13px;
+    margin-bottom: 16px;
+}
+
+.target-zone {
+    position: relative;
+    height: 40px;
+    background: #1d2027;
+    border-radius: 8px;
+    margin-bottom: 16px;
+}
+
+#moving-marker {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 12px;
+    height: 100%;
+    background: #d64545;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    background: #2f81f7;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+}
