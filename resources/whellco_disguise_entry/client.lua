@@ -4,6 +4,7 @@ local disguiseActive = false
 local currentArea = nil
 local guardPromptActive = false
 local suspicion = 0
+local crowdBlending = false
 
 local function isInsideArea(area)
     local playerCoords = GetEntityCoords(PlayerPedId())
@@ -43,7 +44,8 @@ end
 local function updateSuspicionHud()
     SendNUIMessage({
         action = 'suspicion',
-        value = suspicion
+        value = suspicion,
+        blending = crowdBlending
     })
 end
 
@@ -71,6 +73,7 @@ RegisterNetEvent('whellco_disguise_entry:apply', function(data)
     disguiseActive = true
     currentArea = data.area
     suspicion = 0
+    crowdBlending = false
 
     local playerPed = PlayerPedId()
 
@@ -80,7 +83,9 @@ RegisterNetEvent('whellco_disguise_entry:apply', function(data)
         while disguiseActive do
             Wait(1000)
 
-            if isBlendingIntoCrowd() then
+            crowdBlending = isBlendingIntoCrowd()
+
+            if crowdBlending then
                 updateSuspicionHud()
             else
                 suspicion = math.min(Config.Disguise.SuspicionMax, suspicion + Config.Disguise.SuspicionPerSecond)
@@ -150,8 +155,9 @@ RegisterNetEvent('whellco_disguise_entry:remove', function()
     currentArea = nil
     guardPromptActive = false
     suspicion = 0
+    crowdBlending = false
 
-    SendNUIMessage({ action = 'suspicion', value = 0 })
+    SendNUIMessage({ action = 'suspicion', value = 0, blending = false })
 end)
 
 RegisterNetEvent('whellco_disguise_entry:alert', function(job, coords)

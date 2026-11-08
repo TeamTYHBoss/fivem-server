@@ -21,8 +21,9 @@
 - Fast movement breaks the crowd blend state.
 - Crowd blend maximum speed is 2.0.
 - While blending, suspicion does not increase.
+- A visual indicator shows when crowd blending is active.
+- The indicator says: `Crowd blend active`.
 - Leaving the crowd or moving too fast resumes suspicion growth.
-- The crowd requirements and speed limit are configurable.
 
 ## Guard challenges
 

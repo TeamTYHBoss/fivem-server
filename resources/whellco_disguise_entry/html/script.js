@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const meter = document.getElementById('suspicion-meter');
     const fill = document.getElementById('suspicion-fill');
+    const blendIndicator = document.getElementById('blend-indicator');
 
     window.addEventListener('message', (event) => {
         const data = event.data;
@@ -15,6 +16,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 fill.style.background = '#ffb347';
             } else {
                 fill.style.background = '#2f81f7';
+            }
+
+            if (data.blending) {
+                blendIndicator.classList.remove('hidden');
+            } else {
+                blendIndicator.classList.add('hidden');
             }
         }
     });
