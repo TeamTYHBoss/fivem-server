@@ -23,6 +23,9 @@
 - Feathers drop every 0.4 seconds while panicking.
 - Chickens leave footprints on the kitchen floor while running.
 - Footprints appear every 0.6 seconds while panicking.
+- Footprints fade out gradually over time.
+- Footprints last for 10 seconds.
+- Footprints fade over the final 3 seconds.
 - Chickens calm down when the player is more than 6 metres away.
 - Calm chickens return to normal wandering.
 
@@ -47,6 +50,8 @@
 | `squawkInterval` | Time between panic sounds |
 | `featherInterval` | Time between feather effects |
 | `footprintInterval` | Time between footprint effects |
+| `FootprintLifetime` | Total footprint lifetime |
+| `FootprintFadeTime` | Time spent fading out |
 
 ## Security
 
@@ -54,3 +59,4 @@
 - Chickens do not affect server economy.
 - Chickens do not affect player inventory.
 - Chickens are removed when the resource stops.
+- Footprints are removed when the resource stops.

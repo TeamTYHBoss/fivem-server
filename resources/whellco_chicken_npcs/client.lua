@@ -1,4 +1,5 @@
 local chickens = {}
+local footprints = {}
 
 local function clearChickens()
     for _, chicken in ipairs(chickens) do
@@ -8,6 +9,16 @@ local function clearChickens()
     end
 
     chickens = {}
+end
+
+local function clearFootprints()
+    for _, footprint in ipairs(footprints) do
+        if DoesParticleFxLoopedExist(footprint.handle) then
+            StopParticleFxLooped(footprint.handle, false)
+        end
+    end
+
+    footprints = {}
 end
 
 local function spawnChicken(config)
@@ -110,7 +121,7 @@ local function leaveFootprints(chicken)
     local offsetY = math.random(-20, 20) / 100
 
     UseParticleFxAssetNextCall('core')
-    StartParticleFxNonLoopedAtCoord(
+    local handle = StartParticleFxLoopedAtCoord(
         'exp_grd_bzgas_smoke',
         chickenCoords.x + offsetX,
         chickenCoords.y + offsetY,
@@ -123,6 +134,35 @@ local function leaveFootprints(chicken)
         false,
         false
     )
+
+    footprints[#footprints + 1] = {
+        handle = handle,
+        created = currentTime
+    }
+end
+
+local function updateFootprints()
+    local currentTime = GetGameTimer()
+
+    for index = #footprints, 1, -1 do
+        local footprint = footprints[index]
+        local age = currentTime - footprint.created
+
+        if age >= Config.FootprintLifetime then
+            if DoesParticleFxLoopedExist(footprint.handle) then
+                StopParticleFxLooped(footprint.handle, false)
+            end
+
+            table.remove(footprints, index)
+        elseif age > Config.FootprintLifetime - Config.FootprintFadeTime then
+            local fadeProgress = (age - (Config.FootprintLifetime - Config.FootprintFadeTime)) / Config.FootprintFadeTime
+            local scale = 0.15 * (1.0 - fadeProgress)
+
+            if DoesParticleFxLoopedExist(footprint.handle) then
+                SetParticleFxLoopedScale(footprint.handle, scale, scale, scale)
+            end
+        end
+    end
 end
 
 local function panicChicken(chicken, playerCoords)
@@ -200,6 +240,8 @@ CreateThread(function()
                 end
             end
         end
+
+        updateFootprints()
     end
 end)
 
@@ -209,4 +251,5 @@ AddEventHandler('onResourceStop', function(resource)
     end
 
     clearChickens()
+    clearFootprints()
 end)

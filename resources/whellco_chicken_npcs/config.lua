@@ -20,3 +20,5 @@ Config.Chickens = {
 
 Config.SpawnDistance = 30.0
 Config.DespawnDistance = 40.0
+Config.FootprintLifetime = 10000
+Config.FootprintFadeTime = 3000
