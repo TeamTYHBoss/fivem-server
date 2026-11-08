@@ -12,6 +12,14 @@
 - Chickens are harmless and invincible.
 - Chickens cannot be knocked over by player impacts.
 
+## Panic behaviour
+
+- Chickens panic when a player gets within 3 metres.
+- Panicking chickens run away from the player.
+- Chickens run at increased speed.
+- Chickens calm down when the player is more than 6 metres away.
+- Calm chickens return to normal wandering.
+
 ## Spawn rules
 
 - Chickens spawn when a player comes within 30 metres.
@@ -27,6 +35,9 @@
 | `heading` | Initial facing direction |
 | `wanderRadius` | Maximum wandering distance |
 | `wanderInterval` | Time between new destinations |
+| `panicDistance` | Distance that triggers panic |
+| `panicSpeed` | Running speed while panicking |
+| `calmDistance` | Distance required to calm down |
 
 ## Security
 

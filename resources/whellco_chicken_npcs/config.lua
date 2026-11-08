@@ -8,7 +8,10 @@ Config.Chickens = {
         coords = vector3(-268.0, -955.0, 31.0),
         heading = 0.0,
         wanderRadius = 5.0,
-        wanderInterval = 8000
+        wanderInterval = 8000,
+        panicDistance = 3.0,
+        panicSpeed = 3.0,
+        calmDistance = 6.0
     }
 }
 

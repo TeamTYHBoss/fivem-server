@@ -22,7 +22,8 @@ local function spawnChicken(config)
 
         chickens[#chickens + 1] = {
             ped = ped,
-            config = config
+            config = config,
+            panicking = false
         }
     end
 end
@@ -38,9 +39,31 @@ local function wanderChicken(chicken)
     TaskGoToCoordAnyMeans(chicken.ped, targetX, targetY, targetZ, 1.0, 0, 0, 786603, 0.0)
 end
 
+local function panicChicken(chicken, playerCoords)
+    local config = chicken.config
+    local chickenCoords = GetEntityCoords(chicken.ped)
+    local direction = chickenCoords - playerCoords
+    local length = #direction
+
+    if length == 0 then
+        direction = vector3(1.0, 0.0, 0.0)
+    else
+        direction = direction / length
+    end
+
+    local runX = config.coords.x + (direction.x * config.panicDistance)
+    local runY = config.coords.y + (direction.y * config.panicDistance)
+    local runZ = config.coords.z
+
+    ClearPedTasks(chicken.ped)
+    TaskGoToCoordAnyMeans(chicken.ped, runX, runY, runZ, config.panicSpeed, 0, 0, 786603, 0.0)
+
+    chicken.panicking = true
+end
+
 CreateThread(function()
     while true do
-        Wait(1000)
+        Wait(500)
 
         local playerCoords = GetEntityCoords(PlayerPedId())
 
@@ -71,11 +94,19 @@ CreateThread(function()
 
         for _, chicken in ipairs(chickens) do
             if DoesEntityExist(chicken.ped) then
-                wanderChicken(chicken)
+                local chickenCoords = GetEntityCoords(chicken.ped)
+                local distance = #(playerCoords - chickenCoords)
+
+                if distance < chicken.config.panicDistance then
+                    if not chicken.panicking then
+                        panicChicken(chicken, playerCoords)
+                    end
+                elseif chicken.panicking and distance > chicken.config.calmDistance then
+                    chicken.panicking = false
+                    wanderChicken(chicken)
+                end
             end
         end
-
-        Wait(Config.Chickens[1] and Config.Chickens[1].wanderInterval or 8000)
     end
 end)
 
