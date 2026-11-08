@@ -52,11 +52,33 @@ local function spawnRestaurantCustomers(restaurant)
             SetPedFleeAttributes(ped, 0, false)
             SetPedCanRagdollFromPlayerImpact(ped, false)
 
-            TaskStartScenarioInPlace(ped, 'WORLD_HUMAN_SEAT_WALL_EATING', 0, true)
+            if index == 1 then
+                TaskStartScenarioInPlace(ped, 'WORLD_HUMAN_STAND_IMPATIENT', 0, true)
+            else
+                TaskStartScenarioInPlace(ped, 'WORLD_HUMAN_SEAT_WALL_EATING', 0, true)
+            end
 
             restaurantPeds[#restaurantPeds + 1] = ped
         end
     end
+
+    CreateThread(function()
+        while #restaurantPeds > 0 do
+            Wait(15000)
+
+            local availableItems = getAvailableItems(restaurant.id)
+
+            if #availableItems > 0 then
+                local item = availableItems[math.random(#availableItems)]
+
+                QBCore.Functions.Notify(
+                    ('%s ordered %s.'):format(restaurant.label, item.label),
+                    'primary',
+                    5000
+                )
+            end
+        end
+    end)
 end
 
 CreateThread(function()
