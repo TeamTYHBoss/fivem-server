@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Vehicle Auction Reports</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="auction-reports" id="auction-reports">
+        <div class="window">
+            <header>
+                <h1>Vehicle Auction Reports</h1>
+                <p>Report auctions and view reports.</p>
+            </header>
+
+            <div class="report-options">
+                <input id="auction-input" placeholder="Enter auction ID">
+                <select id="reason-select"></select>
+                <input id="details-input" maxlength="255" placeholder="Enter details">
+                <button id="submit-button">Submit Report</button>
+            </div>
+
+            <div class="report-list" id="report-list"></div>
+
+            <button id="close-button">Close</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
