@@ -5,6 +5,8 @@ local currentTv = nil
 local currentChannel = 1
 local channels = {}
 local hasRemote = false
+local remoteProp = nil
+local remoteFound = false
 
 local function loadChannels()
     channels = {}
@@ -24,13 +26,40 @@ local function loadChannels()
     end, playlist)
 end
 
+local function clearRemoteProp()
+    if remoteProp and DoesEntityExist(remoteProp) then
+        DeleteEntity(remoteProp)
+    end
+
+    remoteProp = nil
+end
+
+local function spawnRemoteProp()
+    clearRemoteProp()
+
+    local house = Config.Houses[1]
+
+    if not house then
+        return
+    end
+
+    local spawnPoint = house.remoteSpawnPoints[math.random(#house.remoteSpawnPoints)]
+    local prop = CreateObject(GetHashKey('prop_remote_control'), spawnPoint.x, spawnPoint.y, spawnPoint.z, true, true, false)
+
+    if prop and prop ~= 0 then
+        SetEntityAsMissionEntity(prop, true, true)
+        PlaceObjectOnGroundProperly(prop)
+        remoteProp = prop
+    end
+end
+
 local function openTv(tv)
     if tvOpen then
         return
     end
 
     if not hasRemote then
-        QBCore.Functions.Notify('You need a TV remote to use this TV.', 'error')
+        QBCore.Functions.Notify('You need to find the TV remote somewhere in the house.', 'error')
         return
     end
 
@@ -101,6 +130,7 @@ end
 
 CreateThread(function()
     loadChannels()
+    spawnRemoteProp()
 
     while true do
         Wait(0)
@@ -123,6 +153,26 @@ CreateThread(function()
 
                 if IsControlJustReleased(0, Config.Controls.interact) then
                     openTv(tv)
+                end
+            end
+        end
+
+        if remoteProp and DoesEntityExist(remoteProp) then
+            local remoteCoords = GetEntityCoords(remoteProp)
+            local remoteDistance = #(playerCoords - remoteCoords)
+
+            if remoteDistance < 1.5 then
+                QBCore.Functions.DrawText3D(
+                    remoteCoords.x,
+                    remoteCoords.y,
+                    remoteCoords.z,
+                    '[E] Pick up TV remote'
+                )
+
+                if IsControlJustReleased(0, Config.Controls.interact) then
+                    TriggerServerEvent('whellco_iptv:pickUpRemote')
+                    clearRemoteProp()
+                    remoteFound = true
                 end
             end
         end
@@ -168,5 +218,6 @@ AddEventHandler('onResourceStop', function(resource)
         return
     end
 
+    clearRemoteProp()
     closeTv()
 end)

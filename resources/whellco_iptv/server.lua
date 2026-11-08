@@ -55,19 +55,21 @@ RegisterNetEvent('whellco_iptv:checkRemote', function()
     TriggerClientEvent('whellco_iptv:remoteStatus', source, hasRemote(Player))
 end)
 
-QBCore.Functions.CreateUseableItem('tv_remote', function(source)
+RegisterNetEvent('whellco_iptv:pickUpRemote', function()
+    local source = source
     local Player = QBCore.Functions.GetPlayer(source)
 
     if not Player then
         return
     end
 
-    if not hasRemote(Player) then
+    if hasRemote(Player) then
         return
     end
 
+    Player.Functions.AddItem('tv_remote', 1)
     TriggerClientEvent('whellco_iptv:remoteStatus', source, true)
-    TriggerClientEvent('QBCore:Notify', source, 'TV remote ready.', 'success')
+    TriggerClientEvent('QBCore:Notify', source, 'You found the TV remote.', 'success')
 end)
 
 QBCore.Functions.CreateCallback('whellco_iptv:getLastChannel', function(source, cb, tvId)

@@ -19,6 +19,20 @@ Config.TVs = {
     }
 }
 
+Config.Houses = {
+    {
+        id = 'house_1',
+        label = 'House',
+        remoteSpawnPoints = {
+            vector3(-268.0, -953.0, 31.0),
+            vector3(-270.0, -957.0, 31.0),
+            vector3(-266.0, -958.0, 31.0),
+            vector3(-272.0, -953.0, 31.0),
+            vector3(-265.0, -954.0, 31.0)
+        }
+    }
+}
+
 Config.Controls = {
     interact = 38,
     nextChannel = 175,
