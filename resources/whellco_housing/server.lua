@@ -1,11 +1,7 @@
-local function getIdentifier(source)
-    local identifier = GetPlayerIdentifierByType(source, 'license')
+local QBCore = exports['qb-core']:GetCoreObject()
 
-    if not identifier then
-        identifier = GetPlayerIdentifierByType(source, 'steam')
-    end
-
-    return identifier
+local function getQbPlayer(source)
+    return QBCore.Functions.GetPlayer(source)
 end
 
 local function getProperties()
@@ -52,17 +48,14 @@ end)
 
 RegisterNetEvent('whellco_housing:buyProperty', function(propertyId)
     local source = source
+    local Player = getQbPlayer(source)
     local property = Config.Properties[propertyId]
 
-    if not property then
+    if not Player or not property then
         return
     end
 
-    local characterId = GetPlayerIdentifierByType(source, 'license')
-
-    if not characterId then
-        return
-    end
+    local citizenId = Player.PlayerData.citizenid
 
     local existing = MySQL.single.await(
         'SELECT owner_character_id FROM whellco_properties WHERE property_id = ? LIMIT 1',
@@ -70,67 +63,59 @@ RegisterNetEvent('whellco_housing:buyProperty', function(propertyId)
     )
 
     if existing and existing.owner_character_id then
-        TriggerClientEvent('whellco_housing:notify', source, 'That property is already owned.')
+        TriggerClientEvent('QBCore:Notify', source, 'That property is already owned.', 'error')
         return
     end
 
-    local account = MySQL.single.await(
-        'SELECT cash FROM whellco_players WHERE character_id = ? LIMIT 1',
-        { characterId }
+    if Player.Functions.GetMoney('cash') < property.price then
+        TriggerClientEvent('QBCore:Notify', source, 'You do not have enough cash.', 'error')
+        return
+    end
+
+    if not Player.Functions.RemoveMoney('cash', property.price, ('Purchased %s'):format(property.label)) then
+        TriggerClientEvent('QBCore:Notify', source, 'Purchase failed.', 'error')
+        return
+    end
+
+    MySQL.query.await(
+        [[
+            INSERT INTO whellco_properties (property_id, owner_character_id, price)
+            VALUES (?, ?, ?)
+            ON DUPLICATE KEY UPDATE owner_character_id = VALUES(owner_character_id), price = VALUES(price)
+        ]],
+        { propertyId, citizenId, property.price }
     )
 
-    if not account or (account.cash or 0) < property.price then
-        TriggerClientEvent('whellco_housing:notify', source, 'You do not have enough cash.')
-        return
-    end
+    MySQL.query.await(
+        [[
+            INSERT INTO whellco_property_keys (property_id, character_id)
+            VALUES (?, ?)
+            ON DUPLICATE KEY UPDATE character_id = VALUES(character_id)
+        ]],
+        { propertyId, citizenId }
+    )
 
-    MySQL.transaction.await({
-        {
-            query = 'UPDATE whellco_players SET cash = cash - ? WHERE character_id = ? AND cash >= ?',
-            values = { property.price, characterId, property.price }
-        },
-        {
-            query = [[
-                INSERT INTO whellco_properties (property_id, owner_character_id, price)
-                VALUES (?, ?, ?)
-                ON DUPLICATE KEY UPDATE owner_character_id = VALUES(owner_character_id), price = VALUES(price)
-            ]],
-            values = { propertyId, characterId, property.price }
-        },
-        {
-            query = [[
-                INSERT INTO whellco_property_keys (property_id, character_id)
-                VALUES (?, ?)
-                ON DUPLICATE KEY UPDATE character_id = VALUES(character_id)
-            ]],
-            values = { propertyId, characterId }
-        }
-    })
-
-    TriggerClientEvent('whellco_housing:notify', source, ('Purchased %s for %s%d.'):format(property.label, Config.Currency, property.price))
+    TriggerClientEvent('QBCore:Notify', source, ('Purchased %s for %s%d.'):format(property.label, Config.Currency, property.price), 'success')
 end)
 
 RegisterNetEvent('whellco_housing:enterProperty', function(propertyId)
     local source = source
+    local Player = getQbPlayer(source)
     local property = Config.Properties[propertyId]
 
-    if not property then
+    if not Player or not property then
         return
     end
 
-    local characterId = GetPlayerIdentifierByType(source, 'license')
-
-    if not characterId then
-        return
-    end
+    local citizenId = Player.PlayerData.citizenid
 
     local key = MySQL.single.await(
         'SELECT id FROM whellco_property_keys WHERE property_id = ? AND character_id = ? LIMIT 1',
-        { propertyId, characterId }
+        { propertyId, citizenId }
     )
 
     if not key then
-        TriggerClientEvent('whellco_housing:notify', source, 'You do not have a key for this property.')
+        TriggerClientEvent('QBCore:Notify', source, 'You do not have a key for this property.', 'error')
         return
     end
 
@@ -154,23 +139,19 @@ end)
 
 RegisterNetEvent('whellco_housing:placeFurniture', function(data)
     local source = source
-    local propertyId = tostring(data.propertyId or '')
-    local itemId = tostring(data.itemId or '')
-    local item = Config.Furniture[itemId]
+    local Player = getQbPlayer(source)
+    local property = Config.Properties[data.propertyId]
+    local item = Config.Furniture[data.itemId]
 
-    if not property or not item then
+    if not Player or not property or not item then
         return
     end
 
-    local characterId = GetPlayerIdentifierByType(source, 'license')
-
-    if not characterId then
-        return
-    end
+    local citizenId = Player.PlayerData.citizenid
 
     local key = MySQL.single.await(
         'SELECT id FROM whellco_property_keys WHERE property_id = ? AND character_id = ? LIMIT 1',
-        { propertyId, characterId }
+        { data.propertyId, citizenId }
     )
 
     if not key then
@@ -183,8 +164,8 @@ RegisterNetEvent('whellco_housing:placeFurniture', function(data)
                 (property_id, item, x, y, z, heading)
             VALUES (?, ?, ?, ?, ?, ?)
         ]],
-        { propertyId, itemId, data.x, data.y, data.z, data.heading or 0.0 }
+        { data.propertyId, data.itemId, data.x, data.y, data.z, data.heading or 0.0 }
     )
 
-    TriggerClientEvent('whellco_housing:notify', source, ('Placed %s.'):format(item.label))
+    TriggerClientEvent('QBCore:Notify', source, ('Placed %s.'):format(item.label), 'success')
 end)
