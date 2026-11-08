@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Computer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="computer" class="hidden">
+        <div class="window">
+            <div class="header">
+                <span>Computer</span>
+                <button id="close">X</button>
+            </div>
+            <div class="tabs">
+                <button class="tab active" data-tab="bank">Bank</button>
+                <button class="tab" data-tab="shop">Shop</button>
+                <button class="tab" data-tab="social">Social</button>
+            </div>
+            <div id="bank" class="panel active">
+                <h2>Bank Balance</h2>
+                <div id="balance">$0</div>
+                <button id="refresh-balance">Refresh</button>
+            </div>
+            <div id="shop" class="panel">
+                <h2>Shop</h2>
+                <div id="shop-items"></div>
+            </div>
+            <div id="social" class="panel">
+                <h2>Facewall</h2>
+                <textarea id="post-content" placeholder="What is happening?"></textarea>
+                <button id="create-post">Post</button>
+                <div id="posts"></div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
