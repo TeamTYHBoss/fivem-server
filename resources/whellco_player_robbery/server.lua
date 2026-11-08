@@ -29,6 +29,14 @@ local function canStartRobbery(source, targetServerId)
     return true
 end
 
+local function endRobbery(robberServerId, targetServerId, reason)
+    activeRobberies[robberServerId] = nil
+    activeRobberies[targetServerId] = nil
+
+    TriggerClientEvent('whellco_player_robbery:fail', robberServerId, reason)
+    TriggerClientEvent('whellco_player_robbery:fail', targetServerId, reason)
+end
+
 RegisterNetEvent('whellco_player_robbery:handsUp', function(state)
     local source = source
 
@@ -40,6 +48,12 @@ RegisterNetEvent('whellco_player_robbery:handsUp', function(state)
                 handsUpStates[source] = false
             end
         end)
+    end
+
+    local targetServerId = activeRobberies[source]
+
+    if targetServerId and not state then
+        endRobbery(targetServerId, source, 'target-lowered-hands')
     end
 end)
 
@@ -149,5 +163,5 @@ RegisterCommand('robberyinfo', function(source)
         return
     end
 
-    TriggerClientEvent('QBCore:Notify', source, 'Players must have their hands up before they can be robbed.', 'primary')
+    TriggerClientEvent('QBCore:Notify', source, 'Players must keep their hands up during a robbery.', 'primary')
 end, false)

@@ -10,6 +10,15 @@
 - The hands-up requirement is configurable.
 - The hands-up key is configurable.
 
+## Fail state
+
+- If the target lowers their hands during a robbery, the robbery fails.
+- The robbery ends immediately for both players.
+- The robber receives: `Robbery failed: the target lowered their hands.`
+- The target receives: `Robbery failed: the target lowered their hands.`
+- No cash or items are transferred.
+- The minigame UI closes for both players.
+
 ## Target warning
 
 - The target receives a notification when a robbery starts.

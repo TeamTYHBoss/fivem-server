@@ -64,6 +64,19 @@ RegisterNetEvent('whellco_player_robbery:victim', function(robberServerId)
     PlaySoundFrontend(-1, 'CHECKPOINT_PERFECT', 'HUD_MINI_GAME_SOUNDSET', true)
 end)
 
+RegisterNetEvent('whellco_player_robbery:fail', function(reason)
+    robberyActive = false
+
+    SetNuiFocus(false, false)
+    SendNUIMessage({ action = 'close' })
+
+    if reason == 'target-lowered-hands' then
+        QBCore.Functions.Notify('Robbery failed: the target lowered their hands.', 'error', 10000)
+    else
+        QBCore.Functions.Notify('Robbery failed.', 'error', 10000)
+    end
+end)
+
 RegisterNetEvent('whellco_player_robbery:policeAlert', function(coords)
     if not coords then
         return
@@ -86,5 +99,5 @@ RegisterNUICallback('complete', function(data, cb)
 end)
 
 RegisterCommand('robberyhelp', function()
-    QBCore.Functions.Notify('Press X to put your hands up. Robbers can only rob players with their hands up.', 'primary')
+    QBCore.Functions.Notify('Press X to put your hands up. Keep them up during a robbery or the robbery will fail.', 'primary')
 end, false)
