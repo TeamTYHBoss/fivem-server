@@ -1,4 +1,7 @@
 local QBCore = exports['qb-core']:GetCoreObject()
+local MySQL = exports.oxmysql
+
+local MAX_CHANNELS = 500
 
 local function parseM3U(content)
     local channels = {}
@@ -7,6 +10,10 @@ local function parseM3U(content)
         local name = line:match('#EXTINF:-1[^,]*,(.*)')
 
         if name then
+            if #channels >= MAX_CHANNELS then
+                break
+            end
+
             channels[#channels + 1] = {
                 name = name
             }
@@ -23,7 +30,12 @@ local function parseM3U(content)
 end
 
 QBCore.Functions.CreateCallback('whellco_iptv:getChannels', function(source, cb, playlistUrl)
-    if not playlistUrl then
+    if type(playlistUrl) ~= 'string' or #playlistUrl == 0 or #playlistUrl > 2048 then
+        cb({ channels = {} })
+        return
+    end
+
+    if not playlistUrl:match('^https?://') then
         cb({ channels = {} })
         return
     end
@@ -41,7 +53,7 @@ end)
 local function hasRemote(Player)
     local item = Player.Functions.GetItemByName('tv_remote')
 
-    return item and item.amount > 0
+    return item and (item.amount or 0) > 0
 end
 
 RegisterNetEvent('whellco_iptv:checkRemote', function()
@@ -67,7 +79,11 @@ RegisterNetEvent('whellco_iptv:pickUpRemote', function()
         return
     end
 
-    Player.Functions.AddItem('tv_remote', 1)
+    if not Player.Functions.AddItem('tv_remote', 1) then
+        TriggerClientEvent('QBCore:Notify', source, 'Your inventory is full.', 'error')
+        return
+    end
+
     TriggerClientEvent('whellco_iptv:remoteStatus', source, true)
     TriggerClientEvent('QBCore:Notify', source, 'You found the TV remote.', 'success')
 end)
@@ -84,7 +100,10 @@ RegisterNetEvent('whellco_iptv:dropRemote', function()
         return
     end
 
-    Player.Functions.RemoveItem('tv_remote', 1)
+    if not Player.Functions.RemoveItem('tv_remote', 1) then
+        return
+    end
+
     TriggerClientEvent('whellco_iptv:remoteStatus', source, false)
     TriggerClientEvent('QBCore:Notify', source, 'You left the house and dropped the TV remote.', 'primary')
 end)
@@ -97,27 +116,35 @@ QBCore.Functions.CreateCallback('whellco_iptv:getLastChannel', function(source, 
         return
     end
 
-    local result = MySQL.query.await(
+    MySQL.query(
         'SELECT channel FROM whellco_iptv_last_channel WHERE citizenid = ? AND tv_id = ?',
-        { Player.PlayerData.citizenid, tvId }
+        { Player.PlayerData.citizenid, tvId },
+        function(result)
+            if result and result[1] then
+                cb({ channel = result[1].channel })
+            else
+                cb({ channel = 1 })
+            end
+        end
     )
-
-    if result and result[1] then
-        cb({ channel = result[1].channel })
-    else
-        cb({ channel = 1 })
-    end
 end)
 
 RegisterNetEvent('whellco_iptv:saveChannel', function(tvId, channel)
     local source = source
     local Player = QBCore.Functions.GetPlayer(source)
+    local channelNumber = tonumber(channel)
 
-    if not Player or not tvId or not channel then
+    if not Player or not tvId or not channelNumber then
         return
     end
 
-    MySQL.query.await(
+    channelNumber = math.floor(channelNumber)
+
+    if channelNumber < 1 or channelNumber > 1000 then
+        return
+    end
+
+    MySQL.query(
         [[INSERT INTO whellco_iptv_last_channel
             (citizenid, tv_id, channel)
           VALUES (?, ?, ?)
@@ -126,7 +153,7 @@ RegisterNetEvent('whellco_iptv:saveChannel', function(tvId, channel)
         {
             Player.PlayerData.citizenid,
             tvId,
-            channel
+            channelNumber
         }
     )
 end)

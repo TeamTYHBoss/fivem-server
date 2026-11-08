@@ -1,9 +1,10 @@
 local QBCore = exports['qb-core']:GetCoreObject()
+local MySQL = exports.oxmysql
 
 local function isAdmin(Player)
     local job = Player.PlayerData.job
 
-    return job and Config.AdminJobs[job.name]
+    return job and Config.AdminJobs and Config.AdminJobs[job.name] or false
 end
 
 local function getRestaurant(id)
@@ -48,15 +49,23 @@ RegisterNetEvent('whellco_fast_food:buy', function(restaurantId, itemId)
 
     local item = Config.Menu[itemId]
 
-    if Player.PlayerData.money.cash < item.price then
+    if (Player.PlayerData.money.cash or 0) < item.price then
         TriggerClientEvent('QBCore:Notify', source, 'You do not have enough cash.', 'error')
         return
     end
 
-    Player.Functions.RemoveMoney('cash', item.price, 'fast-food-purchase')
-    Player.Functions.AddItem(itemId, 1)
+    if not Player.Functions.AddItem(itemId, 1) then
+        TriggerClientEvent('QBCore:Notify', source, 'Your inventory is full.', 'error')
+        return
+    end
 
-    MySQL.query.await(
+    if not Player.Functions.RemoveMoney('cash', item.price, 'fast-food-purchase') then
+        Player.Functions.RemoveItem(itemId, 1)
+        TriggerClientEvent('QBCore:Notify', source, 'Purchase failed.', 'error')
+        return
+    end
+
+    MySQL.insert(
         [[INSERT INTO whellco_fast_food_purchases
             (player_citizenid, restaurant_id, item_id, price)
           VALUES (?, ?, ?, ?)]],
@@ -83,12 +92,15 @@ RegisterNetEvent('whellco_fast_food:eat', function(itemId)
 
     local inventoryItem = Player.Functions.GetItemByName(itemId)
 
-    if not inventoryItem or inventoryItem.amount < 1 then
+    if not inventoryItem or (inventoryItem.amount or 0) < 1 then
         TriggerClientEvent('QBCore:Notify', source, 'You do not have this food item.', 'error')
         return
     end
 
-    Player.Functions.RemoveItem(itemId, 1)
+    if not Player.Functions.RemoveItem(itemId, 1) then
+        TriggerClientEvent('QBCore:Notify', source, 'Could not consume that item.', 'error')
+        return
+    end
 
     TriggerClientEvent('QBCore:Notify', source, ('You ate %s.'):format(item.label), 'success')
 end)
