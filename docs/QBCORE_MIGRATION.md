@@ -66,6 +66,12 @@ Player.Functions.SetMetaData('whellco_level', value)
 - `whellco_housing`: migrated.
 - `whellco_banking`: migrated.
 - `whellco_vehicles`: migration SQL added; server logic migration pending.
+- `whellco_dealership`: migration SQL added; server logic migration pending.
+- `whellco_insurance`: migration SQL added; server logic migration pending.
+- `whellco_registration`: migration SQL added; server logic migration pending.
+- `whellco_vehicletax`: migration SQL added; server logic migration pending.
+- `whellco_mot`: migration SQL added; server logic migration pending.
+- `whellco_impound`: migration SQL added; server logic migration pending.
 - Remaining vehicle and auction systems: batch migration pending.
 
 ## Compatibility bridge
@@ -79,6 +85,8 @@ Player.Functions.SetMetaData('whellco_level', value)
 - `addMoney(source, amount, reason, account)`
 - `removeMoney(source, amount, reason, account)`
 - `notify(source, message, type)`
+- `getVehicleOwner(source)`
+- `ownsVehicle(source, ownerColumn, tableName, vehicleId)`
 
 New and migrated resources should use these exports or call QBCore directly.
 
@@ -90,3 +98,11 @@ Run `resources/whellco_banking/sql/qbcore_migration.sql` and `resources/whellco_
 - Deposits remove QBCore cash; withdrawals add QBCore cash.
 - Bank transfers validate both QBCore players and update citizen-keyed accounts.
 - Vehicle ownership migration converts `whellco_vehicles.owner_identifier` from license identifiers to QBCore citizen IDs.
+
+## Batch 2b migration
+
+Run the migration SQL files in `whellco_dealership`, `whellco_insurance`, `whellco_registration`, `whellco_vehicletax`, `whellco_mot`, and `whellco_impound` once.
+
+- Added a shared QBCore vehicle ownership bridge.
+- Vehicle-related systems can validate ownership through `exports['whellco_qbcore']:ownsVehicle()`.
+- Dealership purchases, insurance policies, registrations, vehicle tax, MOT records, and impound records are prepared for QBCore citizen IDs.
