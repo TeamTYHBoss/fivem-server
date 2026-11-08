@@ -38,6 +38,8 @@
 - Wet footprints fade over the final 4 seconds.
 - Chickens shiver while wet.
 - Chickens shake every 0.2 seconds while wet.
+- Feathers look ruffled while the chicken is wet.
+- Ruffle effects repeat every 0.5 seconds while wet.
 - Chickens shake dry after calming down.
 - Chickens shake every 3 seconds while wet.
 - Water droplets fly off when the chicken shakes.
@@ -69,6 +71,7 @@
 | `wetFootprintInterval` | Time between wet footprint effects |
 | `shakeInterval` | Time between shake effects |
 | `shiverInterval` | Time between shiver movements |
+| `ruffleInterval` | Time between ruffle effects |
 | `waterDropletCount` | Number of water droplets per shake |
 | `counters` | Counter locations that trigger flour |
 | `sinks` | Sink locations that trigger wet footprints |

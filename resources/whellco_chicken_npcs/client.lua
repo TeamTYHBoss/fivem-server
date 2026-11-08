@@ -69,7 +69,8 @@ local function spawnChicken(config)
             lastFlour = 0,
             lastWetFootprint = 0,
             lastShake = 0,
-            lastShiver = 0
+            lastShiver = 0,
+            lastRuffle = 0
         }
     end
 end
@@ -238,6 +239,33 @@ local function leaveWetFootprints(chicken)
         handle = handle,
         created = currentTime
     }
+end
+
+local function ruffleFeathers(chicken)
+    local currentTime = GetGameTimer()
+
+    if currentTime - chicken.lastRuffle < chicken.config.ruffleInterval then
+        return
+    end
+
+    chicken.lastRuffle = currentTime
+
+    local chickenCoords = GetEntityCoords(chicken.ped)
+
+    UseParticleFxAssetNextCall('core')
+    StartParticleFxNonLoopedAtCoord(
+        'exp_grd_bzgas_smoke',
+        chickenCoords.x,
+        chickenCoords.y,
+        chickenCoords.z + 0.2,
+        0.0,
+        0.0,
+        0.0,
+        0.3,
+        false,
+        false,
+        false
+    )
 end
 
 local function shakeDry(chicken)
@@ -524,6 +552,7 @@ CreateThread(function()
 
                     if chicken.wet then
                         shiverChicken(chicken)
+                        ruffleFeathers(chicken)
                         shakeDry(chicken)
                     end
 
