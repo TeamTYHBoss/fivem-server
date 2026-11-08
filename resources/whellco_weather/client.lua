@@ -328,6 +328,29 @@ local function updateSwimmingPools()
     end
 end
 
+local function startSwimmingAnimation(ped)
+    if not DoesEntityExist(ped) then
+        return
+    end
+
+    RequestAnimDict('swimming@swim')
+
+    while not HasAnimDictLoaded('swimming@swim') do
+        Wait(0)
+    end
+
+    TaskPlayAnim(ped, 'swimming@swim', 'idle', 8.0, -8.0, -1, 1, 0, false, false, false)
+end
+
+local function stopSwimmingAnimation(ped)
+    if not DoesEntityExist(ped) then
+        return
+    end
+
+    StopAnimTask(ped, 'swimming@swim', 'idle', 1.0)
+    ClearPedTasks(ped)
+end
+
 CreateThread(function()
     while true do
         Wait(100)
