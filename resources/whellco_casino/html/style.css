@@ -1,0 +1,136 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    color: #fff;
+}
+
+.casino {
+    display: none;
+    position: fixed;
+    inset: 0;
+    align-items: center;
+    justify-content: center;
+    background: rgba(2, 6, 15, .88);
+    backdrop-filter: blur(10px);
+}
+
+.casino.visible {
+    display: flex;
+}
+
+.window {
+    width: min(880px, 96vw);
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 28px;
+    border-radius: 20px;
+    background: linear-gradient(160deg, rgba(9, 14, 25, .98), rgba(17, 25, 43, .98));
+    border: 1px solid rgba(255, 215, 0, .28);
+    box-shadow: 0 30px 100px rgba(0, 0, 0, .75);
+}
+
+h1 {
+    font-size: 28px;
+    color: #ffd54a;
+    text-transform: uppercase;
+}
+
+h2 {
+    margin: 18px 0 10px;
+    color: #7ef9ff;
+}
+
+header p {
+    margin-top: 5px;
+    color: rgba(255, 255, 255, .75);
+}
+
+nav {
+    display: flex;
+    gap: 8px;
+    margin: 18px 0;
+}
+
+.tab {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, .15);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, .06);
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.tab.active {
+    background: linear-gradient(135deg, #ffd54a, #ff8a00);
+    color: #17120a;
+}
+
+.panel {
+    display: none;
+}
+
+.panel.active {
+    display: block;
+}
+
+.slot-display {
+    display: flex;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.reel {
+    flex: 1;
+    padding: 24px 0;
+    text-align: center;
+    font-size: 26px;
+    font-weight: 800;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .08);
+    border: 1px solid rgba(255, 215, 0, .35);
+}
+
+.card {
+    padding: 14px;
+    margin-bottom: 10px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .06);
+    border: 1px solid rgba(255, 255, 255, .12);
+}
+
+.card strong {
+    color: #ffd54a;
+}
+
+.card p {
+    margin-top: 5px;
+    color: rgba(255, 255, 255, .72);
+}
+
+select,
+input,
+button {
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+}
+
+button {
+    color: #17120a;
+    cursor: pointer;
+    background: linear-gradient(135deg, #ffd54a, #ff8a00);
+}
+
+#close-button {
+    width: 100%;
+    margin-top: 18px;
+    padding: 12px;
+}

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>WhellCo Casino</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="casino" id="casino">
+        <div class="window">
+            <header>
+                <h1>WhellCo Casino & Resort</h1>
+                <p id="membership-label">Free Membership</p>
+                <p id="cash-label">Cash: £0</p>
+            </header>
+
+            <nav>
+                <button class="tab active" data-tab="games">Casino</button>
+                <button class="tab" data-tab="membership">Passes</button>
+                <button class="tab" data-tab="penthouse">Penthouse</button>
+                <button class="tab" data-tab="garage">Garage</button>
+            </nav>
+
+            <section id="games" class="panel active">
+                <h2>Slot Machines</h2>
+                <div class="slot-display">
+                    <div id="reel-1" class="reel">?</div>
+                    <div id="reel-2" class="reel">?</div>
+                    <div id="reel-3" class="reel">?</div>
+                </div>
+
+                <select id="slot-bet"></select>
+                <button id="spin-slots">Spin Slots</button>
+                <p id="slot-result"></p>
+
+                <h2>Wheel Spin</h2>
+                <p id="wheel-cost"></p>
+                <button id="spin-wheel">Spin Wheel</button>
+                <p id="wheel-result"></p>
+            </section>
+
+            <section id="membership" class="panel">
+                <h2>Membership Passes</h2>
+                <div id="membership-list"></div>
+            </section>
+
+            <section id="penthouse" class="panel">
+                <h2>Casino Penthouse</h2>
+                <button id="buy-penthouse">Buy Penthouse</button>
+                <div id="penthouse-options"></div>
+            </section>
+
+            <section id="garage" class="panel">
+                <h2>Casino Garage</h2>
+                <div id="garage-list"></div>
+            </section>
+
+            <button id="close-button">Close</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
