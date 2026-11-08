@@ -68,6 +68,7 @@ RegisterNetEvent('whellco_fast_food:buy', function(restaurantId, itemId)
         }
     )
 
+    TriggerClientEvent('whellco_fast_food:handOver', source, itemId)
     TriggerClientEvent('QBCore:Notify', source, ('Purchased %s for $%d.'):format(item.label, item.price), 'success')
 end)
 

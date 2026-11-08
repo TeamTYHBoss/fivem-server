@@ -1,6 +1,7 @@
 local QBCore = exports['qb-core']:GetCoreObject()
 
 local restaurantPeds = {}
+local cashierPed = nil
 
 local function getAvailableItems(restaurantId)
     local items = {}
@@ -28,17 +29,81 @@ local function clearRestaurantPeds()
     end
 
     restaurantPeds = {}
+    cashierPed = nil
+end
+
+local function spawnCashier(restaurant)
+    local cashierCoords = restaurant.coords + vector3(0.0, -1.5, 0.0)
+    local cashier = CreatePed(4, GetHashKey('s_m_m_linecook'), cashierCoords.x, cashierCoords.y, cashierCoords.z, restaurant.heading, false, true)
+
+    if cashier and cashier ~= 0 then
+        SetEntityAsMissionEntity(cashier, true, true)
+        SetBlockingOfNonTemporaryEvents(cashier, true)
+        SetPedFleeAttributes(cashier, 0, false)
+        SetPedCanRagdollFromPlayerImpact(cashier, false)
+
+        TaskStartScenarioInPlace(cashier, 'WORLD_HUMAN_CLIPBOARD', 0, true)
+
+        cashierPed = cashier
+        restaurantPeds[#restaurantPeds + 1] = cashier
+    end
+end
+
+local function handOverFoodBag(itemId)
+    if not cashierPed or not DoesEntityExist(cashierPed) then
+        return
+    end
+
+    local playerPed = PlayerPedId()
+    local item = Config.Menu[itemId]
+
+    if not item then
+        return
+    end
+
+    ClearPedTasks(cashierPed)
+    TaskTurnPedToFaceEntity(cashierPed, playerPed, 1500)
+    Wait(500)
+
+    local foodBag = CreateObject(GetHashKey('prop_food_bag_01'), 0.0, 0.0, 0.0, true, true, false)
+
+    if foodBag and foodBag ~= 0 then
+        AttachEntityToEntity(
+            foodBag,
+            cashierPed,
+            GetPedBoneIndex(cashierPed, 57005),
+            0.10,
+            0.0,
+            0.0,
+            90.0,
+            0.0,
+            0.0,
+            true,
+            true,
+            false,
+            true,
+            1,
+            true
+        )
+
+        Wait(1000)
+
+        DetachEntity(foodBag, true, true)
+        DeleteEntity(foodBag)
+    end
+
+    TaskStartScenarioInPlace(cashierPed, 'WORLD_HUMAN_CLIPBOARD', 0, true)
 end
 
 local function spawnRestaurantCustomers(restaurant)
     clearRestaurantPeds()
+    spawnCashier(restaurant)
 
-    local customerCount = 4
+    local customerCount = 3
     local seatOffsets = {
         vector3(1.5, 1.0, 0.0),
         vector3(-1.5, 1.0, 0.0),
-        vector3(1.5, -1.0, 0.0),
-        vector3(-1.5, -1.0, 0.0)
+        vector3(1.5, -1.0, 0.0)
     }
 
     for index = 1, customerCount do
@@ -52,11 +117,7 @@ local function spawnRestaurantCustomers(restaurant)
             SetPedFleeAttributes(ped, 0, false)
             SetPedCanRagdollFromPlayerImpact(ped, false)
 
-            if index == 1 then
-                TaskStartScenarioInPlace(ped, 'WORLD_HUMAN_STAND_IMPATIENT', 0, true)
-            else
-                TaskStartScenarioInPlace(ped, 'WORLD_HUMAN_SEAT_WALL_EATING', 0, true)
-            end
+            TaskStartScenarioInPlace(ped, 'WORLD_HUMAN_SEAT_WALL_EATING', 0, true)
 
             restaurantPeds[#restaurantPeds + 1] = ped
         end
@@ -123,6 +184,10 @@ CreateThread(function()
             end
         end
     end
+end)
+
+RegisterNetEvent('whellco_fast_food:handOver', function(itemId)
+    handOverFoodBag(itemId)
 end)
 
 AddEventHandler('onResourceStop', function(resource)

@@ -1,17 +1,25 @@
 # Fast Food Restaurants
 
-`whellco_fast_food` adds fast food restaurants where players can purchase food and drinks. NPCs order at the counter and sit and eat inside restaurants.
+`whellco_fast_food` adds fast food restaurants where players can purchase food and drinks. Cashiers hand over food bags, while NPCs order at the counter and sit and eat inside restaurants.
+
+## Cashier handover
+
+- Each restaurant has a cashier NPC.
+- The cashier uses the `WORLD_HUMAN_CLIPBOARD` scenario.
+- When a player buys food, the cashier turns toward the player.
+- The cashier holds a food bag using `prop_food_bag_01`.
+- The food bag is attached to the cashier’s hand.
+- The food bag is removed after the handover animation.
+- The cashier returns to the clipboard scenario.
 
 ## Restaurant customers
 
-- Each restaurant spawns up to 4 NPC customers.
-- One customer stands at the counter and orders food.
-- The counter customer uses the `WORLD_HUMAN_STAND_IMPATIENT` scenario.
-- Other customers sit and eat using the `WORLD_HUMAN_SEAT_WALL_EATING` scenario.
+- Each restaurant spawns up to 3 seated NPC customers.
+- One cashier NPC stands at the counter.
+- Seated customers use the `WORLD_HUMAN_SEAT_WALL_EATING` scenario.
 - Customers spawn when a player comes within 30 metres.
 - Customers are removed when the player moves more than 30 metres away.
 - Customers order a random available menu item every 15 seconds.
-- Customers are non-hostile and cannot be knocked over by player impacts.
 
 ## Restaurant names
 
@@ -63,6 +71,7 @@
 - Purchases are logged in `whellco_fast_food_purchases`.
 - Items are only available at participating restaurants.
 - Food restores hunger when consumed.
+- Cashiers hand over food bags after purchase.
 
 ## Commands
 
@@ -85,3 +94,4 @@ View fast food help:
 - Purchase prices are validated server-side.
 - Purchases are logged server-side.
 - Food items are added server-side.
+- Cashier handovers are triggered server-side.
