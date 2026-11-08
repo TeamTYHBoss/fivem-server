@@ -123,6 +123,46 @@ RegisterNetEvent('whellco_luxury_mansions:customise', function(mansionId, settin
     TriggerClientEvent('QBCore:Notify', source, 'Mansion customisation updated.', 'success')
 end)
 
+RegisterNetEvent('whellco_luxury_mansions:sellback', function(mansionId)
+    local source = source
+    local Player = QBCore.Functions.GetPlayer(source)
+    local mansion = getMansion(mansionId)
+
+    if not Player or not mansion then
+        return
+    end
+
+    local ownership = MySQL.single.await(
+        'SELECT owner_citizenid, purchase_price FROM whellco_mansion_ownership WHERE mansion_id = ?',
+        {
+            mansion.id
+        }
+    )
+
+    if not ownership then
+        TriggerClientEvent('QBCore:Notify', source, 'This mansion is not owned.', 'error')
+        return
+    end
+
+    if ownership.owner_citizenid ~= Player.PlayerData.citizenid then
+        TriggerClientEvent('QBCore:Notify', source, 'You do not own this mansion.', 'error')
+        return
+    end
+
+    local sellbackAmount = math.floor(mansion.price * (mansion.sellbackPercent / 100))
+
+    MySQL.query.await(
+        'DELETE FROM whellco_mansion_ownership WHERE mansion_id = ?',
+        {
+            mansion.id
+        }
+    )
+
+    Player.Functions.AddMoney('bank', sellbackAmount, 'mansion-sellback')
+
+    TriggerClientEvent('QBCore:Notify', source, ('Sold %s back to the state for $%d.'):format(mansion.label, sellbackAmount), 'success')
+end)
+
 RegisterCommand('mansions', function(source)
     local Player = QBCore.Functions.GetPlayer(source)
 
