@@ -8,7 +8,13 @@ local function requestInterior(name)
         return true
     end
 
-    RequestCollisionAtCoord(Config.Interiors[name].entry.x, Config.Interiors[name].entry.y, Config.Interiors[name].entry.z)
+    local interior = Config.Interiors[name]
+
+    if not interior then
+        return false
+    end
+
+    RequestCollisionAtCoord(interior.entry.x, interior.entry.y, interior.entry.z)
 
     local timeout = GetGameTimer() + 10000
 
@@ -50,6 +56,30 @@ local function hasInteractionAccess(Player, interaction)
 
     return job and job.name == interaction.requiredJob and (job.grade.level or 0) >= (interaction.jobGrade or 0)
 end
+
+RegisterNetEvent('whellco_immersive_interiors:teleport', function(data)
+    if not data or not data.coords then
+        return
+    end
+
+    local interiorId = data.interiorId
+
+    if not requestInterior(interiorId) then
+        QBCore.Functions.Notify('Interior could not be loaded.', 'error')
+        return
+    end
+
+    local playerPed = PlayerPedId()
+
+    SetEntityCoords(playerPed, data.coords.x, data.coords.y, data.coords.z, false, false, false, false)
+    currentInterior = interiorId
+
+    QBCore.Functions.Notify(('Teleported to %s.'):format(data.label), 'success')
+end)
+
+RegisterNetEvent('whellco_immersive_interiors:notify', function(message, type)
+    QBCore.Functions.Notify(message, type or 'primary')
+end)
 
 CreateThread(function()
     while true do
@@ -107,8 +137,4 @@ CreateThread(function()
 
         Wait(sleep)
     end
-end)
-
-RegisterNetEvent('whellco_immersive_interiors:notify', function(message, type)
-    QBCore.Functions.Notify(message, type or 'primary')
 end)
