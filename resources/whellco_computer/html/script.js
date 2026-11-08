@@ -1,10 +1,22 @@
 let currentTab = 'bank';
+let playerCitizenId = '';
 
 function request(name, data = {}) {
     return fetch(`https://${GetParentResourceName()}/${name}`, {
         method: 'POST',
         body: JSON.stringify(data)
     }).then(response => response.json());
+}
+
+function setStatus(id, message, isError = false) {
+    const element = document.getElementById(id);
+
+    if (!element) {
+        return;
+    }
+
+    element.textContent = message || '';
+    element.classList.toggle('error', Boolean(isError));
 }
 
 function showTab(tab) {
@@ -67,7 +79,15 @@ function loadShop() {
             const button = document.createElement('button');
             button.textContent = 'Buy';
             button.onclick = () => {
-                request('buyItem', { itemId: id }).then(refreshBalance);
+                button.disabled = true;
+                setStatus('shop-status', '');
+
+                request('buyItem', { itemId: id }).then(response => {
+                    setStatus('shop-status', response.message || (response.success ? 'Purchase complete' : 'Purchase failed'), !response.success);
+                    refreshBalance();
+                }).finally(() => {
+                    button.disabled = false;
+                });
             };
 
             element.appendChild(label);
@@ -89,21 +109,42 @@ function refreshMarketplace() {
             const label = document.createElement('span');
             label.textContent = `${listing.item} x${listing.quantity} - $${listing.price}`;
 
-            const buyButton = document.createElement('button');
-            buyButton.textContent = 'Buy';
-            buyButton.onclick = () => {
-                request('buyListing', { listingId: listing.id }).then(refreshMarketplace);
-            };
-
-            const cancelButton = document.createElement('button');
-            cancelButton.textContent = 'Cancel';
-            cancelButton.onclick = () => {
-                request('cancelListing', { listingId: listing.id }).then(refreshMarketplace);
-            };
-
             element.appendChild(label);
-            element.appendChild(buyButton);
-            element.appendChild(cancelButton);
+
+            if (listing.seller !== playerCitizenId) {
+                const buyButton = document.createElement('button');
+                buyButton.textContent = 'Buy';
+                buyButton.onclick = () => {
+                    buyButton.disabled = true;
+                    setStatus('marketplace-status', '');
+
+                    request('buyListing', { listingId: listing.id }).then(response => {
+                        setStatus('marketplace-status', response.message || (response.success ? 'Purchase complete' : 'Purchase failed'), !response.success);
+                        refreshMarketplace();
+                    }).finally(() => {
+                        buyButton.disabled = false;
+                    });
+                };
+
+                element.appendChild(buyButton);
+            } else {
+                const cancelButton = document.createElement('button');
+                cancelButton.textContent = 'Cancel';
+                cancelButton.onclick = () => {
+                    cancelButton.disabled = true;
+                    setStatus('marketplace-status', '');
+
+                    request('cancelListing', { listingId: listing.id }).then(response => {
+                        setStatus('marketplace-status', response.message || (response.success ? 'Listing cancelled' : 'Could not cancel listing'), !response.success);
+                        refreshMarketplace();
+                    }).finally(() => {
+                        cancelButton.disabled = false;
+                    });
+                };
+
+                element.appendChild(cancelButton);
+            }
+
             container.appendChild(element);
         });
     });
@@ -113,13 +154,8 @@ function refreshNotifications() {
     request('getNotifications').then(notifications => {
         const container = document.getElementById('notifications-list');
         container.textContent = '';
-        let unread = 0;
 
         notifications.forEach(notification => {
-            if (!notification.read_at) {
-                unread++;
-            }
-
             const element = document.createElement('div');
             element.className = notification.read_at ? 'notification read' : 'notification unread';
             element.textContent = notification.content;
@@ -128,7 +164,11 @@ function refreshNotifications() {
                 const button = document.createElement('button');
                 button.textContent = 'Mark read';
                 button.onclick = () => {
-                    request('markNotificationRead', { notificationId: notification.id }).then(refreshNotifications);
+                    button.disabled = true;
+
+                    request('markNotificationRead', { notificationId: notification.id }).finally(() => {
+                        refreshNotifications();
+                    });
                 };
 
                 element.appendChild(button);
@@ -137,9 +177,11 @@ function refreshNotifications() {
             container.appendChild(element);
         });
 
+        return request('getUnreadNotificationCount');
+    }).then(count => {
         const badge = document.getElementById('unread-count');
-        badge.textContent = unread;
-        badge.classList.toggle('hidden', unread === 0);
+        badge.textContent = count || 0;
+        badge.classList.toggle('hidden', !count);
     });
 }
 
@@ -167,10 +209,18 @@ function refreshPosts() {
             const commentButton = document.createElement('button');
             commentButton.textContent = 'Comment';
             commentButton.onclick = () => {
+                commentButton.disabled = true;
+                setStatus('social-status', '');
+
                 request('addComment', {
                     postId: postData.id,
                     content: commentInput.value
-                }).then(refreshPosts);
+                }).then(response => {
+                    setStatus('social-status', response.message || (response.success ? 'Comment added' : 'Could not add comment'), !response.success);
+                    return refreshPosts();
+                }).finally(() => {
+                    commentButton.disabled = false;
+                });
             };
 
             element.appendChild(commentInput);
@@ -206,6 +256,7 @@ document.getElementById('refresh-marketplace').onclick = refreshMarketplace;
 document.getElementById('refresh-notifications').onclick = refreshNotifications;
 
 document.getElementById('send-transfer').onclick = () => {
+    const button = document.getElementById('send-transfer');
     const recipient = document.getElementById('transfer-recipient').value.trim();
     const amount = document.getElementById('transfer-amount').value;
 
@@ -213,19 +264,29 @@ document.getElementById('send-transfer').onclick = () => {
         return;
     }
 
+    button.disabled = true;
+    setStatus('transfer-status', '');
+
     request('transferMoney', {
         recipient,
-        amount,
-        requestId: `${Date.now()}-${Math.random().toString(36).slice(2)}`
-    }).then(() => {
-        document.getElementById('transfer-recipient').value = '';
-        document.getElementById('transfer-amount').value = '';
+        amount
+    }).then(response => {
+        setStatus('transfer-status', response.message || (response.success ? 'Transfer sent' : 'Transfer failed'), !response.success);
+
+        if (response.success) {
+            document.getElementById('transfer-recipient').value = '';
+            document.getElementById('transfer-amount').value = '';
+        }
+
         refreshBalance();
         refreshTransfers();
+    }).finally(() => {
+        button.disabled = false;
     });
 };
 
 document.getElementById('create-listing').onclick = () => {
+    const button = document.getElementById('create-listing');
     const item = document.getElementById('listing-item').value.trim();
     const quantity = document.getElementById('listing-quantity').value;
     const price = document.getElementById('listing-price').value;
@@ -234,25 +295,45 @@ document.getElementById('create-listing').onclick = () => {
         return;
     }
 
+    button.disabled = true;
+    setStatus('marketplace-status', '');
+
     request('createListing', {
         item,
         quantity,
-        price,
-        metadata: {}
-    }).then(() => {
-        document.getElementById('listing-item').value = '';
-        document.getElementById('listing-quantity').value = '';
-        document.getElementById('listing-price').value = '';
+        price
+    }).then(response => {
+        setStatus('marketplace-status', response.message || (response.success ? 'Listing created' : 'Could not create listing'), !response.success);
+
+        if (response.success) {
+            document.getElementById('listing-item').value = '';
+            document.getElementById('listing-quantity').value = '';
+            document.getElementById('listing-price').value = '';
+        }
+
         refreshMarketplace();
+    }).finally(() => {
+        button.disabled = false;
     });
 };
 
 document.getElementById('create-post').onclick = () => {
+    const button = document.getElementById('create-post');
     const content = document.getElementById('post-content').value;
 
-    request('createPost', { content }).then(() => {
-        document.getElementById('post-content').value = '';
-        refreshPosts();
+    button.disabled = true;
+    setStatus('social-status', '');
+
+    request('createPost', { content }).then(response => {
+        setStatus('social-status', response.message || (response.success ? 'Post created' : 'Could not create post'), !response.success);
+
+        if (response.success) {
+            document.getElementById('post-content').value = '';
+        }
+
+        return refreshPosts();
+    }).finally(() => {
+        button.disabled = false;
     });
 };
 
@@ -261,6 +342,7 @@ window.addEventListener('message', event => {
 
     if (data.action === 'open') {
         document.getElementById('computer').classList.remove('hidden');
+        playerCitizenId = data.citizenId || '';
         showTab('bank');
         refreshNotifications();
     } else if (data.action === 'close') {

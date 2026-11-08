@@ -35,6 +35,10 @@ local function createNotification(citizenId, kind, referenceId, content)
     })
 end
 
+local function generateRequestId()
+    return ('%d-%s-%s'):format(os.time(), math.random(100000, 999999), math.random(100000, 999999))
+end
+
 QBCore.Functions.CreateCallback('whellco_computer:getBankBalance', function(source, cb)
     local Player = QBCore.Functions.GetPlayer(source)
     cb(Player and (Player.PlayerData.money.bank or 0) or 0)
@@ -80,7 +84,7 @@ end)
 QBCore.Functions.CreateCallback('whellco_computer:transferMoney', function(source, cb, data)
     local sender = QBCore.Functions.GetPlayer(source)
 
-    if not sender or type(data) ~= 'table' or not data.recipient or not data.amount or not data.requestId then
+    if not sender or type(data) ~= 'table' or not data.recipient or not data.amount then
         cb(false, 'Invalid transfer request')
         return
     end
@@ -102,73 +106,83 @@ QBCore.Functions.CreateCallback('whellco_computer:transferMoney', function(sourc
         return
     end
 
-    local requestId = tostring(data.requestId):sub(1, 64)
+    local requestId = generateRequestId()
 
-    MySQL.scalar('SELECT id FROM whellco_computer_transfers WHERE request_id = ?', { requestId }, function(existing)
-        if existing then
-            cb(false, 'Transfer already processed')
-            return
-        end
-
+    MySQL.insert('INSERT INTO whellco_computer_transfers (request_id, sender, recipient, amount, status) VALUES (?, ?, ?, ?, ?)', {
+        requestId, sender.PlayerData.citizenid, data.recipient, amount, 'pending'
+    }, function(transferId)
+        sender = QBCore.Functions.GetPlayer(source)
         local recipient = getPlayerByCitizenId(data.recipient)
 
-        if not recipient then
-            cb(false, 'Recipient is not online')
+        if not transferId or not sender or not recipient then
+            if transferId then
+                MySQL.update('UPDATE whellco_computer_transfers SET status = ? WHERE id = ?', { 'failed', transferId })
+            end
+
+            cb(false, transferId and 'Recipient is not online' or 'Could not create transfer record')
             return
         end
 
         if (sender.PlayerData.money.bank or 0) < amount then
+            MySQL.update('UPDATE whellco_computer_transfers SET status = ? WHERE id = ?', { 'failed', transferId })
             cb(false, 'Not enough money in bank')
             return
         end
 
         if not sender.Functions.RemoveMoney('bank', amount, 'computer-transfer') then
+            MySQL.update('UPDATE whellco_computer_transfers SET status = ? WHERE id = ?', { 'failed', transferId })
             cb(false, 'Transfer failed')
             return
         end
 
-        MySQL.insert('INSERT INTO whellco_computer_transfers (request_id, sender, recipient, amount, status) VALUES (?, ?, ?, ?, ?)', {
-            requestId, sender.PlayerData.citizenid, recipient.PlayerData.citizenid, amount, 'pending'
-        }, function(transferId)
-            if not transferId then
-                sender.Functions.AddMoney('bank', amount, 'computer-transfer-refund')
-                cb(false, 'Could not create transfer record')
-                return
-            end
+        if not recipient.Functions.AddMoney('bank', amount, 'computer-transfer') then
+            sender.Functions.AddMoney('bank', amount, 'computer-transfer-refund')
+            MySQL.update('UPDATE whellco_computer_transfers SET status = ? WHERE id = ?', { 'failed', transferId })
+            cb(false, 'Recipient could not receive the transfer')
+            return
+        end
 
-            if not recipient.Functions.AddMoney('bank', amount, 'computer-transfer') then
-                sender.Functions.AddMoney('bank', amount, 'computer-transfer-refund')
-                MySQL.update('UPDATE whellco_computer_transfers SET status = ? WHERE id = ?', { 'failed', transferId })
-                cb(false, 'Recipient could not receive the transfer')
-                return
-            end
-
-            MySQL.transaction({
-                {
-                    query = 'UPDATE whellco_computer_transfers SET status = ? WHERE id = ? AND status = ?',
-                    values = { 'completed', transferId, 'pending' }
-                },
-                {
-                    query = 'INSERT INTO whellco_computer_notifications (citizenid, kind, reference_id, content) VALUES (?, ?, ?, ?)',
-                    values = {
-                        recipient.PlayerData.citizenid,
-                        'transfer',
-                        transferId,
-                        ('%s sent you $%s'):format(sender.PlayerData.charinfo.firstname, amount)
-                    }
+        MySQL.transaction({
+            {
+                query = 'UPDATE whellco_computer_transfers SET status = ? WHERE id = ? AND status = ?',
+                values = { 'completed', transferId, 'pending' }
+            },
+            {
+                query = 'INSERT INTO whellco_computer_notifications (citizenid, kind, reference_id, content) VALUES (?, ?, ?, ?)',
+                values = {
+                    recipient.PlayerData.citizenid,
+                    'transfer',
+                    transferId,
+                    ('%s sent you $%s'):format(sender.PlayerData.charinfo.firstname, amount)
                 }
-            }, function(success)
-                if not success then
-                    recipient.Functions.RemoveMoney('bank', amount, 'computer-transfer-reversal')
-                    sender.Functions.AddMoney('bank', amount, 'computer-transfer-refund')
-                    MySQL.update('UPDATE whellco_computer_transfers SET status = ? WHERE id = ?', { 'failed', transferId })
-                    cb(false, 'Transfer failed')
-                    return
+            }
+        }, function(success)
+            recipient = getPlayerByCitizenId(data.recipient)
+            sender = QBCore.Functions.GetPlayer(source)
+
+            if not success then
+                local reversed = true
+
+                if recipient then
+                    reversed = recipient.Functions.RemoveMoney('bank', amount, 'computer-transfer-reversal')
                 end
 
+                if sender then
+                    sender.Functions.AddMoney('bank', amount, 'computer-transfer-refund')
+                end
+
+                MySQL.update('UPDATE whellco_computer_transfers SET status = ? WHERE id = ?', {
+                    reversed and 'failed' or 'recovery', transferId
+                })
+                cb(false, 'Transfer failed')
+                return
+            end
+
+            if recipient then
                 notify(recipient.PlayerData.source, ('You received $%s from %s'):format(amount, sender.PlayerData.charinfo.firstname), 'success')
-                cb(true, ('Sent $%s to %s'):format(amount, recipient.PlayerData.charinfo.firstname))
-            end)
+            end
+
+            cb(true, ('Sent $%s to %s'):format(amount, recipient.PlayerData.charinfo.firstname))
         end)
     end)
 end)
@@ -200,6 +214,21 @@ QBCore.Functions.CreateCallback('whellco_computer:getNotifications', function(so
         Player.PlayerData.citizenid
     }, function(rows)
         cb(rows or {})
+    end)
+end)
+
+QBCore.Functions.CreateCallback('whellco_computer:getUnreadNotificationCount', function(source, cb)
+    local Player = QBCore.Functions.GetPlayer(source)
+
+    if not Player then
+        cb(0)
+        return
+    end
+
+    MySQL.scalar('SELECT COUNT(*) FROM whellco_computer_notifications WHERE citizenid = ? AND read_at IS NULL', {
+        Player.PlayerData.citizenid
+    }, function(count)
+        cb(tonumber(count) or 0)
     end)
 end)
 
@@ -245,8 +274,8 @@ QBCore.Functions.CreateCallback('whellco_computer:createListing', function(sourc
         return
     end
 
-    if data.metadata ~= nil and type(data.metadata) ~= 'table' then
-        cb(false, 'Invalid metadata')
+    if data.metadata ~= nil then
+        cb(false, 'Metadata cannot be supplied by the client')
         return
     end
 
@@ -256,10 +285,10 @@ QBCore.Functions.CreateCallback('whellco_computer:createListing', function(sourc
     end
 
     MySQL.insert('INSERT INTO whellco_computer_listings (seller, item, quantity, metadata, price, status) VALUES (?, ?, ?, ?, ?, ?)', {
-        Player.PlayerData.citizenid, data.item, quantity, json.encode(data.metadata or {}), price, 'active'
+        Player.PlayerData.citizenid, data.item, quantity, '{}', price, 'active'
     }, function(listingId)
         if not listingId then
-            Player.Functions.AddItem(data.item, quantity, false, data.metadata or {})
+            Player.Functions.AddItem(data.item, quantity)
             cb(false, 'Could not create listing')
             return
         end
@@ -315,7 +344,7 @@ QBCore.Functions.CreateCallback('whellco_computer:cancelListing', function(sourc
                 return
             end
 
-            if not Player.Functions.AddItem(listing.item, listing.quantity, false, json.decode(listing.metadata or '{}')) then
+            if not Player.Functions.AddItem(listing.item, listing.quantity) then
                 MySQL.update('UPDATE whellco_computer_listings SET status = ? WHERE id = ?', { 'recovery', listingId })
                 cb(false, 'Inventory full; listing marked for recovery')
                 return
@@ -355,50 +384,44 @@ QBCore.Functions.CreateCallback('whellco_computer:buyListing', function(source, 
             return
         end
 
-        local seller = getPlayerByCitizenId(listing.seller)
-
-        if not seller then
-            cb(false, 'Seller is not online')
-            return
-        end
-
         if (buyer.PlayerData.money.bank or 0) < listing.price then
             cb(false, 'Not enough money in bank')
-            return
-        end
-
-        local metadata = json.decode(listing.metadata or '{}')
-
-        if not buyer.Functions.AddItem(listing.item, listing.quantity, false, metadata) then
-            cb(false, 'Inventory full')
-            return
-        end
-
-        if not buyer.Functions.RemoveMoney('bank', listing.price, 'computer-marketplace') then
-            buyer.Functions.RemoveItem(listing.item, listing.quantity, false, metadata)
-            cb(false, 'Purchase failed')
             return
         end
 
         MySQL.update('UPDATE whellco_computer_listings SET status = ?, buyer = ? WHERE id = ? AND status = ?', {
             'pending', buyer.PlayerData.citizenid, listingId, 'active'
         }, function(affected)
-            if not affected or affected == 0 then
-                buyer.Functions.AddMoney('bank', listing.price, 'computer-marketplace-refund')
-                buyer.Functions.RemoveItem(listing.item, listing.quantity, false, metadata)
+            if not affected or affected ~= 1 then
                 cb(false, 'Listing is no longer available')
                 return
             end
 
-            seller = getPlayerByCitizenId(listing.seller)
+            buyer = QBCore.Functions.GetPlayer(source)
+            local seller = getPlayerByCitizenId(listing.seller)
 
-            if not seller then
+            if not buyer or not seller then
                 MySQL.update('UPDATE whellco_computer_listings SET status = ? WHERE id = ? AND status = ?', {
                     'active', listingId, 'pending'
                 })
-                buyer.Functions.AddMoney('bank', listing.price, 'computer-marketplace-refund')
-                buyer.Functions.RemoveItem(listing.item, listing.quantity, false, metadata)
-                cb(false, 'Seller is no longer online')
+                cb(false, 'Purchase could not be completed')
+                return
+            end
+
+            if not buyer.Functions.AddItem(listing.item, listing.quantity) then
+                MySQL.update('UPDATE whellco_computer_listings SET status = ? WHERE id = ? AND status = ?', {
+                    'active', listingId, 'pending'
+                })
+                cb(false, 'Inventory full')
+                return
+            end
+
+            if not buyer.Functions.RemoveMoney('bank', listing.price, 'computer-marketplace') then
+                buyer.Functions.RemoveItem(listing.item, listing.quantity)
+                MySQL.update('UPDATE whellco_computer_listings SET status = ? WHERE id = ? AND status = ?', {
+                    'active', listingId, 'pending'
+                })
+                cb(false, 'Purchase failed')
                 return
             end
 
@@ -417,18 +440,38 @@ QBCore.Functions.CreateCallback('whellco_computer:buyListing', function(source, 
                     }
                 }
             }, function(success)
+                buyer = QBCore.Functions.GetPlayer(source)
+                seller = getPlayerByCitizenId(listing.seller)
+
                 if not success then
+                    if buyer then
+                        buyer.Functions.AddMoney('bank', listing.price, 'computer-marketplace-refund')
+                        buyer.Functions.RemoveItem(listing.item, listing.quantity)
+                    end
+
                     MySQL.update('UPDATE whellco_computer_listings SET status = ? WHERE id = ? AND status = ?', {
                         'active', listingId, 'pending'
                     })
-                    buyer.Functions.AddMoney('bank', listing.price, 'computer-marketplace-refund')
-                    buyer.Functions.RemoveItem(listing.item, listing.quantity, false, metadata)
                     cb(false, 'Purchase failed')
                     return
                 end
 
-                seller.Functions.AddMoney('bank', listing.price, 'computer-marketplace-sale')
-                notify(seller.PlayerData.source, ('%s bought your listing for $%s'):format(buyer.PlayerData.charinfo.firstname, listing.price), 'success')
+                if seller then
+                    if not seller.Functions.AddMoney('bank', listing.price, 'computer-marketplace-sale') then
+                        MySQL.update('UPDATE whellco_computer_listings SET status = ? WHERE id = ?', {
+                            'recovery', listingId
+                        })
+                        print(('[whellco_computer] Marketplace payout failed for listing %s.'):format(listingId))
+                    end
+
+                    notify(seller.PlayerData.source, ('%s bought your listing for $%s'):format(buyer.PlayerData.charinfo.firstname, listing.price), 'success')
+                else
+                    MySQL.update('UPDATE whellco_computer_listings SET status = ? WHERE id = ?', {
+                        'recovery', listingId
+                    })
+                    print(('[whellco_computer] Marketplace seller offline during payout for listing %s.'):format(listingId))
+                end
+
                 cb(true, ('Bought %s x%s for $%s'):format(listing.item, listing.quantity, listing.price))
             end)
         end)

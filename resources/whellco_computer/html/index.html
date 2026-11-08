@@ -27,11 +27,13 @@
                 <input id="transfer-recipient" placeholder="Recipient citizen ID">
                 <input id="transfer-amount" type="number" min="1" placeholder="Amount">
                 <button id="send-transfer">Send Transfer</button>
+                <div id="transfer-status" class="status"></div>
                 <h3>Transfer History</h3>
                 <div id="transfers"></div>
             </div>
             <div id="shop" class="panel">
                 <h2>Shop</h2>
+                <div id="shop-status" class="status"></div>
                 <div id="shop-items"></div>
             </div>
             <div id="marketplace" class="panel">
@@ -41,6 +43,7 @@
                 <input id="listing-quantity" type="number" min="1" placeholder="Quantity">
                 <input id="listing-price" type="number" min="1" placeholder="Price">
                 <button id="create-listing">List Item</button>
+                <div id="marketplace-status" class="status"></div>
                 <h3>Active Listings</h3>
                 <button id="refresh-marketplace">Refresh</button>
                 <div id="listings"></div>
@@ -49,6 +52,7 @@
                 <h2>Facewall</h2>
                 <textarea id="post-content" placeholder="What is happening?"></textarea>
                 <button id="create-post">Post</button>
+                <div id="social-status" class="status"></div>
                 <div id="posts"></div>
             </div>
             <div id="notifications" class="panel">
