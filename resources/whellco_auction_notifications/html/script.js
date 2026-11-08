@@ -1,5 +1,5 @@
 const notificationMenu = document.getElementById('auction-notifications');
-const notificationsContainer = document.getElementById('notifications');
+const notificationList = document.getElementById('notification-list');
 const closeButton = document.getElementById('close-button');
 
 let currentNotifications = [];
@@ -17,14 +17,31 @@ function post(callbackName, data) {
 }
 
 function renderNotifications() {
-    notificationsContainer.innerHTML = '';
+    notificationList.innerHTML = '';
 
     currentNotifications.forEach(function(notification) {
         const row = document.createElement('div');
-        row.className = 'notification-item';
-        row.textContent = `${notification.notification_type} — ${notification.message} — ${notification.created_at}`;
+        row.className = notification.read_at ? 'notification-item' : 'notification-item unread';
 
-        notificationsContainer.appendChild(row);
+        const info = document.createElement('div');
+        info.textContent = `${notification.notification_type} — ${notification.message}`;
+
+        row.appendChild(info);
+
+        if (!notification.read_at) {
+            const markRead = document.createElement('button');
+            markRead.textContent = 'Mark Read';
+
+            markRead.addEventListener('click', function() {
+                post('markRead', {
+                    notificationId: notification.id
+                });
+            });
+
+            row.appendChild(markRead);
+        }
+
+        notificationList.appendChild(row);
     });
 }
 

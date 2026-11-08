@@ -44,21 +44,28 @@ header p {
     color: rgba(255, 255, 255, .70);
 }
 
-.notifications {
+.notification-list {
     display: grid;
     gap: 10px;
     margin: 20px 0;
 }
 
 .notification-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     padding: 14px;
     border-radius: 12px;
     background: rgba(255, 255, 255, .06);
     border: 1px solid rgba(255, 255, 255, .12);
 }
 
+.notification-item.unread {
+    border-color: rgba(0, 212, 255, .55);
+}
+
 button {
-    padding: 8px 12px;
+    padding: 10px;
     border: none;
     border-radius: 8px;
     font-weight: 700;

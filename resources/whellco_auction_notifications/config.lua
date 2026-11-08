@@ -1,11 +1,12 @@
 Config = {}
 
-Config.Currency = '£'
 Config.MaxNotifications = 25
 
 Config.NotificationTypes = {
-    bid = 'Bid placed',
-    outbid = 'Outbid',
-    won = 'Auction won',
-    ended = 'Auction ended'
+    auction_start = 'Auction started',
+    bid_placed = 'Bid placed',
+    outbid = 'You were outbid',
+    auction_end = 'Auction ended',
+    auction_won = 'Auction won',
+    auction_lost = 'Auction lost'
 }

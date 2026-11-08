@@ -2,7 +2,7 @@ fx_version 'cerulean'
 game 'gta5'
 
 author 'Chris Wheller'
-description 'Vehicle auction notification system with bid alerts, outbid alerts and notification NUI'
+description 'Vehicle auction notification system with auction alerts, notification types and notification NUI'
 version '1.0.0'
 
 shared_script 'config.lua'

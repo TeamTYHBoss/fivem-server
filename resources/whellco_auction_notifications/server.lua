@@ -17,9 +17,11 @@ local function sendMenu(source)
 
     local notifications = MySQL.query.await(
         [[
-            SELECT id, player_id, auction_id, notification_type, message, read_at, created_at
+            SELECT id, auction_id, notification_type, message, read_at, created_at
             FROM whellco_auction_notifications
-            WHERE player_id = ?
+            WHERE character_id = (
+                SELECT character_id FROM whellco_players WHERE identifier = ? ORDER BY created_at DESC LIMIT 1
+            )
             ORDER BY created_at DESC
             LIMIT ?
         ]],
@@ -27,7 +29,8 @@ local function sendMenu(source)
     ) or {}
 
     TriggerClientEvent('whellco_auction_notifications:openMenu', source, {
-        notifications = notifications
+        notifications = notifications,
+        types = Config.NotificationTypes
     })
 end
 
@@ -39,19 +42,54 @@ RegisterNetEvent('whellco_auction_notifications:closeMenu', function()
     TriggerClientEvent('whellco_auction_notifications:closeMenu', source)
 end)
 
-RegisterNetEvent('whellco_auction_notifications:createNotification', function(playerId, auctionId, notificationType, message)
+RegisterNetEvent('whellco_auction_notifications:markRead', function(notificationId)
     local source = source
+    local identifier = getIdentifier(source)
+
+    if not identifier then
+        return
+    end
+
+    MySQL.update.await(
+        [[
+            UPDATE whellco_auction_notifications
+            SET read_at = CURRENT_TIMESTAMP
+            WHERE id = ? AND character_id = (
+                SELECT character_id FROM whellco_players WHERE identifier = ? ORDER BY created_at DESC LIMIT 1
+            ) AND read_at IS NULL
+        ]],
+        { notificationId, identifier }
+    )
+
+    sendMenu(source)
+end)
+
+RegisterNetEvent('whellco_auction_notifications:createNotification', function(auctionId, notificationType, message)
+    local source = source
+    local identifier = getIdentifier(source)
+
+    if not identifier then
+        return
+    end
+
+    if not Config.NotificationTypes[notificationType] then
+        return
+    end
 
     MySQL.insert.await(
         [[
             INSERT INTO whellco_auction_notifications
-                (player_id, auction_id, notification_type, message)
-            VALUES (?, ?, ?, ?)
+                (character_id, auction_id, notification_type, message)
+            SELECT character_id, ?, ?, ?
+            FROM whellco_players
+            WHERE identifier = ?
+            ORDER BY created_at DESC
+            LIMIT 1
         ]],
-        { playerId, auctionId, notificationType, message }
+        { auctionId, notificationType, message, identifier }
     )
 
-    TriggerClientEvent('whellco_auction_notifications:notify', source, message)
+    TriggerClientEvent('whellco_auction_notifications:notify', source, 'Notification created.')
 
     sendMenu(source)
 end)

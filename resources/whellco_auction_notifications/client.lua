@@ -10,7 +10,8 @@ local function openNotificationMenu(data)
     SetNuiFocus(true, true)
     SendNUIMessage({
         action = 'open',
-        notifications = data.notifications
+        notifications = data.notifications,
+        types = data.types
     })
 end
 
@@ -36,12 +37,17 @@ RegisterNetEvent('whellco_auction_notifications:notify', function(message)
     EndTextCommandThefeedPostTicker(false, true)
 end)
 
-RegisterCommand('auctionnotifications', function()
+RegisterCommand('auctionalerts', function()
     TriggerServerEvent('whellco_auction_notifications:openMenu')
 end, false)
 
 RegisterNuiCallback('closeMenu', function(_, cb)
     TriggerServerEvent('whellco_auction_notifications:closeMenu')
+    cb({ ok = true })
+end)
+
+RegisterNuiCallback('markRead', function(data, cb)
+    TriggerServerEvent('whellco_auction_notifications:markRead', data.notificationId)
     cb({ ok = true })
 end)
 
