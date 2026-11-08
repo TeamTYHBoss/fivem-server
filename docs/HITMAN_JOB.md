@@ -6,6 +6,15 @@
 
 This system uses NPC contract targets. It does **not** reward killing other players or encourage mass violence against players. PvP can remain governed by your server’s existing consent, roleplay, and moderation rules.
 
+## Silent elimination bonus
+
+- Melee eliminations earn a silent-elimination credit.
+- Stealth eliminations earn a silent-elimination credit.
+- Each silent elimination adds a 25% payout bonus.
+- Bonuses stack per silent elimination.
+- Stealth is detected when the player is on foot and moving slowly.
+- Melee weapons are configurable.
+
 ## Startup order
 
 ```cfg
@@ -87,4 +96,5 @@ View hitman help:
 - Contract expiry is validated server-side.
 - Contract payouts are validated server-side.
 - Contract progression is validated server-side.
+- Silent-elimination bonuses are validated server-side.
 - Contract actions are logged server-side.

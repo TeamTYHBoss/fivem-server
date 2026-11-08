@@ -4,6 +4,10 @@ local activeContract = nil
 local contractBlips = {}
 local contractPeds = {}
 
+local function isMeleeWeapon(weapon)
+    return Config.Hitman.MeleeWeapons[weapon] == true
+end
+
 local function clearContract()
     activeContract = nil
 
@@ -86,6 +90,27 @@ RegisterNetEvent('whellco_hitman:start', function(data)
                 break
             end
 
+            for index, ped in ipairs(contractPeds) do
+                if DoesEntityExist(ped) and IsEntityDead(ped) then
+                    local weapon = GetSelectedPedWeapon(PlayerPedId())
+                    local isStealth = not IsPedInAnyVehicle(PlayerPedId(), false) and GetEntitySpeed(PlayerPedId()) < 2.0
+                    local method = nil
+
+                    if isMeleeWeapon(weapon) then
+                        method = 'melee'
+                    elseif isStealth then
+                        method = 'stealth'
+                    end
+
+                    if method then
+                        TriggerServerEvent('whellco_hitman:elimination', method)
+                    end
+
+                    table.remove(contractPeds, index)
+                    break
+                end
+            end
+
             local remainingTargets = 0
 
             for _, ped in ipairs(contractPeds) do
@@ -108,7 +133,7 @@ RegisterNetEvent('whellco_hitman:openMenu', function()
 end)
 
 RegisterCommand('hitmanhelp', function()
-    QBCore.Functions.Notify('Use /hitman to accept a contract. Contracts escalate in difficulty and payout.', 'primary')
+    QBCore.Functions.Notify('Use melee or stealth eliminations for a bonus payout.', 'primary')
 end, false)
 
 AddEventHandler('onResourceStop', function(resource)

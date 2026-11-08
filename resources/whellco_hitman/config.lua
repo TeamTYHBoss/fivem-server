@@ -13,7 +13,17 @@ Config.Hitman = {
     NpcTargetWeapon = 'WEAPON_PISTOL',
     NpcTargetAccuracy = 25,
     NpcTargetFleeDistance = 150.0,
-    EscapeDistance = 200.0
+    EscapeDistance = 200.0,
+    SilentEliminationBonusPercent = 25,
+    MeleeWeapons = {
+        ['WEAPON_UNARMED'] = true,
+        ['WEAPON_KNIFE'] = true,
+        ['WEAPON_NIGHTSTICK'] = true,
+        ['WEAPON_HAMMER'] = true,
+        ['WEAPON_BAT'] = true,
+        ['WEAPON_CROWBAR'] = true
+    },
+    StealthMultiplier = 1.5
 }
 
 -- Contracts escalate by tier. Payouts increase, but the time limit stays constant.
