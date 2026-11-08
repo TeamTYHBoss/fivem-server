@@ -69,7 +69,7 @@ Player.Functions.SetMetaData('whellco_level', value)
 - Service systems: migrated.
 - Auction notifications and settings: migrated.
 - Auction reports, moderation, audit, archive, insights, exports, recommendations, and dashboard: migrated.
-- Remaining auction systems: QBCore migration SQL added; server logic migration pending.
+- Auction history, stats, leaderboard, watchlist, search, favorites, categories, and tags: migrated.
 - Remaining utility systems: batch migration pending.
 
 ## Compatibility bridge
@@ -88,8 +88,8 @@ Player.Functions.SetMetaData('whellco_level', value)
 
 New and migrated resources should use these exports or call QBCore directly.
 
-## Batch 5b migration
+## Batch 5c migration
 
-- Auction reports, moderation, audit, archive, insights, exports, recommendations, and dashboard now use QBCore citizen IDs.
-- Admin-only auction systems use QBCore permissions.
-- All migrated auction systems use QBCore notifications.
+- Auction history, stats, leaderboard, watchlist, search, favorites, categories, and tags now use QBCore citizen IDs.
+- All player-facing auction actions use QBCore notifications.
+- Auction tags remain auction-scoped and use QBCore player validation before changes.

@@ -1,77 +1,53 @@
-local function sendMenu(source)
-    local bidders = MySQL.query.await(
-        [[
-            SELECT player_id, total_bids, total_spent, auctions_won
-            FROM whellco_auction_leaderboard
-            ORDER BY total_spent DESC
-            LIMIT ?
-        ]],
-        { Config.LeaderboardSize }
-    ) or {}
+local QBCore = exports['qb-core']:GetCoreObject()
 
-    local sellers = MySQL.query.await(
-        [[
-            SELECT player_id, auctions_sold, total_spent
-            FROM whellco_auction_leaderboard
-            ORDER BY auctions_sold DESC
-            LIMIT ?
-        ]],
-        { Config.LeaderboardSize }
-    ) or {}
-
-    TriggerClientEvent('whellco_auction_leaderboard:openMenu', source, {
-        bidders = bidders,
-        sellers = sellers
-    })
+local function getQbPlayer(source)
+    return QBCore.Functions.GetPlayer(source)
 end
 
 RegisterNetEvent('whellco_auction_leaderboard:openMenu', function()
-    sendMenu(source)
+    local source = source
+    local Player = getQbPlayer(source)
+
+    if not Player then
+        return
+    end
+
+    local leaderboard = MySQL.query.await(
+        [[
+            SELECT id, auction_id, metric, value, created_at
+            FROM whellco_auction_leaderboard
+            WHERE character_id = ?
+            ORDER BY value DESC
+            LIMIT 25
+        ]],
+        { Player.PlayerData.citizenid }
+    ) or {}
+
+    TriggerClientEvent('whellco_auction_leaderboard:openMenu', source, {
+        leaderboard = leaderboard
+    })
 end)
 
 RegisterNetEvent('whellco_auction_leaderboard:closeMenu', function()
     TriggerClientEvent('whellco_auction_leaderboard:closeMenu', source)
 end)
 
-RegisterNetEvent('whellco_auction_leaderboard:updateStats', function(playerId, totalBids, totalSpent, auctionsWon, auctionsSold)
+RegisterNetEvent('whellco_auction_leaderboard:recordScore', function(auctionId, metric, value)
     local source = source
+    local Player = getQbPlayer(source)
 
-    totalBids = tonumber(totalBids) or 0
-    totalSpent = tonumber(totalSpent) or 0
-    auctionsWon = tonumber(auctionsWon) or 0
-    auctionsSold = tonumber(auctionsSold) or 0
-
-    local existing = MySQL.single.await(
-        [[
-            SELECT id
-            FROM whellco_auction_leaderboard
-            WHERE player_id = ?
-            LIMIT 1
-        ]],
-        { playerId }
-    )
-
-    if existing then
-        MySQL.query.await(
-            [[
-                UPDATE whellco_auction_leaderboard
-                SET total_bids = ?, total_spent = ?, auctions_won = ?, auctions_sold = ?
-                WHERE id = ?
-            ]],
-            { totalBids, totalSpent, auctionsWon, auctionsSold, existing.id }
-        )
-    else
-        MySQL.insert.await(
-            [[
-                INSERT INTO whellco_auction_leaderboard
-                    (player_id, total_bids, total_spent, auctions_won, auctions_sold)
-                VALUES (?, ?, ?, ?, ?)
-            ]],
-            { playerId, totalBids, totalSpent, auctionsWon, auctionsSold }
-        )
+    if not Player then
+        return
     end
 
-    TriggerClientEvent('whellco_auction_leaderboard:notify', source, 'Leaderboard updated.')
+    MySQL.insert.await(
+        [[
+            INSERT INTO whellco_auction_leaderboard
+                (character_id, auction_id, metric, value)
+            VALUES (?, ?, ?, ?)
+        ]],
+        { Player.PlayerData.citizenid, auctionId, metric, value }
+    )
 
-    sendMenu(source)
+    TriggerClientEvent('QBCore:Notify', source, 'Leaderboard score recorded.', 'success')
 end)

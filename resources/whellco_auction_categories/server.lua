@@ -1,77 +1,53 @@
-local function sendMenu(source)
-    local auctions = MySQL.query.await(
-        [[
-            SELECT id, auction_id, category_id, created_at
-            FROM whellco_auction_categories
-            ORDER BY created_at DESC
-            LIMIT ?
-        ]],
-        { Config.MaxCategories }
-    ) or {}
+local QBCore = exports['qb-core']:GetCoreObject()
 
-    TriggerClientEvent('whellco_auction_categories:openMenu', source, {
-        categories = Config.AuctionCategories,
-        auctions = auctions
-    })
+local function getQbPlayer(source)
+    return QBCore.Functions.GetPlayer(source)
 end
 
 RegisterNetEvent('whellco_auction_categories:openMenu', function()
-    sendMenu(source)
+    local source = source
+    local Player = getQbPlayer(source)
+
+    if not Player then
+        return
+    end
+
+    local categories = MySQL.query.await(
+        [[
+            SELECT id, auction_id, category, created_at
+            FROM whellco_auction_categories
+            WHERE character_id = ?
+            ORDER BY created_at DESC
+            LIMIT 25
+        ]],
+        { Player.PlayerData.citizenid }
+    ) or {}
+
+    TriggerClientEvent('whellco_auction_categories:openMenu', source, {
+        categories = categories
+    })
 end)
 
 RegisterNetEvent('whellco_auction_categories:closeMenu', function()
     TriggerClientEvent('whellco_auction_categories:closeMenu', source)
 end)
 
-RegisterNetEvent('whellco_auction_categories:setCategory', function(auctionId, categoryId)
+RegisterNetEvent('whellco_auction_categories:addCategory', function(auctionId, category)
     local source = source
+    local Player = getQbPlayer(source)
 
-    categoryId = tonumber(categoryId) or 0
-
-    local validCategory = false
-
-    for _, category in ipairs(Config.AuctionCategories) do
-        if category.id == categoryId then
-            validCategory = true
-            break
-        end
-    end
-
-    if not validCategory then
+    if not Player then
         return
     end
 
-    local existing = MySQL.single.await(
+    MySQL.insert.await(
         [[
-            SELECT id
-            FROM whellco_auction_categories
-            WHERE auction_id = ?
-            LIMIT 1
+            INSERT INTO whellco_auction_categories
+                (character_id, auction_id, category)
+            VALUES (?, ?, ?)
         ]],
-        { auctionId }
+        { Player.PlayerData.citizenid, auctionId, category }
     )
 
-    if existing then
-        MySQL.query.await(
-            [[
-                UPDATE whellco_auction_categories
-                SET category_id = ?
-                WHERE id = ?
-            ]],
-            { categoryId, existing.id }
-        )
-    else
-        MySQL.insert.await(
-            [[
-                INSERT INTO whellco_auction_categories
-                    (auction_id, category_id)
-                VALUES (?, ?)
-            ]],
-            { auctionId, categoryId }
-        )
-    end
-
-    TriggerClientEvent('whellco_auction_categories:notify', source, 'Auction category updated.')
-
-    sendMenu(source)
+    TriggerClientEvent('QBCore:Notify', source, 'Category added.', 'success')
 end)

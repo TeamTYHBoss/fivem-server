@@ -1,97 +1,54 @@
-local function getIdentifier(source)
-    local identifier = GetPlayerIdentifierByType(source, 'license')
+local QBCore = exports['qb-core']:GetCoreObject()
 
-    if not identifier then
-        identifier = GetPlayerIdentifierByType(source, 'steam')
-    end
-
-    return identifier
+local function getQbPlayer(source)
+    return QBCore.Functions.GetPlayer(source)
 end
 
-local function sendMenu(source)
-    local identifier = getIdentifier(source)
+RegisterNetEvent('whellco_auction_favorites:openMenu', function()
+    local source = source
+    local Player = getQbPlayer(source)
 
-    if not identifier then
+    if not Player then
         return
     end
 
     local favorites = MySQL.query.await(
         [[
-            SELECT id, player_id, auction_id, plate, created_at
+            SELECT id, auction_id, created_at
             FROM whellco_auction_favorites
-            WHERE player_id = ?
+            WHERE character_id = ?
             ORDER BY created_at DESC
-            LIMIT ?
+            LIMIT 25
         ]],
-        { identifier, Config.MaxFavorites }
+        { Player.PlayerData.citizenid }
     ) or {}
 
     TriggerClientEvent('whellco_auction_favorites:openMenu', source, {
         favorites = favorites
     })
-end
-
-RegisterNetEvent('whellco_auction_favorites:openMenu', function()
-    sendMenu(source)
 end)
 
 RegisterNetEvent('whellco_auction_favorites:closeMenu', function()
     TriggerClientEvent('whellco_auction_favorites:closeMenu', source)
 end)
 
-RegisterNetEvent('whellco_auction_favorites:favoriteAuction', function(auctionId, plate)
+RegisterNetEvent('whellco_auction_favorites:addFavorite', function(auctionId)
     local source = source
-    local identifier = getIdentifier(source)
+    local Player = getQbPlayer(source)
 
-    if not identifier then
-        return
-    end
-
-    local existing = MySQL.single.await(
-        [[
-            SELECT id
-            FROM whellco_auction_favorites
-            WHERE player_id = ? AND auction_id = ?
-            LIMIT 1
-        ]],
-        { identifier, auctionId }
-    )
-
-    if existing then
-        return
-    end
-
-    MySQL.insert.await(
-        [[
-            INSERT INTO whellco_auction_favorites
-                (player_id, auction_id, plate)
-            VALUES (?, ?, ?)
-        ]],
-        { identifier, auctionId, plate }
-    )
-
-    TriggerClientEvent('whellco_auction_favorites:notify', source, ('Added auction for plate %s to favorites.'):format(plate))
-
-    sendMenu(source)
-end)
-
-RegisterNetEvent('whellco_auction_favorites:unfavoriteAuction', function(auctionId)
-    local source = source
-    local identifier = getIdentifier(source)
-
-    if not identifier then
+    if not Player then
         return
     end
 
     MySQL.query.await(
         [[
-            DELETE FROM whellco_auction_favorites
-            WHERE player_id = ? AND auction_id = ?
+            INSERT INTO whellco_auction_favorites
+                (character_id, auction_id)
+            VALUES (?, ?)
+            ON DUPLICATE KEY UPDATE character_id = VALUES(character_id)
         ]],
-        { identifier, auctionId }
+        { Player.PlayerData.citizenid, auctionId }
     )
 
-    TriggerClientEvent('whellco_auction_favorites:notify', source, 'Auction removed from favorites.')
-
-    sendMenu(source)
+    TriggerClientEvent('QBCore:Notify', source, 'Auction added to favorites.', 'success')
 end)

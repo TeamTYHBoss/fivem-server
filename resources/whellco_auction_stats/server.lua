@@ -1,65 +1,53 @@
-local function sendMenu(source)
+local QBCore = exports['qb-core']:GetCoreObject()
+
+local function getQbPlayer(source)
+    return QBCore.Functions.GetPlayer(source)
+end
+
+RegisterNetEvent('whellco_auction_stats:openMenu', function()
+    local source = source
+    local Player = getQbPlayer(source)
+
+    if not Player then
+        return
+    end
+
     local stats = MySQL.query.await(
         [[
-            SELECT id, auction_id, plate, total_bids, highest_bid, final_bid, winner_id, created_at
+            SELECT id, auction_id, metric, value, created_at
             FROM whellco_auction_stats
-            ORDER BY highest_bid DESC
-            LIMIT ?
+            WHERE character_id = ?
+            ORDER BY created_at DESC
+            LIMIT 25
         ]],
-        { Config.MaxStatsEntries }
+        { Player.PlayerData.citizenid }
     ) or {}
 
     TriggerClientEvent('whellco_auction_stats:openMenu', source, {
         stats = stats
     })
-end
-
-RegisterNetEvent('whellco_auction_stats:openMenu', function()
-    sendMenu(source)
 end)
 
 RegisterNetEvent('whellco_auction_stats:closeMenu', function()
     TriggerClientEvent('whellco_auction_stats:closeMenu', source)
 end)
 
-RegisterNetEvent('whellco_auction_stats:updateStats', function(auctionId, plate, totalBids, highestBid, finalBid, winnerId)
+RegisterNetEvent('whellco_auction_stats:recordStat', function(auctionId, metric, value)
     local source = source
+    local Player = getQbPlayer(source)
 
-    totalBids = tonumber(totalBids) or 0
-    highestBid = tonumber(highestBid) or 0
-    finalBid = tonumber(finalBid) or 0
-
-    local existing = MySQL.single.await(
-        [[
-            SELECT id
-            FROM whellco_auction_stats
-            WHERE auction_id = ?
-            LIMIT 1
-        ]],
-        { auctionId }
-    )
-
-    if existing then
-        MySQL.query.await(
-            [[
-                UPDATE whellco_auction_stats
-                SET total_bids = ?, highest_bid = ?, final_bid = ?, winner_id = ?
-                WHERE id = ?
-            ]],
-            { totalBids, highestBid, finalBid, winnerId, existing.id }
-        )
-    else
-        MySQL.insert.await(
-            [[
-                INSERT INTO whellco_auction_stats
-                    (auction_id, plate, total_bids, highest_bid, final_bid, winner_id)
-                VALUES (?, ?, ?, ?, ?, ?)
-            ]],
-            { auctionId, plate, totalBids, highestBid, finalBid, winnerId }
-        )
+    if not Player then
+        return
     end
 
-    TriggerClientEvent('whellco_auction_stats:notify', source, 'Auction stats updated.')
+    MySQL.insert.await(
+        [[
+            INSERT INTO whellco_auction_stats
+                (character_id, auction_id, metric, value)
+            VALUES (?, ?, ?, ?)
+        ]],
+        { Player.PlayerData.citizenid, auctionId, metric, value }
+    )
 
-    sendMenu(source)
+    TriggerClientEvent('QBCore:Notify', source, 'Auction stat recorded.', 'success')
 end)
