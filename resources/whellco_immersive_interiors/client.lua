@@ -57,6 +57,14 @@ local function hasInteractionAccess(Player, interaction)
     return job and job.name == interaction.requiredJob and (job.grade.level or 0) >= (interaction.jobGrade or 0)
 end
 
+local function playSound(soundName, soundSet)
+    if not soundName or soundName == '' then
+        return
+    end
+
+    PlaySoundFrontend(-1, soundName, soundSet or 'HUD_FRONTEND_DEFAULT_SOUNDSET', true)
+end
+
 local function playTeleportEffect(coords)
     if not Config.TeleportTransition.enabled then
         return
@@ -92,8 +100,17 @@ end
 
 local function teleportPlayer(interiorId, coords, label)
     local transition = Config.TeleportTransition
+    local audio = transition.audio or {}
 
     if transition.enabled then
+        if audio.enabled then
+            if audio.departureDelayMs > 0 then
+                Wait(audio.departureDelayMs)
+            end
+
+            playSound(audio.departureSound, audio.departureSoundSet)
+        end
+
         DoScreenFadeOut(transition.fadeOutMs)
 
         while not IsScreenFadedOut() do
@@ -109,6 +126,14 @@ local function teleportPlayer(interiorId, coords, label)
     playTeleportEffect(coords)
 
     if transition.enabled then
+        if audio.enabled then
+            if audio.arrivalDelayMs > 0 then
+                Wait(math.max(0, audio.arrivalDelayMs - transition.fadeOutMs))
+            end
+
+            playSound(audio.arrivalSound, audio.arrivalSoundSet)
+        end
+
         Wait(math.max(0, transition.particleDurationMs - transition.fadeOutMs))
         DoScreenFadeIn(transition.fadeInMs)
     end

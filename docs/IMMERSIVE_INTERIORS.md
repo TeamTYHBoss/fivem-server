@@ -1,6 +1,6 @@
 # Immersive Interiors
 
-`whellco_immersive_interiors` provides QBCore-native custom MLO interiors, seamless entry and exit points, job-gated rooms, interactive interior locations, and polished teleport transitions.
+`whellco_immersive_interiors` provides QBCore-native custom MLO interiors, seamless entry and exit points, job-gated rooms, interactive interior locations, and polished teleport transitions with audio cues.
 
 ## Startup order
 
@@ -13,8 +13,6 @@ ensure whellco_immersive_interiors
 
 ## Teleport transitions
 
-Teleports can use a screen fade and particle effect:
-
 ```lua
 Config.TeleportTransition = {
     enabled = true,
@@ -22,16 +20,25 @@ Config.TeleportTransition = {
     fadeInMs = 500,
     particleEffect = 'scr_reconstructiontrust',
     particleName = 'scr_reconstruction_trust',
-    particleDurationMs = 900
+    particleDurationMs = 900,
+    audio = {
+        enabled = true,
+        departureSound = 'CHECKPOINT_PERFECT',
+        departureSoundSet = 'HUD_MINI_GAME_SOUNDSET',
+        arrivalSound = 'SELECT',
+        arrivalSoundSet = 'HUD_FRONTEND_DEFAULT_SOUNDSET',
+        departureDelayMs = 0,
+        arrivalDelayMs = 300
+    }
 }
 ```
 
-- Set `enabled = false` to disable all transition effects.
-- `fadeOutMs` controls how quickly the screen fades to black.
-- `fadeInMs` controls how quickly the screen returns after teleporting.
-- `particleEffect` is the particle asset requested by the client.
-- `particleName` is the particle effect played at the destination.
-- `particleDurationMs` controls how long the client waits before fading back in.
+- Set `enabled = false` to disable the visual transition.
+- Set `audio.enabled = false` to disable only the audio cues.
+- `departureSound` plays before the screen fade begins.
+- `arrivalSound` plays after the player reaches the destination.
+- `departureDelayMs` delays the departure sound.
+- `arrivalDelayMs` delays the arrival sound.
 
 ## Admin teleport commands
 

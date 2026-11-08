@@ -10,7 +10,16 @@ Config.TeleportTransition = {
     fadeInMs = 500,
     particleEffect = 'scr_reconstructiontrust',
     particleName = 'scr_reconstruction_trust',
-    particleDurationMs = 900
+    particleDurationMs = 900,
+    audio = {
+        enabled = true,
+        departureSound = 'CHECKPOINT_PERFECT',
+        departureSoundSet = 'HUD_MINI_GAME_SOUNDSET',
+        arrivalSound = 'SELECT',
+        arrivalSoundSet = 'HUD_FRONTEND_DEFAULT_SOUNDSET',
+        departureDelayMs = 0,
+        arrivalDelayMs = 300
+    }
 }
 
 Config.Interiors = {
