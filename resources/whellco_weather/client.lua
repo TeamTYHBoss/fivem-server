@@ -1,6 +1,7 @@
 local QBCore = exports['qb-core']:GetCoreObject()
 
 local streetLightLevel = 0.0
+local houseLights = {}
 
 RegisterNetEvent('whellco_weather:setWeather', function(weather)
     if not weather then
@@ -50,10 +51,71 @@ local function updateStreetLights()
     end
 end
 
+local function updateHouseLights()
+    local hour = GetClockHours()
+    local minute = GetClockMinutes()
+    local time = hour + (minute / 60.0)
+
+    local isNight = time >= 18.0 or time < 6.0
+
+    for _, house in ipairs(Config.Houses) do
+        local playerCoords = GetEntityCoords(PlayerPedId())
+        local distance = #(playerCoords - house.coords)
+
+        if distance < house.lightDistance then
+            if isNight then
+                if not houseLights[house.id] then
+                    houseLights[house.id] = {}
+
+                    for _, window in ipairs(house.windows) do
+                        UseParticleFxAssetNextCall('core')
+                        local handle = StartParticleFxLoopedAtCoord(
+                            'exp_grd_bzgas_smoke',
+                            window.x,
+                            window.y,
+                            window.z,
+                            0.0,
+                            0.0,
+                            0.0,
+                            0.3,
+                            false,
+                            false,
+                            false
+                        )
+
+                        houseLights[house.id][#houseLights[house.id] + 1] = handle
+                    end
+                end
+            else
+                if houseLights[house.id] then
+                    for _, handle in ipairs(houseLights[house.id]) do
+                        if DoesParticleFxLoopedExist(handle) then
+                            StopParticleFxLooped(handle, false)
+                        end
+                    end
+
+                    houseLights[house.id] = nil
+                end
+            end
+        else
+            if houseLights[house.id] then
+                for _, handle in ipairs(houseLights[house.id]) do
+                    if DoesParticleFxLoopedExist(handle) then
+                        StopParticleFxLooped(handle, false)
+                    end
+                end
+
+                houseLights[house.id] = nil
+            end
+        end
+    end
+end
+
 CreateThread(function()
     while true do
         Wait(1000)
 
         updateStreetLights()
+        updateHouseLights()
     end
 end)

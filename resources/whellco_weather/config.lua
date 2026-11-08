@@ -4,6 +4,20 @@ Config.Timezone = 'Europe/London'
 Config.SyncInterval = 60000
 Config.WeatherChangeInterval = 900000
 
+Config.Houses = {
+    {
+        id = 'house_1',
+        label = 'House',
+        coords = vector3(-268.0, -955.0, 31.0),
+        lightDistance = 50.0,
+        windows = {
+            vector3(-268.0, -953.0, 32.0),
+            vector3(-270.0, -953.0, 32.0),
+            vector3(-266.0, -953.0, 32.0)
+        }
+    }
+}
+
 Config.WeatherTypes = {
     'CLEAR',
     'EXTRASUNNY',

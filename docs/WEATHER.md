@@ -1,6 +1,6 @@
 # Weather
 
-`whellco_weather` adds realistic weather and real-time clock sync. Streetlights turn on gradually as it gets darker.
+`whellco_weather` adds realistic weather and real-time clock sync. Streetlights turn on gradually as it gets darker, and house windows light up at night.
 
 ## Weather
 
@@ -25,6 +25,15 @@
 - Streetlights turn off fully at 7 AM.
 - Streetlight brightness changes gradually.
 - Streetlight brightness is based on the server machine clock.
+
+## House windows
+
+- House windows light up at night.
+- Windows light up after 6 PM.
+- Windows turn off after 6 AM.
+- Window lights are based on the server machine clock.
+- Window lights only appear when a player is nearby.
+- Window lights are removed when the player moves away.
 
 ## Night time
 
