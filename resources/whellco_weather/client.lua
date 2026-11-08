@@ -257,6 +257,9 @@ local function updatePlayerWater()
 
     if inWater and not wasInWater then
         playSplash(playerCoords, true)
+        SetPedConfigFlag(playerPed, 1, true)
+        SetPedCanRagdoll(playerPed, false)
+        SetEntityCoordsNoOffset(playerPed, playerCoords.x, playerCoords.y, playerCoords.z, false, false, false)
     end
 
     wasInWater = inWater

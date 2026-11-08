@@ -1,6 +1,6 @@
 # Weather
 
-`whellco_weather` adds realistic weather and real-time clock sync. Streetlights turn on gradually as it gets darker, house windows light up at night, some windows flicker like a TV is on inside, TV windows have a subtle blue tint, some windows have curtains or blinds, silhouettes appear behind the curtains, nearby buildings, NPCs, and items spawn only, network traffic is optimized for distant players, spawned entities are pooled to reduce lag, and working swimming pools allow players and NPCs to swim with water splash particles, sound effects, dive ripples, and swimming animations.
+`whellco_weather` adds realistic weather and real-time clock sync. Streetlights turn on gradually as it gets darker, house windows light up at night, some windows flicker like a TV is on inside, TV windows have a subtle blue tint, some windows have curtains or blinds, silhouettes appear behind the curtains, nearby buildings, NPCs, and items spawn only, network traffic is optimized for distant players, spawned entities are pooled to reduce lag, and working swimming pools allow players and NPCs to swim with water splash particles, sound effects, dive ripples, swimming animations, and smooth transitions when entering the pool.
 
 ## Weather
 
@@ -138,6 +138,16 @@
 - The animation stops when an NPC leaves the pool.
 - The animation is removed when the player moves away.
 - The animation uses configurable animation settings.
+
+## Pool entry transitions
+
+- Smooth transitions trigger when players enter the pool.
+- Transitions prevent sudden movement changes.
+- Transitions keep the player position stable.
+- Transitions disable ragdoll during entry.
+- Transitions enable swimming movement.
+- Transitions trigger once when entering water.
+- Transitions reset when the player leaves water.
 
 ## Night time
 
