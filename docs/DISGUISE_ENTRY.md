@@ -1,6 +1,16 @@
 # Disguised Entry for Restricted Areas
 
-`whellco_disguise_entry` lets players use disguise kits to enter restricted areas with a chance of detection.
+`whellco_disguise_entry` lets players use disguise kits to enter restricted areas with a chance of detection and guard challenges.
+
+## Guard challenges
+
+- Guards can challenge disguised players.
+- Guard challenge chance is 35% per detection check.
+- Guard challenge cooldown is 20 seconds.
+- The guard prompt says: `Guard: "State your business." Press [E] to convince them.`
+- Players have 5 seconds to respond.
+- Pressing E convinces the guard.
+- Failing to respond removes the disguise and marks the entry as detected.
 
 ## Startup order
 
@@ -71,6 +81,8 @@ View disguise help:
 
 - Disguise eligibility is validated server-side.
 - Disguise cooldowns are validated server-side.
+- Guard challenge cooldowns are validated server-side.
+- Guard responses are validated server-side.
 - Disguise items are validated server-side.
 - Restricted-area access is validated server-side.
 - Disguise entries are logged server-side.

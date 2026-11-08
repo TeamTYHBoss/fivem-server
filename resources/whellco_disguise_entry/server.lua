@@ -2,6 +2,7 @@ local QBCore = exports['qb-core']:GetCoreObject()
 
 local activeDisguises = {}
 local disguiseCooldowns = {}
+local guardChallengeCooldowns = {}
 
 local function isAdmin(Player)
     local job = Player.PlayerData.job
@@ -21,6 +22,18 @@ local function canUseDisguise(source)
     end
 
     disguiseCooldowns[source] = now
+
+    return true
+end
+
+local function canChallengeGuard(source)
+    local now = os.time()
+
+    if now - (guardChallengeCooldowns[source] or 0) < Config.Disguise.GuardChallengeCooldownSeconds then
+        return false
+    end
+
+    guardChallengeCooldowns[source] = now
 
     return true
 end
@@ -90,6 +103,54 @@ RegisterNetEvent('whellco_disguise_entry:enter', function(areaName)
     TriggerClientEvent('QBCore:Notify', source, ('Disguise active: %s.'):format(area.name), 'success')
 end)
 
+RegisterNetEvent('whellco_disguise_entry:guardChallenge', function()
+    local source = source
+    local Player = QBCore.Functions.GetPlayer(source)
+    local disguise = activeDisguises[source]
+
+    if not Player or not disguise then
+        return
+    end
+
+    if not canChallengeGuard(source) then
+        return
+    end
+
+    TriggerClientEvent('whellco_disguise_entry:guardPrompt', source)
+end)
+
+RegisterNetEvent('whellco_disguise_entry:guardResponse', function(response)
+    local source = source
+    local Player = QBCore.Functions.GetPlayer(source)
+    local disguise = activeDisguises[source]
+
+    if not Player or not disguise then
+        return
+    end
+
+    if response ~= 'convince' then
+        activeDisguises[source] = nil
+        TriggerClientEvent('whellco_disguise_entry:remove', source)
+        TriggerClientEvent('QBCore:Notify', source, 'You failed the guard challenge.', 'error')
+
+        MySQL.query.await(
+            [[UPDATE whellco_disguise_entries
+              SET detected = 1
+              WHERE player_citizenid = ? AND area_name = ? AND detected = 0
+              ORDER BY id DESC
+              LIMIT 1]],
+            {
+                Player.PlayerData.citizenid,
+                disguise.area
+            }
+        )
+
+        return
+    end
+
+    TriggerClientEvent('QBCore:Notify', source, 'You convinced the guard.', 'success')
+end)
+
 RegisterNetEvent('whellco_disguise_entry:detect', function()
     local source = source
     local Player = QBCore.Functions.GetPlayer(source)
@@ -131,5 +192,5 @@ RegisterCommand('disguiseinfo', function(source)
         return
     end
 
-    TriggerClientEvent('QBCore:Notify', source, 'Disguised entry lets players enter restricted areas using a disguise kit.', 'primary')
+    TriggerClientEvent('QBCore:Notify', source, 'Guards can challenge disguised players with a prompt.', 'primary')
 end, false)

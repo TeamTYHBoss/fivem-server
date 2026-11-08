@@ -2,6 +2,7 @@ local QBCore = exports['qb-core']:GetCoreObject()
 
 local disguiseActive = false
 local currentArea = nil
+local guardPromptActive = false
 
 local function isInsideArea(area)
     local playerCoords = GetEntityCoords(PlayerPedId())
@@ -53,7 +54,9 @@ RegisterNetEvent('whellco_disguise_entry:apply', function(data)
                 break
             end
 
-            if math.random(100) <= Config.Disguise.DetectionChance then
+            if math.random(100) <= Config.Disguise.GuardChallengeChance then
+                TriggerServerEvent('whellco_disguise_entry:guardChallenge')
+            elseif math.random(100) <= Config.Disguise.DetectionChance then
                 disguiseActive = false
                 TriggerServerEvent('whellco_disguise_entry:detect')
                 break
@@ -62,9 +65,41 @@ RegisterNetEvent('whellco_disguise_entry:apply', function(data)
     end)
 end)
 
+RegisterNetEvent('whellco_disguise_entry:guardPrompt', function()
+    guardPromptActive = true
+
+    local response = nil
+
+    CreateThread(function()
+        while guardPromptActive do
+            Wait(0)
+
+            SetTextComponentFormat('STRING')
+            AddTextComponentString('Guard: "State your business." Press [E] to convince them.')
+            DisplayHelpTextThisFrame(false, false)
+
+            if IsControlJustReleased(0, 38) then
+                response = 'convince'
+                break
+            end
+        end
+    end)
+
+    Wait(5000)
+
+    guardPromptActive = false
+
+    if response then
+        TriggerServerEvent('whellco_disguise_entry:guardResponse', response)
+    else
+        TriggerServerEvent('whellco_disguise_entry:guardResponse', 'fail')
+    end
+end)
+
 RegisterNetEvent('whellco_disguise_entry:remove', function()
     disguiseActive = false
     currentArea = nil
+    guardPromptActive = false
 end)
 
 RegisterNetEvent('whellco_disguise_entry:alert', function(job, coords)
@@ -86,5 +121,5 @@ RegisterNetEvent('whellco_disguise_entry:alert', function(job, coords)
 end)
 
 RegisterCommand('disguisehelp', function()
-    QBCore.Functions.Notify('Stand in a restricted area and press E to use a disguise kit.', 'primary')
+    QBCore.Functions.Notify('Stand in a restricted area and press E to use a disguise kit. Guards may challenge you.', 'primary')
 end, false)
