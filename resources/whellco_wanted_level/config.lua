@@ -11,7 +11,10 @@ Config.Wanted = {
     },
     MilitaryAlertJobs = {
         police = true
-    }
+    },
+    SearchConeRadius = 150.0,
+    SearchConeDurationSeconds = 120,
+    LastKnownPositionUpdateSeconds = 5
 }
 
 -- Minor crimes create a 1 or 2 star response.

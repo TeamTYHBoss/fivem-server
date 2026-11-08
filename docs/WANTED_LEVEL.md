@@ -1,6 +1,6 @@
 # Wanted Level System
 
-`whellco_wanted_level` creates an escalating response based on crime severity.
+`whellco_wanted_level` creates an escalating response based on crime severity, with search cones and last known position tracking.
 
 ## Wanted levels
 
@@ -12,13 +12,22 @@
 | 4 | Severe | 8 units | Yes | 2 units |
 | 5 | Critical | 12 units | Yes | 4 units |
 
-## Crime categories
+## Search cones
 
-- Minor crimes create a 1-star response.
-- Moderate crimes create a 2-star response.
-- Serious crimes create a 3-star response.
-- Severe crimes create a 4-star response.
-- Critical crimes create a 5-star response.
+- Police create a search area around the suspect’s last known position.
+- Search cone radius is 150 metres.
+- Search cones last 120 seconds.
+- Search cones appear as map blips labelled `Last Known Position`.
+- Search cones update as the suspect moves.
+- Search cones clear when wanted level reaches 0.
+
+## Last known position tracking
+
+- The server records the suspect’s position when a wanted level is set.
+- The server updates the last known position every 5 seconds.
+- Police receive updated search areas.
+- Search areas expire automatically.
+- Search areas clear when the wanted level clears.
 
 ## Response escalation
 
@@ -54,4 +63,5 @@ View wanted-level help:
 - Wanted levels cannot exceed 5.
 - Wanted levels cannot be manually lowered by clients.
 - Police and military alerts are validated server-side.
-- Wanted-level changes are broadcast server-side.
+- Last known positions are tracked server-side.
+- Search areas are broadcast server-side.
