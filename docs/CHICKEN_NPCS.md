@@ -40,6 +40,7 @@
 - Chickens shake after calming down.
 - Chickens shake every 3 seconds while wet.
 - Water droplets fly off when the chicken shakes.
+- Water droplets splash when they hit the floor.
 - Chickens calm down when the player is more than 6 metres away.
 - Calm chickens return to normal wandering.
 
@@ -86,3 +87,4 @@
 - Footprints are removed when the resource stops.
 - Flour effects are removed when the resource stops.
 - Wet footprints are removed when the resource stops.
+- Water droplets are removed when the resource stops.

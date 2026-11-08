@@ -2,6 +2,7 @@ local chickens = {}
 local footprints = {}
 local flourEffects = {}
 local wetFootprints = {}
+local droplets = {}
 
 local function clearChickens()
     for _, chicken in ipairs(chickens) do
@@ -41,6 +42,10 @@ local function clearWetFootprints()
     end
 
     wetFootprints = {}
+end
+
+local function clearDroplets()
+    droplets = {}
 end
 
 local function spawnChicken(config)
@@ -260,28 +265,60 @@ local function shakeDry(chicken)
         false
     )
 
-    for _ = 1, 6 do
+    for _ = 1, chicken.config.waterDropletCount do
         local offsetX = math.random(-80, 80) / 100
         local offsetY = math.random(-80, 80) / 100
         local offsetZ = math.random(20, 80) / 100
 
-        UseParticleFxAssetNextCall('core')
-        StartParticleFxNonLoopedAtCoord(
-            'exp_grd_bzgas_smoke',
-            chickenCoords.x + offsetX,
-            chickenCoords.y + offsetY,
-            chickenCoords.z + offsetZ,
-            0.0,
-            0.0,
-            0.0,
-            0.25,
-            false,
-            false,
-            false
-        )
+        droplets[#droplets + 1] = {
+            x = chickenCoords.x + offsetX,
+            y = chickenCoords.y + offsetY,
+            z = chickenCoords.z + offsetZ,
+            velocityX = offsetX * 0.5,
+            velocityY = offsetY * 0.5,
+            velocityZ = offsetZ * 0.5,
+            created = currentTime
+        }
     end
 
     chicken.wet = false
+end
+
+local function updateDroplets()
+    local currentTime = GetGameTimer()
+
+    for index = #droplets, 1, -1 do
+        local droplet = droplets[index]
+        local age = currentTime - droplet.created
+
+        droplet.x = droplet.x + (droplet.velocityX * 0.016)
+        droplet.y = droplet.y + (droplet.velocityY * 0.016)
+        droplet.z = droplet.z + (droplet.velocityZ * 0.016)
+        droplet.velocityZ = droplet.velocityZ - 0.02
+
+        local floorZ = droplet.z
+
+        if droplet.velocityZ < 0 and droplet.z <= floorZ then
+            UseParticleFxAssetNextCall('core')
+            StartParticleFxNonLoopedAtCoord(
+                'exp_grd_bzgas_smoke',
+                droplet.x,
+                droplet.y,
+                floorZ,
+                0.0,
+                0.0,
+                0.0,
+                0.2,
+                false,
+                false,
+                false
+            )
+
+            table.remove(droplets, index)
+        elseif age > 3000 then
+            table.remove(droplets, index)
+        end
+    end
 end
 
 local function updateFootprints()
@@ -392,7 +429,7 @@ end
 
 CreateThread(function()
     while true do
-        Wait(500)
+        Wait(0)
 
         local playerCoords = GetEntityCoords(PlayerPedId())
 
@@ -477,6 +514,7 @@ CreateThread(function()
             end
         end
 
+        updateDroplets()
         updateFootprints()
         updateFlourEffects()
         updateWetFootprints()
@@ -492,4 +530,5 @@ AddEventHandler('onResourceStop', function(resource)
     clearFootprints()
     clearFlourEffects()
     clearWetFootprints()
+    clearDroplets()
 end)
