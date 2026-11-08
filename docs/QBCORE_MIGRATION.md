@@ -60,6 +60,10 @@ Player.Functions.SetMetaData('whellco_level', value)
 - `whellco_qbcore`: migrated.
 - `whellco_economy`: migrated.
 - `whellco_casino`: migrated.
+- `whellco_characters`: migrated.
+- `whellco_spawn_selector`: QBCore dependency declared; server logic migration pending.
+- `whellco_wardrobe`: QBCore dependency declared; server logic migration pending.
+- `whellco_housing`: QBCore dependency declared; server logic migration pending.
 - Remaining WhellCo resources: use the compatibility bridge while being migrated in batches.
 
 ## Compatibility bridge
@@ -75,3 +79,9 @@ Player.Functions.SetMetaData('whellco_level', value)
 - `notify(source, message, type)`
 
 New and migrated resources should use these exports or call QBCore directly.
+
+## Batch 1 migration
+
+Run `resources/whellco_characters/sql/qbcore_migration.sql` once.
+
+It converts existing character and player identifier values from FiveM license identifiers to QBCore citizen IDs.

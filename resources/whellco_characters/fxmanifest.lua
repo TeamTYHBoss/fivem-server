@@ -2,8 +2,8 @@ fx_version 'cerulean'
 game 'gta5'
 
 author 'Chris Wheller'
-description 'Character creation, persistence, spawn selection and character NUI'
-version '1.0.0'
+description 'QBCore-native character creation, selection and spawning'
+version '2.0.0'
 
 shared_script 'config.lua'
 
@@ -20,4 +20,7 @@ files {
     'html/script.js'
 }
 
-dependency 'oxmysql'
+dependencies {
+    'qb-core',
+    'oxmysql'
+}

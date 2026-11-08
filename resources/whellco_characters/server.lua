@@ -1,30 +1,26 @@
+local QBCore = exports['qb-core']:GetCoreObject()
+
 local activeCharacters = {}
 
-local function getIdentifier(source)
-    local identifier = GetPlayerIdentifierByType(source, 'license')
-
-    if not identifier then
-        identifier = GetPlayerIdentifierByType(source, 'steam')
-    end
-
-    return identifier
+local function getQbPlayer(source)
+    return QBCore.Functions.GetPlayer(source)
 end
 
-local function getCharacters(identifier)
+local function getCharacters(citizenId)
     return MySQL.query.await(
         'SELECT id, first_name, last_name, date_of_birth, gender, spawn_point FROM whellco_characters WHERE identifier = ? ORDER BY created_at ASC',
-        { identifier }
+        { citizenId }
     ) or {}
 end
 
 local function sendCharacterMenu(source)
-    local identifier = getIdentifier(source)
+    local Player = getQbPlayer(source)
 
-    if not identifier then
+    if not Player then
         return
     end
 
-    local characters = getCharacters(identifier)
+    local characters = getCharacters(Player.PlayerData.citizenid)
     local spawnPoints = {}
 
     for id, spawn in pairs(Config.SpawnPoints) do
@@ -43,14 +39,13 @@ end
 
 AddEventHandler('playerConnecting', function(_, _, deferrals)
     local source = source
-    local identifier = getIdentifier(source)
 
     deferrals.defer()
     Wait(0)
     deferrals.update('Loading your characters…')
 
-    if not identifier then
-        deferrals.done('Unable to identify your account.')
+    if not getQbPlayer(source) then
+        deferrals.done('Unable to identify your QBCore character.')
         return
     end
 
@@ -72,12 +67,13 @@ end)
 
 RegisterNetEvent('whellco_characters:createCharacter', function(data)
     local source = source
-    local identifier = getIdentifier(source)
+    local Player = getQbPlayer(source)
 
-    if not identifier then
+    if not Player then
         return
     end
 
+    local citizenId = Player.PlayerData.citizenid
     local firstName = tostring(data.firstName or ''):gsub('^%s+', ''):gsub('%s+$', '')
     local lastName = tostring(data.lastName or ''):gsub('^%s+', ''):gsub('%s+$', '')
     local dateOfBirth = tostring(data.dateOfBirth or '')
@@ -85,12 +81,12 @@ RegisterNetEvent('whellco_characters:createCharacter', function(data)
     local spawnPoint = tostring(data.spawnPoint or 'legion_square')
 
     if #firstName < 2 or #firstName > 32 or #lastName < 2 or #lastName > 32 then
-        TriggerClientEvent('whellco_characters:notify', source, 'Enter a valid first and last name.')
+        TriggerClientEvent('QBCore:Notify', source, 'Enter a valid first and last name.', 'error')
         return
     end
 
     if not dateOfBirth:match('^%d%d%d%d%-%d%d%-%d%d$') then
-        TriggerClientEvent('whellco_characters:notify', source, 'Enter a valid date of birth.')
+        TriggerClientEvent('QBCore:Notify', source, 'Enter a valid date of birth.', 'error')
         return
     end
 
@@ -100,11 +96,11 @@ RegisterNetEvent('whellco_characters:createCharacter', function(data)
 
     local count = MySQL.scalar.await(
         'SELECT COUNT(*) FROM whellco_characters WHERE identifier = ?',
-        { identifier }
+        { citizenId }
     ) or 0
 
     if count >= Config.MaxCharacters then
-        TriggerClientEvent('whellco_characters:notify', source, 'You have reached the character limit.')
+        TriggerClientEvent('QBCore:Notify', source, 'You have reached the character limit.', 'error')
         return
     end
 
@@ -114,7 +110,7 @@ RegisterNetEvent('whellco_characters:createCharacter', function(data)
                 (identifier, first_name, last_name, date_of_birth, gender, spawn_point)
             VALUES (?, ?, ?, ?, ?, ?)
         ]],
-        { identifier, firstName, lastName, dateOfBirth, gender, spawnPoint }
+        { citizenId, firstName, lastName, dateOfBirth, gender, spawnPoint }
     )
 
     sendCharacterMenu(source)
@@ -122,15 +118,15 @@ end)
 
 RegisterNetEvent('whellco_characters:selectCharacter', function(characterId)
     local source = source
-    local identifier = getIdentifier(source)
+    local Player = getQbPlayer(source)
 
-    if not identifier then
+    if not Player then
         return
     end
 
     local character = MySQL.single.await(
         'SELECT id, first_name, last_name, spawn_point FROM whellco_characters WHERE id = ? AND identifier = ? LIMIT 1',
-        { characterId, identifier }
+        { characterId, Player.PlayerData.citizenid }
     )
 
     if not character then
@@ -139,7 +135,7 @@ RegisterNetEvent('whellco_characters:selectCharacter', function(characterId)
 
     local spawn = Config.SpawnPoints[character.spawn_point] or Config.SpawnPoints.legion_square
 
-    activeCharacters[identifier] = character.id
+    activeCharacters[Player.PlayerData.citizenid] = character.id
 
     TriggerEvent('whellco_economy:characterSelected', character.id, source)
 
@@ -151,24 +147,24 @@ end)
 
 RegisterNetEvent('whellco_characters:deleteCharacter', function(characterId)
     local source = source
-    local identifier = getIdentifier(source)
+    local Player = getQbPlayer(source)
 
-    if not identifier then
+    if not Player then
         return
     end
 
     MySQL.update.await(
         'DELETE FROM whellco_characters WHERE id = ? AND identifier = ?',
-        { characterId, identifier }
+        { characterId, Player.PlayerData.citizenid }
     )
 
     sendCharacterMenu(source)
 end)
 
 AddEventHandler('playerDropped', function()
-    local identifier = getIdentifier(source)
+    local Player = getQbPlayer(source)
 
-    if identifier then
-        activeCharacters[identifier] = nil
+    if Player then
+        activeCharacters[Player.PlayerData.citizenid] = nil
     end
 end)
