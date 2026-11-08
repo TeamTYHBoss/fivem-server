@@ -1,5 +1,6 @@
 local chickens = {}
 local footprints = {}
+local flourEffects = {}
 
 local function clearChickens()
     for _, chicken in ipairs(chickens) do
@@ -19,6 +20,16 @@ local function clearFootprints()
     end
 
     footprints = {}
+end
+
+local function clearFlourEffects()
+    for _, effect in ipairs(flourEffects) do
+        if DoesParticleFxLoopedExist(effect.handle) then
+            StopParticleFxLooped(effect.handle, false)
+        end
+    end
+
+    flourEffects = {}
 end
 
 local function spawnChicken(config)
@@ -154,7 +165,7 @@ local function kickUpFlour(chicken)
     local chickenCoords = GetEntityCoords(chicken.ped)
 
     UseParticleFxAssetNextCall('core')
-    StartParticleFxNonLoopedAtCoord(
+    local handle = StartParticleFxLoopedAtCoord(
         'exp_grd_bzgas_smoke',
         chickenCoords.x,
         chickenCoords.y,
@@ -167,6 +178,11 @@ local function kickUpFlour(chicken)
         false,
         false
     )
+
+    flourEffects[#flourEffects + 1] = {
+        handle = handle,
+        created = currentTime
+    }
 end
 
 local function updateFootprints()
@@ -188,6 +204,30 @@ local function updateFootprints()
 
             if DoesParticleFxLoopedExist(footprint.handle) then
                 SetParticleFxLoopedScale(footprint.handle, scale, scale, scale)
+            end
+        end
+    end
+end
+
+local function updateFlourEffects()
+    local currentTime = GetGameTimer()
+
+    for index = #flourEffects, 1, -1 do
+        local effect = flourEffects[index]
+        local age = currentTime - effect.created
+
+        if age >= Config.FlourLifetime then
+            if DoesParticleFxLoopedExist(effect.handle) then
+                StopParticleFxLooped(effect.handle, false)
+            end
+
+            table.remove(flourEffects, index)
+        elseif age > Config.FlourLifetime - Config.FlourFadeTime then
+            local fadeProgress = (age - (Config.FlourLifetime - Config.FlourFadeTime)) / Config.FlourFadeTime
+            local scale = 0.8 * (1.0 - fadeProgress)
+
+            if DoesParticleFxLoopedExist(effect.handle) then
+                SetParticleFxLoopedScale(effect.handle, scale, scale, scale)
             end
         end
     end
@@ -290,6 +330,7 @@ CreateThread(function()
         end
 
         updateFootprints()
+        updateFlourEffects()
     end
 end)
 
@@ -300,4 +341,5 @@ AddEventHandler('onResourceStop', function(resource)
 
     clearChickens()
     clearFootprints()
+    clearFlourEffects()
 end)

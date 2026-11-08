@@ -28,6 +28,9 @@
 - Footprints fade over the final 3 seconds.
 - Chickens kick up flour when on the counter.
 - Flour effects repeat every 0.7 seconds while on the counter.
+- Flour particles fade out gradually over time.
+- Flour effects last for 8 seconds.
+- Flour effects fade over the final 2.5 seconds.
 - Chickens calm down when the player is more than 6 metres away.
 - Calm chickens return to normal wandering.
 
@@ -56,6 +59,8 @@
 | `counters` | Counter locations that trigger flour |
 | `FootprintLifetime` | Total footprint lifetime |
 | `FootprintFadeTime` | Time spent fading out |
+| `FlourLifetime` | Total flour effect lifetime |
+| `FlourFadeTime` | Time spent fading out |
 
 ## Security
 
@@ -64,3 +69,4 @@
 - Chickens do not affect player inventory.
 - Chickens are removed when the resource stops.
 - Footprints are removed when the resource stops.
+- Flour effects are removed when the resource stops.
