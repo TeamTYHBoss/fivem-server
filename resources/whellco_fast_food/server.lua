@@ -48,13 +48,6 @@ local function canBuy(restaurantId, itemId)
     return false
 end
 
-local function isOnCooldown(source)
-    local now = GetGameTimer()
-    local lastPurchase = purchaseCooldowns[source] or 0
-
-    return now - lastPurchase < PURCHASE_COOLDOWN
-end
-
 RegisterNetEvent('whellco_fast_food:buy', function(restaurantId, itemId)
     local source = source
     local Player = QBCore.Functions.GetPlayer(source)
@@ -63,7 +56,10 @@ RegisterNetEvent('whellco_fast_food:buy', function(restaurantId, itemId)
         return
     end
 
-    if isOnCooldown(source) then
+    local now = GetGameTimer()
+    local lastPurchase = purchaseCooldowns[source] or 0
+
+    if now - lastPurchase < PURCHASE_COOLDOWN then
         notify(source, 'Please wait before making another purchase.', 'error')
         return
     end
@@ -82,8 +78,6 @@ RegisterNetEvent('whellco_fast_food:buy', function(restaurantId, itemId)
         return
     end
 
-    purchaseCooldowns[source] = GetGameTimer()
-
     if not Player.Functions.AddItem(itemId, 1) then
         notify(source, 'Your inventory is full.', 'error')
         return
@@ -94,6 +88,8 @@ RegisterNetEvent('whellco_fast_food:buy', function(restaurantId, itemId)
         notify(source, 'Purchase failed.', 'error')
         return
     end
+
+    purchaseCooldowns[source] = now
 
     MySQL.insert(
         [[INSERT INTO whellco_fast_food_purchases
@@ -143,6 +139,10 @@ RegisterNetEvent('whellco_fast_food:eat', function(itemId)
     end
 
     notify(source, ('You ate %s.'):format(item.label), 'success')
+end)
+
+AddEventHandler('playerDropped', function()
+    purchaseCooldowns[source] = nil
 end)
 
 RegisterCommand('foodinfo', function(source)

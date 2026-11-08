@@ -11,6 +11,32 @@ local function notify(source, message, kind)
     TriggerClientEvent('QBCore:Notify', source, message, kind or 'primary', 5000)
 end
 
+local function isPrivateHost(host)
+    if host == 'localhost' then
+        return true
+    end
+
+    if host:match('^127%.%d+%.%d+%.%d+$')
+        or host:match('^10%.%d+%.%d+%.%d+$')
+        or host:match('^192%.168%.%d+%.%d+$')
+        or host:match('^172%.1[6-9]%.%d+%.%d+$')
+        or host:match('^172%.2[0-9]%.%d+%.%d+$')
+        or host:match('^172%.3[01]%.%d+%.%d+$') then
+        return true
+    end
+
+    local lowerHost = host:lower()
+
+    if lowerHost == '::1'
+        or lowerHost == 'fe80::'
+        or lowerHost:match('^fc[0-9a-f][0-9a-f]:')
+        or lowerHost:match('^fd[0-9a-f][0-9a-f]:') then
+        return true
+    end
+
+    return false
+end
+
 local function isValidPlaylistUrl(url)
     if type(url) ~= 'string' or #url == 0 or #url > MAX_PLAYLIST_LENGTH then
         return false
@@ -22,20 +48,20 @@ local function isValidPlaylistUrl(url)
 
     local host = url:match('^https?://([^/:?#]+)')
 
-    if not host then
+    if not host or host == '' then
         return false
     end
 
-    host = host:lower()
+    if host:find('%[') then
+        local ipv6 = host:match('^%[(.+)%]$')
 
-    if host == 'localhost'
-        or host:match('^127%.%d+%.%d+%.%d+$')
-        or host:match('^10%.%d+%.%d+%.%d+$')
-        or host:match('^192%.168%.%d+%.%d+$')
-        or host:match('^172%.1[6-9]%.%d+%.%d+$')
-        or host:match('^172%.2[0-9]%.%d+%.%d+$')
-        or host:match('^172%.3[01]%.%d+%.%d+$') then
-        return false
+        if not ipv6 or isPrivateHost(ipv6) then
+            return false
+        end
+    else
+        if isPrivateHost(host) then
+            return false
+        end
     end
 
     return true

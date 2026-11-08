@@ -1,6 +1,5 @@
 local QBCore = exports['qb-core']:GetCoreObject()
 
-local MIN_SYNC_INTERVAL = 1000
 local currentWeather = 'CLEAR'
 
 local function notify(source, message, kind)
@@ -78,10 +77,11 @@ CreateThread(function()
         updateWeather()
         syncTime()
 
-        Wait(1000)
-        elapsedSeconds += 1
+        Wait(syncInterval * 1000)
+        elapsedSeconds += syncInterval
 
         if elapsedSeconds >= weatherChangeInterval then
+            updateWeather()
             elapsedSeconds = 0
         end
     end
