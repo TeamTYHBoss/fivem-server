@@ -32,6 +32,22 @@ Config.Houses = {
                 z = 32.0,
                 heading = 0.0
             }
+        },
+        silhouettes = {
+            {
+                model = 'prop_human_seat_chair_03',
+                x = -268.0,
+                y = -954.0,
+                z = 32.0,
+                heading = 0.0
+            },
+            {
+                model = 'prop_human_seat_chair_03',
+                x = -270.0,
+                y = -954.0,
+                z = 32.0,
+                heading = 0.0
+            }
         }
     }
 }

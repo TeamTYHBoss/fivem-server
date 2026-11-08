@@ -1,6 +1,6 @@
 # Weather
 
-`whellco_weather` adds realistic weather and real-time clock sync. Streetlights turn on gradually as it gets darker, house windows light up at night, some windows flicker like a TV is on inside, TV windows have a subtle blue tint, and some windows have curtains or blinds.
+`whellco_weather` adds realistic weather and real-time clock sync. Streetlights turn on gradually as it gets darker, house windows light up at night, some windows flicker like a TV is on inside, TV windows have a subtle blue tint, some windows have curtains or blinds, and silhouettes appear behind the curtains.
 
 ## Weather
 
@@ -55,6 +55,16 @@
 - Curtains and blinds use configurable headings.
 - Curtains and blinds only appear when a player is nearby.
 - Curtains and blinds are removed when the player moves away.
+
+## Silhouettes
+
+- Silhouettes appear behind the curtains.
+- Silhouettes are configured per house.
+- Silhouettes use configurable models.
+- Silhouettes use configurable positions.
+- Silhouettes use configurable headings.
+- Silhouettes only appear when a player is nearby.
+- Silhouettes are removed when the player moves away.
 
 ## Night time
 

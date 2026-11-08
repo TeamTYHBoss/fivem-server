@@ -3,6 +3,7 @@ local QBCore = exports['qb-core']:GetCoreObject()
 local streetLightLevel = 0.0
 local houseLights = {}
 local houseCurtains = {}
+local houseSilhouettes = {}
 
 RegisterNetEvent('whellco_weather:setWeather', function(weather)
     if not weather then
@@ -131,6 +132,29 @@ local function updateHouseLights()
                         houseCurtains[house.id][#houseCurtains[house.id] + 1] = object
                     end
                 end
+
+                if house.silhouettes and #house.silhouettes > 0 then
+                    if not houseSilhouettes[house.id] then
+                        houseSilhouettes[house.id] = {}
+
+                        for _, silhouette in ipairs(house.silhouettes) do
+                            local model = GetHashKey(silhouette.model)
+
+                            RequestModel(model)
+
+                            while not HasModelLoaded(model) do
+                                Wait(0)
+                            end
+
+                            local object = CreateObject(model, silhouette.x, silhouette.y, silhouette.z, false, false, false)
+
+                            SetEntityHeading(object, silhouette.heading or 0.0)
+                            FreezeEntityPosition(object, true)
+
+                            houseSilhouettes[house.id][#houseSilhouettes[house.id] + 1] = object
+                        end
+                    end
+                end
             end
         else
             if houseLights[house.id] then
@@ -151,6 +175,16 @@ local function updateHouseLights()
                 end
 
                 houseCurtains[house.id] = nil
+            end
+
+            if houseSilhouettes[house.id] then
+                for _, object in ipairs(houseSilhouettes[house.id]) do
+                    if DoesEntityExist(object) then
+                        DeleteEntity(object)
+                    end
+                end
+
+                houseSilhouettes[house.id] = nil
             end
         end
     end
