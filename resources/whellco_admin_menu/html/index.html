@@ -19,6 +19,9 @@
             <label>Action Reason</label>
             <input id="action-reason" type="text" placeholder="Reason">
 
+            <label>Temporary Ban Hours</label>
+            <input id="tempban-hours" type="number" min="1" max="720" value="24">
+
             <div class="section">
                 <h2>Self Tools</h2>
                 <button data-action="godmode" data-value="true">God Mode On</button>
@@ -43,6 +46,7 @@
                 <h2>Moderation</h2>
                 <button data-action="warn" class="warning">Warn Player</button>
                 <button data-action="kick" class="danger">Kick Player</button>
+                <button data-action="tempban" class="danger">Temporary Ban</button>
             </div>
         </div>
     </div>

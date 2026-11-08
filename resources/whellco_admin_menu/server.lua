@@ -89,8 +89,8 @@ RegisterNetEvent('whellco_admin_menu:action', function(action, targetSource, val
     elseif action == 'warn' and Target then
         local reason = tostring(value or 'No reason provided')
 
-        if #reason > Config.Moderation.MaxWarningReasonLength then
-            reason = reason:sub(1, Config.Moderation.MaxWarningReasonLength)
+        if #reason > Config.Moderation.MaxReasonLength then
+            reason = reason:sub(1, Config.Moderation.MaxReasonLength)
         end
 
         TriggerClientEvent('whellco_admin_menu:warned', Target.PlayerData.source, {
@@ -103,13 +103,48 @@ RegisterNetEvent('whellco_admin_menu:action', function(action, targetSource, val
     elseif action == 'kick' and Target then
         local reason = tostring(value or 'Kicked by staff')
 
-        if #reason > Config.Moderation.MaxKickReasonLength then
-            reason = reason:sub(1, Config.Moderation.MaxKickReasonLength)
+        if #reason > Config.Moderation.MaxReasonLength then
+            reason = reason:sub(1, Config.Moderation.MaxReasonLength)
         end
 
         logAction(Admin.PlayerData.citizenid, Target.PlayerData.citizenid, 'kick', { reason = reason })
 
         DropPlayer(Target.PlayerData.source, ('Kicked by staff: %s'):format(reason))
+
+    elseif action == 'tempban' and Target then
+        local reason = tostring(value or 'Temporary ban')
+        local hours = tonumber(Config.Moderation.TempBanHours) or 24
+
+        if #reason > Config.Moderation.MaxReasonLength then
+            reason = reason:sub(1, Config.Moderation.MaxReasonLength)
+        end
+
+        if hours < Config.Moderation.MinTempBanHours or hours > Config.Moderation.MaxTempBanHours then
+            TriggerClientEvent('QBCore:Notify', source, 'Temporary ban duration is invalid.', 'error')
+            return
+        end
+
+        local expiresAt = os.time() + (hours * 3600)
+
+        MySQL.query.await(
+            [[INSERT INTO whellco_temp_bans
+                (citizenid, reason, expires_at, created_by)
+              VALUES (?, ?, FROM_UNIXTIME(?), ?)]],
+            {
+                Target.PlayerData.citizenid,
+                reason,
+                expiresAt,
+                Admin.PlayerData.citizenid
+            }
+        )
+
+        logAction(Admin.PlayerData.citizenid, Target.PlayerData.citizenid, 'tempban', {
+            reason = reason,
+            hours = hours,
+            expiresAt = expiresAt
+        })
+
+        DropPlayer(Target.PlayerData.source, ('Temporary ban: %s'):format(reason))
     end
 end)
 

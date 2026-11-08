@@ -12,6 +12,7 @@ Config.MenuKey = 'F6'
 Config.ActionCooldownSeconds = 3
 
 Config.Moderation = {
-    MaxWarningReasonLength = 200,
-    MaxKickReasonLength = 200
+    MaxReasonLength = 200,
+    MinTempBanHours = 1,
+    MaxTempBanHours = 720
 }

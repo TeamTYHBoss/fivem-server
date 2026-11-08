@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const menu = document.getElementById('admin-menu');
     const targetInput = document.getElementById('target-id');
     const reasonInput = document.getElementById('action-reason');
+    const tempBanHours = document.getElementById('tempban-hours');
 
     window.addEventListener('message', (event) => {
         const data = event.data;
@@ -23,12 +24,18 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('button[data-action]').forEach((button) => {
         button.addEventListener('click', () => {
             const action = button.dataset.action;
-            const value = button.dataset.value === 'true' ? true : (button.dataset.value === 'false' ? false : reasonInput.value);
-            const target = targetInput.value;
+            let value = reasonInput.value;
+
+            if (action === 'godmode' || action === 'invisibility' || action === 'noclip' || action === 'freeze') {
+                value = button.dataset.value === 'true';
+            } elseif (action === 'tempban') {
+                value = reasonInput.value;
+                Config = { TempBanHours: parseInt(tempBanHours.value || '24', 10) };
+            }
 
             fetch(`https://${GetParentResourceName()}/action`, {
                 method: 'POST',
-                body: JSON.stringify({ action, target, value })
+                body: JSON.stringify({ action, target: targetInput.value, value })
             });
         });
     });
