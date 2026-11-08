@@ -47,22 +47,27 @@ Config.RateLimits = {
 }
 ```
 
-## Admin queue inspection
+## Admin queue commands
 
-Administrators can inspect the AI dialogue queue with:
+Inspect the queue:
 
 ```text
 /aiqueue
 ```
 
-The command shows:
+Clear every queued request:
 
-- Current queued requests and queue capacity.
-- Active provider requests and maximum concurrency.
-- Recent server-wide requests and the rolling request limit.
-- Up to 10 queued jobs, including source ID, NPC ID, and wait time.
+```text
+/aiqueueclear
+```
 
-Server console administrators can also run `/aiqueue`; the output is printed to the console.
+Cancel every queued request for one player:
+
+```text
+/aiqueueclear 12
+```
+
+The command requires QBCore admin permission when run in-game. Server-console administrators can run it without a source ID.
 
 ## Request queue
 
@@ -72,6 +77,7 @@ Server console administrators can also run `/aiqueue`; the output is printed to 
 4. Up to three requests are dispatched concurrently.
 5. When a provider response arrives, the queue worker starts the next request.
 6. Expired queue entries are removed and players are notified.
+7. Admins can clear the entire queue or cancel all queued requests for a specific source ID.
 
 ## NPC dialogue
 

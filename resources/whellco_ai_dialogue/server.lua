@@ -1,5 +1,6 @@
 local QBCore = exports['qb-core']:GetCoreObject()
 
+local cooldowns = {}
 local playerRequests = {}
 local globalRequests = {}
 local activeRequests = 0
@@ -300,6 +301,54 @@ RegisterCommand('aiqueue', function(source)
     else
         print(output)
     end
+end, false)
+
+RegisterCommand('aiqueueclear', function(source, args)
+    if source > 0 then
+        local Player = QBCore.Functions.GetPlayer(source)
+
+        if not Player or not QBCore.Functions.HasPermission(source, 'admin') then
+            TriggerClientEvent('QBCore:Notify', source, 'You do not have permission.', 'error')
+            return
+        end
+    end
+
+    local target = args[1] and tonumber(args[1]) or nil
+    local removed = 0
+    local remaining = {}
+
+    for _, job in ipairs(queue) do
+        if target and job.source ~= target then
+            remaining[#remaining + 1] = job
+        elseif not target then
+            removed = removed + 1
+        else
+            removed = removed + 1
+        end
+    end
+
+    if target then
+        queue = remaining
+    else
+        removed = #queue
+        queue = {}
+    end
+
+    local message
+
+    if target then
+        message = ('Cancelled %d queued AI dialogue request(s) for source %d.'):format(removed, target)
+    else
+        message = ('Cleared %d queued AI dialogue request(s).'):format(removed)
+    end
+
+    if source > 0 then
+        TriggerClientEvent('QBCore:Notify', source, message, 'success')
+    else
+        print(message)
+    end
+
+    processQueue()
 end, false)
 
 CreateThread(function()
