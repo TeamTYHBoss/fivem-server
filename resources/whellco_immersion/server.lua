@@ -1,268 +1,34 @@
-local playerJobs = {}
-local jobProgress = {}
-local lastInteraction = {}
+local QBCore = exports['qb-core']:GetCoreObject()
 
-local function getIdentifier(source)
-    local identifier = GetPlayerIdentifierByType(source, 'license')
-
-    if not identifier then
-        identifier = GetPlayerIdentifierByType(source, 'steam')
-    end
-
-    return identifier
-end
-
-local function canInteract(source)
-    if type(source) ~= 'number' or source <= 0 then
-        return false
-    end
-
-    local now = GetGameTimer()
-
-    if now - (lastInteraction[source] or 0) < 2000 then
-        return false
-    end
-
-    lastInteraction[source] = now
-
-    return true
-end
-
-local function getNearbyInteraction(source, interaction)
-    local ped = GetPlayerPed(source)
-    local playerCoords = GetEntityCoords(ped)
-
-    return #(playerCoords - interaction.coords) <= 5.0
-end
-
-local function getTier(completedJobs)
-    local selectedTier = Config.JobTiers[1]
-
-    for _, tier in ipairs(Config.JobTiers) do
-        if completedJobs >= tier.minimumCompleted then
-            selectedTier = tier
-        end
-    end
-
-    return selectedTier
-end
-
-local function buildRoute(job, tier)
-    local stops = {}
-    local used = {}
-
-    for index = 1, tier.stops do
-        local destinationIndex
-
-        repeat
-            destinationIndex = math.random(1, #Config.JobDestinations)
-        until not used[destinationIndex]
-
-        used[destinationIndex] = true
-
-        stops[index] = {
-            index = index,
-            coords = Config.JobDestinations[destinationIndex]
-        }
-    end
-
-    local payout = job.basePayout + (job.payoutIncreasePerTier * (tier.stops - 1))
-
-    return {
-        stops = stops,
-        payout = payout,
-        timeLimit = tier.timeLimit
-    }
-end
-
-local function saveProgress(identifier, completedJobs)
-    local playerName = GetPlayerName(source) or 'Unknown Player'
-
-    MySQL.update.await(
-        [[
-            INSERT INTO whellco_job_progress (identifier, player_name, completed_jobs)
-            VALUES (?, ?, ?)
-            ON DUPLICATE KEY UPDATE
-                player_name = VALUES(player_name),
-                completed_jobs = VALUES(completed_jobs)
-        ]],
-        { identifier, playerName, completedJobs }
-    )
-end
-
-AddEventHandler('playerConnecting', function(_, _, deferrals)
+RegisterNetEvent('whellco_immersion:startActivity', function(activityId)
     local source = source
-    local identifier = getIdentifier(source)
+    local Player = QBCore.Functions.GetPlayer(source)
+    local activity = Config.Activities[activityId]
 
-    deferrals.defer()
-    Wait(0)
-    deferrals.update('Loading your job progress…')
-
-    local completedJobs = 0
-
-    if identifier then
-        local result = MySQL.scalar.await(
-            'SELECT completed_jobs FROM whellco_job_progress WHERE identifier = ? LIMIT 1',
-            { identifier }
-        )
-
-        if result then
-            completedJobs = tonumber(result) or 0
-        else
-            MySQL.insert.await(
-                'INSERT INTO whellco_job_progress (identifier, completed_jobs) VALUES (?, 0)',
-                { identifier }
-            )
-        end
-    end
-
-    jobProgress[source] = completedJobs
-
-    deferrals.done()
-end)
-
-RegisterNetEvent('whellco_immersion:interact', function(interactionType, interaction)
-    local source = source
-
-    if not canInteract(source) then
+    if not Player or not activity then
         return
     end
 
-    if type(interactionType) ~= 'string' or type(interaction) ~= 'table' then
-        return
-    end
-
-    if not getNearbyInteraction(source, interaction) then
-        return
-    end
-
-    if interactionType == 'job' then
-        local job = Config.Jobs[interaction.jobId]
-
-        if job and not playerJobs[source] then
-            local completedJobs = jobProgress[source] or 0
-            local tier = getTier(completedJobs)
-            local mission = buildRoute(job, tier)
-
-            playerJobs[source] = {
-                jobId = interaction.jobId,
-                mission = mission,
-                currentStop = 1,
-                startedAt = GetGameTimer()
-            }
-
-            TriggerClientEvent('whellco_immersion:startJob', source, interaction.jobId, job.vehicle, mission)
-        end
-
-    elseif interactionType == 'shop' then
-        local shop = Config.Shops[interaction.shopId]
-
-        if shop then
-            TriggerClientEvent('whellco_immersion:notify', source, ('%s is available. Use the shop menu in a future update.'):format(shop.label))
-        end
-
-    elseif interactionType == 'transport' then
-        local stop = Config.Transport[interaction.stopId]
-
-        if stop then
-            TriggerClientEvent('whellco_immersion:notify', source, ('Public transport available from %s.'):format(stop.label))
-            TriggerClientEvent('whellco_immersion:teleport', source, stop.destinations.paleto.coords)
-        end
-
-    elseif interactionType == 'service' then
-        local service = Config.Services[interaction.serviceId]
-
-        if service then
-            TriggerClientEvent('whellco_immersion:notify', source, ('Welcome to %s.'):format(service.label))
-        end
-
-    elseif interactionType == 'fuel' then
-        local station = Config.FuelStations[interaction.stationIndex]
-
-        if station then
-            TriggerClientEvent('whellco_immersion:notify', source, ('Fuel available at %s for %s%.2f per litre.'):format(station.label, Config.Currency, station.pricePerLitre / 100))
-        end
-    end
-end)
-
-RegisterNetEvent('whellco_immersion:completeStop', function()
-    local source = source
-    local activeJob = playerJobs[source]
-
-    if not activeJob then
-        return
-    end
-
-    if GetGameTimer() - activeJob.startedAt > activeJob.mission.timeLimit * 1000 then
-        playerJobs[source] = nil
-
-        TriggerClientEvent('whellco_immersion:notify', source, 'You ran out of time. Return to the job centre to try again.')
-        return
-    end
-
-    if activeJob.currentStop < #activeJob.mission.stops then
-        activeJob.currentStop = activeJob.currentStop + 1
-
-        TriggerClientEvent('whellco_immersion:nextStop', source, activeJob.mission.stops[activeJob.currentStop])
-        return
-    end
-
-    local identifier = getIdentifier(source)
-    local payout = activeJob.mission.payout
-
-    jobProgress[source] = (jobProgress[source] or 0) + 1
-    playerJobs[source] = nil
-
-    if identifier then
-        saveProgress(identifier, jobProgress[source])
-    end
-
-    -- Replace with your economy framework's server-side money addition.
-    TriggerClientEvent('whellco_immersion:completeJob', source, ('Job complete. You earned %s%d.'):format(Config.Currency, payout))
-end)
-
-RegisterCommand('jobleaderboard', function(source)
-    if source == 0 then
-        return
-    end
-
-    local results = MySQL.query.await(
-        [[
-            SELECT
-                player_name,
-                completed_jobs
-            FROM whellco_job_progress
-            WHERE completed_jobs > 0
-            ORDER BY completed_jobs DESC, updated_at ASC
-            LIMIT 10
-        ]],
-        {}
-    )
-
-    local lines = {
-        'Job Leaderboard'
-    }
-
-    if not results or #results == 0 then
-        lines[#lines + 1] = 'No completed jobs have been recorded yet.'
-    else
-        for index, row in ipairs(results) do
-            lines[#lines + 1] = ('%d. %s — %d jobs'):format(
-                index,
-                row.player_name or 'Unknown Player',
-                tonumber(row.completed_jobs) or 0
-            )
-        end
-    end
-
-    exports.chat:addMessage(source, {
-        color = { 0, 190, 255 },
-        multiline = true,
-        args = { 'Job Leaderboard', table.concat(lines, '\n') }
+    TriggerClientEvent('whellco_immersion:activityStarted', source, {
+        id = activityId,
+        label = activity.label
     })
-end, false)
 
-AddEventHandler('playerDropped', function()
-    playerJobs[source] = nil
-    lastInteraction[source] = nil
+    TriggerClientEvent('QBCore:Notify', source, ('Started %s.'):format(activity.label), 'primary')
+end)
+
+RegisterNetEvent('whellco_immersion:completeActivity', function(activityId)
+    local source = source
+    local Player = QBCore.Functions.GetPlayer(source)
+    local activity = Config.Activities[activityId]
+
+    if not Player or not activity then
+        return
+    end
+
+    if not Player.Functions.AddMoney('bank', activity.payout, ('Completed %s'):format(activity.label)) then
+        return
+    end
+
+    TriggerClientEvent('QBCore:Notify', source, ('Activity complete. £%d added to bank.'):format(activity.payout), 'success')
 end)

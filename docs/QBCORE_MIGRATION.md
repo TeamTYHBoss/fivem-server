@@ -72,6 +72,12 @@ Player.Functions.SetMetaData('whellco_level', value)
 - `whellco_vehicletax`: migrated.
 - `whellco_mot`: migrated.
 - `whellco_impound`: migrated.
+- `whellco_police`: migrated.
+- `whellco_medical`: migrated.
+- `whellco_mechanic`: migrated.
+- `whellco_phone`: migrated.
+- `whellco_jobcenter`: migrated.
+- `whellco_immersion`: migrated.
 - Remaining systems: batch migration pending.
 
 ## Compatibility bridge
@@ -90,10 +96,10 @@ Player.Functions.SetMetaData('whellco_level', value)
 
 New and migrated resources should use these exports or call QBCore directly.
 
-## Batch 2c migration
+## Batch 3 migration
 
-- Vehicle ownership now uses QBCore citizen IDs.
-- Dealership purchases use QBCore bank money.
-- Insurance policies use QBCore bank money.
-- Registrations, vehicle tax, MOT bookings, and impound releases use QBCore money.
-- All affected resources declare QBCore, oxmysql, and the WhellCo QBCore bridge as dependencies.
+- Police duty, fines, medical revival and treatment now use QBCore jobs and money.
+- Mechanic repairs validate the QBCore mechanic job.
+- Phone identity and messages use QBCore player data.
+- Job-center applications use QBCore jobs.
+- Immersion activity payouts use QBCore bank money.

@@ -2,8 +2,8 @@ fx_version 'cerulean'
 game 'gta5'
 
 author 'Chris Wheller'
-description 'Job center NUI with job browsing, applications, requirements and active job tracking'
-version '1.0.0'
+description 'QBCore-native job center'
+version '2.0.0'
 
 shared_script 'config.lua'
 
@@ -20,4 +20,8 @@ files {
     'html/script.js'
 }
 
-dependency 'oxmysql'
+dependencies {
+    'qb-core',
+    'oxmysql',
+    'whellco_qbcore'
+}
