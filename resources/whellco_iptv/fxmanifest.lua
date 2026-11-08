@@ -1,0 +1,22 @@
+fx_version 'cerulean'
+game 'gta5'
+
+author 'TeamTYHBoss'
+description 'Working TVs with IPTV channel switching'
+version '1.0.0'
+
+client_scripts {
+    'client.lua'
+}
+
+server_scripts {
+    'server.lua'
+}
+
+files {
+    'html/index.html',
+    'html/style.css',
+    'html/script.js'
+}
+
+ui_page 'html/index.html'
