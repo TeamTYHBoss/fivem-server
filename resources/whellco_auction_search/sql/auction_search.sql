@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS whellco_auction_searches (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    player_id VARCHAR(64) NOT NULL,
+    search_query VARCHAR(64) NOT NULL,
+    search_filter VARCHAR(32) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
