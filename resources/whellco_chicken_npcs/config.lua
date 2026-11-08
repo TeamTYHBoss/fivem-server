@@ -18,6 +18,7 @@ Config.Chickens = {
         flourInterval = 700,
         wetFootprintInterval = 700,
         shakeInterval = 3000,
+        waterDropletCount = 6,
         counters = {
             vector3(-268.0, -953.0, 31.5),
             vector3(-266.0, -955.0, 31.5)

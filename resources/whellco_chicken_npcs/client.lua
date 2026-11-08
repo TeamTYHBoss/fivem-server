@@ -260,6 +260,27 @@ local function shakeDry(chicken)
         false
     )
 
+    for _ = 1, 6 do
+        local offsetX = math.random(-80, 80) / 100
+        local offsetY = math.random(-80, 80) / 100
+        local offsetZ = math.random(20, 80) / 100
+
+        UseParticleFxAssetNextCall('core')
+        StartParticleFxNonLoopedAtCoord(
+            'exp_grd_bzgas_smoke',
+            chickenCoords.x + offsetX,
+            chickenCoords.y + offsetY,
+            chickenCoords.z + offsetZ,
+            0.0,
+            0.0,
+            0.0,
+            0.25,
+            false,
+            false,
+            false
+        )
+    end
+
     chicken.wet = false
 end
 

@@ -39,6 +39,7 @@
 - Chickens shake dry after getting wet.
 - Chickens shake after calming down.
 - Chickens shake every 3 seconds while wet.
+- Water droplets fly off when the chicken shakes.
 - Chickens calm down when the player is more than 6 metres away.
 - Calm chickens return to normal wandering.
 
@@ -66,6 +67,7 @@
 | `flourInterval` | Time between flour effects |
 | `wetFootprintInterval` | Time between wet footprint effects |
 | `shakeInterval` | Time between shake effects |
+| `waterDropletCount` | Number of water droplets per shake |
 | `counters` | Counter locations that trigger flour |
 | `sinks` | Sink locations that trigger wet footprints |
 | `FootprintLifetime` | Total footprint lifetime |
