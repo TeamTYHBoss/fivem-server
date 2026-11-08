@@ -14,7 +14,9 @@ Config.Mansions = {
         mloInterior = 'vinewood_hills_mansion',
         garageSlots = 6,
         storageSlots = 200,
-        wardrobeSlots = 100
+        wardrobeSlots = 100,
+        maxGuests = 20,
+        maxCameras = 8
     },
     {
         id = 'pacific_bluffs_mansion',
@@ -27,7 +29,9 @@ Config.Mansions = {
         mloInterior = 'pacific_bluffs_mansion',
         garageSlots = 8,
         storageSlots = 250,
-        wardrobeSlots = 150
+        wardrobeSlots = 150,
+        maxGuests = 30,
+        maxCameras = 12
     }
 }
 

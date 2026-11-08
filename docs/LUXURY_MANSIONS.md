@@ -1,10 +1,10 @@
 # Luxury Mansions
 
-`whellco_luxury_mansions` adds purchasable luxury mansions with configurable interiors, ownership, customisation, and state sell-back.
+`whellco_luxury_mansions` adds purchasable luxury mansions with configurable interiors, ownership, guest access, private events, CCTV, and state sell-back.
 
 ## Important note on custom MLOs
 
-This resource provides the ownership, entrance, teleport, customisation, and database systems for mansions. The actual 3D interior assets must be supplied as FiveM MLO mapping assets. Place the custom MLO files in the relevant mapping resource and set each mansion’s `mloInterior` identifier to match the loaded interior.
+This resource provides the ownership, entrance, teleport, customisation, access control, events, CCTV, and database systems for mansions. The actual 3D interior assets must be supplied as FiveM MLO mapping assets. Place the custom MLO files in the relevant mapping resource and set each mansion’s `mloInterior` identifier to match the loaded interior.
 
 ## Startup order
 
@@ -45,21 +45,37 @@ source database/whellco_mansion_ownership.sql
 - Configurable floor styles.
 - Configurable lighting modes.
 
+## Gated access control
+
+- Owners can add friends to the mansion guest list.
+- Owners can remove friends from the mansion guest list.
+- Guests can enter the mansion.
+- Non-guests cannot enter.
+- Guest lists are stored in `whellco_mansion_guests`.
+- Guest limits are configurable per mansion.
+
+## Private events
+
+- Owners can host private parties or events.
+- Event names and durations are configurable.
+- Event duration range is 15 to 240 minutes.
+- Events are stored in `whellco_mansion_events`.
+- Owners can end events at any time.
+
+## CCTV security
+
+- Owners can install CCTV cameras.
+- Camera names and positions are configurable.
+- Camera limits are configurable per mansion.
+- Cameras are stored in `whellco_mansion_cameras`.
+- Owners can remove cameras at any time.
+
 ## Mansion list
 
-| Mansion | Price | Sell-back | Garage slots | Storage slots | Wardrobe slots |
-|---|---:|---:|---:|---:|---:|
-| Vinewood Hills Mansion | $5,000,000 | 70% | 6 | 200 | 100 |
-| Pacific Bluffs Mansion | $7,500,000 | 70% | 8 | 250 | 150 |
-
-## Sell-back rules
-
-- Owners can sell their mansion back to the state.
-- Sell-back percentage is 70% by default.
-- Sell-back amount is based on the mansion’s original purchase price.
-- Selling removes mansion ownership.
-- Selling resets mansion customisation.
-- Sell-back payments are added to the owner’s bank account.
+| Mansion | Price | Sell-back | Guests | Cameras | Garage slots | Storage slots | Wardrobe slots |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Vinewood Hills Mansion | $5,000,000 | 70% | 20 | 8 | 6 | 200 | 100 |
+| Pacific Bluffs Mansion | $7,500,000 | 70% | 30 | 12 | 8 | 250 | 150 |
 
 ## Customisation
 
@@ -67,6 +83,15 @@ source database/whellco_mansion_ownership.sql
 - Floor styles: marble, dark oak, polished concrete, velvet carpet.
 - Lighting modes: warm evening, cool modern, candlelight, party mode.
 - Customisation is stored per mansion owner.
+
+## Sell-back rules
+
+- Owners can sell their mansion back to the state.
+- Sell-back percentage is 70% by default.
+- Sell-back amount is based on the mansion’s original purchase price.
+- Selling removes mansion ownership.
+- Selling removes guest access, events, and cameras.
+- Sell-back payments are added to the owner’s bank account.
 
 ## Commands
 
@@ -93,6 +118,8 @@ View mansion admin information:
 - Mansion purchases are validated server-side.
 - Mansion ownership is validated server-side.
 - Mansion access is validated server-side.
+- Mansion guest access is validated server-side.
+- Mansion events are validated server-side.
+- Mansion CCTV is validated server-side.
 - Mansion customisation is validated server-side.
 - Mansion sell-back is validated server-side.
-- Mansion purchases and sell-backs are logged through QBCore money transactions.
