@@ -11,6 +11,29 @@ local function isInsideArea(area)
     return #(playerCoords - area.coords) <= area.radius
 end
 
+local function isBlendingIntoCrowd()
+    local playerCoords = GetEntityCoords(PlayerPedId())
+    local nearbyPeds = 0
+
+    local handle, ped = FindFirstPed()
+
+    repeat
+        if DoesEntityExist(ped) and not IsPedAPlayer(ped) then
+            local distance = #(playerCoords - GetEntityCoords(ped))
+
+            if distance <= Config.Disguise.CrowdBlendRadius then
+                nearbyPeds = nearbyPeds + 1
+            end
+        end
+
+        _, ped = FindNextPed(handle)
+    until not FindNextPed(handle)
+
+    EndFindPed(handle)
+
+    return nearbyPeds >= Config.Disguise.CrowdBlendMinimumPeds
+end
+
 local function updateSuspicionHud()
     SendNUIMessage({
         action = 'suspicion',
@@ -51,8 +74,12 @@ RegisterNetEvent('whellco_disguise_entry:apply', function(data)
         while disguiseActive do
             Wait(1000)
 
-            suspicion = math.min(Config.Disguise.SuspicionMax, suspicion + Config.Disguise.SuspicionPerSecond)
-            updateSuspicionHud()
+            if isBlendingIntoCrowd() then
+                updateSuspicionHud()
+            else
+                suspicion = math.min(Config.Disguise.SuspicionMax, suspicion + Config.Disguise.SuspicionPerSecond)
+                updateSuspicionHud()
+            end
 
             if suspicion >= Config.Disguise.SuspicionMax then
                 disguiseActive = false
@@ -140,5 +167,5 @@ RegisterNetEvent('whellco_disguise_entry:alert', function(job, coords)
 end)
 
 RegisterCommand('disguisehelp', function()
-    QBCore.Functions.Notify('Stand in a restricted area and press E to use a disguise kit. Suspicion rises while disguised.', 'primary')
+    QBCore.Functions.Notify('Stand in a restricted area and press E to use a disguise kit. Blend into crowds to pause suspicion growth.', 'primary')
 end, false)

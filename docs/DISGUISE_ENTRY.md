@@ -1,6 +1,6 @@
 # Disguised Entry for Restricted Areas
 
-`whellco_disguise_entry` lets players use disguise kits to enter restricted areas with a suspicion meter, guard challenges, and detection risk.
+`whellco_disguise_entry` lets players use disguise kits to enter restricted areas with a suspicion meter, guard challenges, crowd blending, and detection risk.
 
 ## Suspicion meter
 
@@ -12,6 +12,15 @@
 - Orange indicates medium suspicion.
 - Red indicates high suspicion.
 - Passing a guard challenge reduces suspicion by 25 points.
+
+## Crowd blending
+
+- Players can blend into crowds to pause suspicion growth.
+- Crowd blending requires at least 3 nearby NPC peds.
+- Crowd blend radius is 8 metres.
+- While blending, suspicion does not increase.
+- Leaving the crowd resumes suspicion growth.
+- The crowd requirements are configurable.
 
 ## Guard challenges
 
