@@ -16,7 +16,9 @@ Config.Mansions = {
         storageSlots = 200,
         wardrobeSlots = 100,
         maxGuests = 20,
-        maxCameras = 8
+        maxCameras = 8,
+        maxSecurityGuards = 4,
+        maxMaids = 4
     },
     {
         id = 'pacific_bluffs_mansion',
@@ -31,7 +33,24 @@ Config.Mansions = {
         storageSlots = 250,
         wardrobeSlots = 150,
         maxGuests = 30,
-        maxCameras = 12
+        maxCameras = 12,
+        maxSecurityGuards = 6,
+        maxMaids = 6
+    }
+}
+
+Config.Staff = {
+    security_guard = {
+        label = 'Security guard',
+        hiringCost = 25000,
+        hourlyWage = 500,
+        maxPerMansion = 4
+    },
+    maid = {
+        label = 'Maid',
+        hiringCost = 15000,
+        hourlyWage = 300,
+        maxPerMansion = 4
     }
 }
 

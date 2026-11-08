@@ -167,6 +167,71 @@ RegisterNetEvent('whellco_luxury_mansions:guest:remove', function(mansionId, gue
     TriggerClientEvent('QBCore:Notify', source, 'Guest removed from mansion access list.', 'success')
 end)
 
+RegisterNetEvent('whellco_luxury_mansions:staff:hire', function(mansionId, staffType)
+    local source = source
+    local Player = QBCore.Functions.GetPlayer(source)
+    local mansion = getMansion(mansionId)
+    local staffConfig = Config.Staff[staffType]
+
+    if not Player or not mansion or not staffConfig or not isOwner(Player, mansionId) then
+        return
+    end
+
+    local staffCount = MySQL.scalar.await(
+        'SELECT COUNT(*) FROM whellco_mansion_staff WHERE mansion_id = ? AND staff_type = ?',
+        {
+            mansion.id,
+            staffType
+        }
+    )
+
+    if staffCount >= staffConfig.maxPerMansion then
+        TriggerClientEvent('QBCore:Notify', source, 'Staff limit reached for this role.', 'error')
+        return
+    end
+
+    if Player.PlayerData.money.bank < staffConfig.hiringCost then
+        TriggerClientEvent('QBCore:Notify', source, 'You do not have enough money to hire staff.', 'error')
+        return
+    end
+
+    Player.Functions.RemoveMoney('bank', staffConfig.hiringCost, 'mansion-staff-hire')
+
+    MySQL.insert.await(
+        [[INSERT INTO whellco_mansion_staff
+            (mansion_id, owner_citizenid, staff_type, hourly_wage)
+          VALUES (?, ?, ?, ?)]],
+        {
+            mansion.id,
+            Player.PlayerData.citizenid,
+            staffType,
+            staffConfig.hourlyWage
+        }
+    )
+
+    TriggerClientEvent('QBCore:Notify', source, ('Hired %s for $%d.'):format(staffConfig.label, staffConfig.hiringCost), 'success')
+end)
+
+RegisterNetEvent('whellco_luxury_mansions:staff:fire', function(mansionId, staffId)
+    local source = source
+    local Player = QBCore.Functions.GetPlayer(source)
+    local mansion = getMansion(mansionId)
+
+    if not Player or not mansion or not isOwner(Player, mansionId) then
+        return
+    end
+
+    MySQL.query.await(
+        'DELETE FROM whellco_mansion_staff WHERE id = ? AND mansion_id = ?',
+        {
+            staffId,
+            mansion.id
+        }
+    )
+
+    TriggerClientEvent('QBCore:Notify', source, 'Staff member dismissed.', 'success')
+end)
+
 RegisterNetEvent('whellco_luxury_mansions:event:create', function(mansionId, eventName, durationMinutes)
     local source = source
     local Player = QBCore.Functions.GetPlayer(source)
@@ -275,11 +340,7 @@ RegisterNetEvent('whellco_luxury_mansions:customise', function(mansionId, settin
     local Player = QBCore.Functions.GetPlayer(source)
     local mansion = getMansion(mansionId)
 
-    if not Player or not mansion then
-        return
-    end
-
-    if not isOwner(Player, mansionId) then
+    if not Player or not mansion or not isOwner(Player, mansionId) then
         return
     end
 
@@ -332,6 +393,13 @@ RegisterNetEvent('whellco_luxury_mansions:sellback', function(mansionId)
 
     MySQL.query.await(
         'DELETE FROM whellco_mansion_cameras WHERE mansion_id = ?',
+        {
+            mansion.id
+        }
+    )
+
+    MySQL.query.await(
+        'DELETE FROM whellco_mansion_staff WHERE mansion_id = ?',
         {
             mansion.id
         }

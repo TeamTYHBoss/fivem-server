@@ -1,10 +1,10 @@
 # Luxury Mansions
 
-`whellco_luxury_mansions` adds purchasable luxury mansions with configurable interiors, ownership, guest access, private events, CCTV, and state sell-back.
+`whellco_luxury_mansions` adds purchasable luxury mansions with configurable interiors, ownership, guest access, private events, CCTV, staff hiring, and state sell-back.
 
 ## Important note on custom MLOs
 
-This resource provides the ownership, entrance, teleport, customisation, access control, events, CCTV, and database systems for mansions. The actual 3D interior assets must be supplied as FiveM MLO mapping assets. Place the custom MLO files in the relevant mapping resource and set each mansion’s `mloInterior` identifier to match the loaded interior.
+This resource provides the ownership, entrance, teleport, customisation, access control, events, CCTV, staff hiring, and database systems for mansions. The actual 3D interior assets must be supplied as FiveM MLO mapping assets. Place the custom MLO files in the relevant mapping resource and set each mansion’s `mloInterior` identifier to match the loaded interior.
 
 ## Startup order
 
@@ -21,6 +21,7 @@ Run:
 
 ```sql
 source database/whellco_mansion_ownership.sql
+source database/whellco_mansion_staff.sql
 ```
 
 ## QBCore integration
@@ -28,6 +29,7 @@ source database/whellco_mansion_ownership.sql
 - Player identity uses `QBCore.Functions.GetPlayer(source)`.
 - Mansion purchases use `Player.Functions.RemoveMoney`.
 - Mansion sell-back uses `Player.Functions.AddMoney`.
+- Mansion staff hiring uses `Player.Functions.RemoveMoney`.
 - Mansion ownership is stored in `whellco_mansion_ownership`.
 - Notifications use `QBCore.Functions.Notify`.
 - The resource declares `qb-core` and `oxmysql` as dependencies.
@@ -54,6 +56,17 @@ source database/whellco_mansion_ownership.sql
 - Guest lists are stored in `whellco_mansion_guests`.
 - Guest limits are configurable per mansion.
 
+## Staff hiring
+
+- Owners can hire security guards and maids.
+- Security guards cost $25,000 to hire.
+- Maids cost $15,000 to hire.
+- Security guards earn $500 per hour.
+- Maids earn $300 per hour.
+- Staff limits are configurable per mansion.
+- Owners can dismiss staff at any time.
+- Staff records are stored in `whellco_mansion_staff`.
+
 ## Private events
 
 - Owners can host private parties or events.
@@ -72,10 +85,10 @@ source database/whellco_mansion_ownership.sql
 
 ## Mansion list
 
-| Mansion | Price | Sell-back | Guests | Cameras | Garage slots | Storage slots | Wardrobe slots |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| Vinewood Hills Mansion | $5,000,000 | 70% | 20 | 8 | 6 | 200 | 100 |
-| Pacific Bluffs Mansion | $7,500,000 | 70% | 30 | 12 | 8 | 250 | 150 |
+| Mansion | Price | Sell-back | Guests | Cameras | Security guards | Maids | Garage slots | Storage slots | Wardrobe slots |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Vinewood Hills Mansion | $5,000,000 | 70% | 20 | 8 | 4 | 4 | 6 | 200 | 100 |
+| Pacific Bluffs Mansion | $7,500,000 | 70% | 30 | 12 | 6 | 6 | 8 | 250 | 150 |
 
 ## Customisation
 
@@ -90,7 +103,7 @@ source database/whellco_mansion_ownership.sql
 - Sell-back percentage is 70% by default.
 - Sell-back amount is based on the mansion’s original purchase price.
 - Selling removes mansion ownership.
-- Selling removes guest access, events, and cameras.
+- Selling removes guest access, events, cameras, and staff.
 - Sell-back payments are added to the owner’s bank account.
 
 ## Commands
@@ -119,6 +132,8 @@ View mansion admin information:
 - Mansion ownership is validated server-side.
 - Mansion access is validated server-side.
 - Mansion guest access is validated server-side.
+- Mansion staff hiring is validated server-side.
+- Mansion staff limits are validated server-side.
 - Mansion events are validated server-side.
 - Mansion CCTV is validated server-side.
 - Mansion customisation is validated server-side.
