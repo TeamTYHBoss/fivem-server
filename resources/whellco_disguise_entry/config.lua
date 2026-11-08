@@ -16,6 +16,7 @@ Config.Disguise = {
     SuspicionMax = 100,
     CrowdBlendRadius = 8.0,
     CrowdBlendMinimumPeds = 3,
+    CrowdBlendMaxSpeed = 2.0,
     AlertJobs = {
         police = true
     }

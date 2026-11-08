@@ -12,8 +12,14 @@ local function isInsideArea(area)
 end
 
 local function isBlendingIntoCrowd()
-    local playerCoords = GetEntityCoords(PlayerPedId())
+    local playerPed = PlayerPedId()
+    local playerCoords = GetEntityCoords(playerPed)
+    local playerSpeed = GetEntitySpeed(playerPed)
     local nearbyPeds = 0
+
+    if playerSpeed > Config.Disguise.CrowdBlendMaxSpeed then
+        return false
+    end
 
     local handle, ped = FindFirstPed()
 
@@ -167,5 +173,5 @@ RegisterNetEvent('whellco_disguise_entry:alert', function(job, coords)
 end)
 
 RegisterCommand('disguisehelp', function()
-    QBCore.Functions.Notify('Stand in a restricted area and press E to use a disguise kit. Blend into crowds to pause suspicion growth.', 'primary')
+    QBCore.Functions.Notify('Stand in a restricted area and press E to use a disguise kit. Move slowly in crowds to pause suspicion growth.', 'primary')
 end, false)

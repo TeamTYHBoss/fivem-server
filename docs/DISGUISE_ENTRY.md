@@ -18,9 +18,11 @@
 - Players can blend into crowds to pause suspicion growth.
 - Crowd blending requires at least 3 nearby NPC peds.
 - Crowd blend radius is 8 metres.
+- Fast movement breaks the crowd blend state.
+- Crowd blend maximum speed is 2.0.
 - While blending, suspicion does not increase.
-- Leaving the crowd resumes suspicion growth.
-- The crowd requirements are configurable.
+- Leaving the crowd or moving too fast resumes suspicion growth.
+- The crowd requirements and speed limit are configurable.
 
 ## Guard challenges
 
