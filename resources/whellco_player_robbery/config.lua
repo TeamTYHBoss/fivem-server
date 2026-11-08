@@ -13,7 +13,10 @@ Config.Robbery = {
     MaxItemsPerRobbery = 3,
     AlertPolice = true,
     AlertPoliceChance = 40,
-    AlertPoliceRadius = 100.0
+    AlertPoliceRadius = 100.0,
+    RequireHandsUp = true,
+    HandsUpKey = 'X',
+    HandsUpTimeoutSeconds = 10
 }
 
 Config.RobberyItems = {

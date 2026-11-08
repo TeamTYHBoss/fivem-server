@@ -1,7 +1,7 @@
 local QBCore = exports['qb-core']:GetCoreObject()
 
 local robberyActive = false
-local currentTarget = nil
+local handsUp = false
 
 local function getClosestPlayer()
     local playerPed = PlayerPedId()
@@ -26,6 +26,18 @@ CreateThread(function()
     while true do
         Wait(0)
 
+        if IsControlJustPressed(0, 73) then
+            handsUp = not handsUp
+
+            if handsUp then
+                TaskHandsUp(PlayerPedId(), 10000, PlayerPedId(), -1, true)
+            else
+                ClearPedTasks(PlayerPedId())
+            end
+
+            TriggerServerEvent('whellco_player_robbery:handsUp', handsUp)
+        end
+
         if not robberyActive then
             local target = getClosestPlayer()
 
@@ -42,7 +54,6 @@ end)
 
 RegisterNetEvent('whellco_player_robbery:start', function(targetServerId)
     robberyActive = true
-    currentTarget = targetServerId
 
     SetNuiFocus(true, true)
     SendNUIMessage({ action = 'start' })
@@ -74,5 +85,5 @@ RegisterNUICallback('complete', function(data, cb)
 end)
 
 RegisterCommand('robberyhelp', function()
-    QBCore.Functions.Notify('Walk up to another player and press E to start a robbery.', 'primary')
+    QBCore.Functions.Notify('Press X to put your hands up. Robbers can only rob players with their hands up.', 'primary')
 end, false)

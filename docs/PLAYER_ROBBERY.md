@@ -2,6 +2,14 @@
 
 `whellco_player_robbery` lets players rob other players through a proximity prompt and timing minigame.
 
+## Hands-up requirement
+
+- Players must press X to put their hands up.
+- Robbers can only start a robbery if the target has their hands up.
+- Hands-up state expires after 10 seconds.
+- The hands-up requirement is configurable.
+- The hands-up key is configurable.
+
 ## Startup order
 
 ```cfg
@@ -31,6 +39,7 @@ source database/whellco_robbery_logs.sql
 ## Robbery rules
 
 - Walk up to another player within 2.5 metres.
+- Target must have their hands up.
 - Press E to start the robbery.
 - Complete the timing minigame within 8 seconds.
 - Robbery success chance is 65%.
@@ -72,6 +81,7 @@ View robbery help:
 ## Security
 
 - Robbery initiation is validated server-side.
+- Hands-up state is validated server-side.
 - Robbery cooldowns are validated server-side.
 - Protected jobs are validated server-side.
 - Cash transfers are validated server-side.

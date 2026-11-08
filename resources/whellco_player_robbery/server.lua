@@ -2,6 +2,7 @@ local QBCore = exports['qb-core']:GetCoreObject()
 
 local activeRobberies = {}
 local robberyCooldowns = {}
+local handsUpStates = {}
 
 local function isAdmin(Player)
     local job = Player.PlayerData.job
@@ -28,6 +29,20 @@ local function canStartRobbery(source, targetServerId)
     return true
 end
 
+RegisterNetEvent('whellco_player_robbery:handsUp', function(state)
+    local source = source
+
+    handsUpStates[source] = state and true or false
+
+    if state then
+        SetTimeout(Config.Robbery.HandsUpTimeoutSeconds * 1000, function()
+            if handsUpStates[source] then
+                handsUpStates[source] = false
+            end
+        end)
+    end
+end)
+
 RegisterNetEvent('whellco_player_robbery:start', function(targetServerId)
     local source = source
     local robber = QBCore.Functions.GetPlayer(source)
@@ -44,6 +59,11 @@ RegisterNetEvent('whellco_player_robbery:start', function(targetServerId)
 
     if isProtected(victim) then
         TriggerClientEvent('QBCore:Notify', source, 'You cannot rob this player.', 'error')
+        return
+    end
+
+    if Config.Robbery.RequireHandsUp and not handsUpStates[targetServerId] then
+        TriggerClientEvent('QBCore:Notify', source, 'The player must have their hands up before you can rob them.', 'error')
         return
     end
 
@@ -129,5 +149,5 @@ RegisterCommand('robberyinfo', function(source)
         return
     end
 
-    TriggerClientEvent('QBCore:Notify', source, 'Walk up to another player and press E to start a robbery.', 'primary')
+    TriggerClientEvent('QBCore:Notify', source, 'Players must have their hands up before they can be robbed.', 'primary')
 end, false)
