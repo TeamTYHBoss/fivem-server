@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const menu = document.getElementById('admin-menu');
     const targetInput = document.getElementById('target-id');
+    const reasonInput = document.getElementById('action-reason');
 
     window.addEventListener('message', (event) => {
         const data = event.data;
@@ -22,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('button[data-action]').forEach((button) => {
         button.addEventListener('click', () => {
             const action = button.dataset.action;
-            const value = button.dataset.value === 'true';
+            const value = button.dataset.value === 'true' ? true : (button.dataset.value === 'false' ? false : reasonInput.value);
             const target = targetInput.value;
 
             fetch(`https://${GetParentResourceName()}/action`, {

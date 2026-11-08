@@ -85,6 +85,31 @@ RegisterNetEvent('whellco_admin_menu:action', function(action, targetSource, val
         })
 
         logAction(Admin.PlayerData.citizenid, Target.PlayerData.citizenid, 'inventory_view', {})
+
+    elseif action == 'warn' and Target then
+        local reason = tostring(value or 'No reason provided')
+
+        if #reason > Config.Moderation.MaxWarningReasonLength then
+            reason = reason:sub(1, Config.Moderation.MaxWarningReasonLength)
+        end
+
+        TriggerClientEvent('whellco_admin_menu:warned', Target.PlayerData.source, {
+            reason = reason,
+            adminName = Admin.PlayerData.charinfo.firstname .. ' ' .. Admin.PlayerData.charinfo.lastname
+        })
+
+        logAction(Admin.PlayerData.citizenid, Target.PlayerData.citizenid, 'warn', { reason = reason })
+
+    elseif action == 'kick' and Target then
+        local reason = tostring(value or 'Kicked by staff')
+
+        if #reason > Config.Moderation.MaxKickReasonLength then
+            reason = reason:sub(1, Config.Moderation.MaxKickReasonLength)
+        end
+
+        logAction(Admin.PlayerData.citizenid, Target.PlayerData.citizenid, 'kick', { reason = reason })
+
+        DropPlayer(Target.PlayerData.source, ('Kicked by staff: %s'):format(reason))
     end
 end)
 

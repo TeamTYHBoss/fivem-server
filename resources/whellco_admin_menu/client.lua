@@ -21,6 +21,18 @@ RegisterNUICallback('action', function(data, cb)
     cb('ok')
 end)
 
+RegisterNetEvent('whellco_admin_menu:warned', function(data)
+    if not data then
+        return
+    end
+
+    QBCore.Functions.Notify(
+        ('Warning from %s: %s'):format(data.adminName, data.reason),
+        'error',
+        10000
+    )
+end)
+
 RegisterNetEvent('whellco_admin_menu:godmode', function(enabled)
     local playerPed = PlayerPedId()
 

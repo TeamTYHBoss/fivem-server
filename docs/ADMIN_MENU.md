@@ -37,6 +37,16 @@ source database/whellco_admin_menu_actions.sql
 - Revive player.
 - Freeze player.
 - View player inventory.
+- Warn player with reason.
+- Kick player with reason.
+
+## Moderation tools
+
+- Warn sends an in-game warning and records the reason.
+- Kick disconnects the target and records the reason.
+- Warning and kick reasons are limited to 200 characters.
+- Both actions require a valid target player ID.
+- Both actions are logged with admin, target, action, reason, and timestamp.
 
 ## Commands
 

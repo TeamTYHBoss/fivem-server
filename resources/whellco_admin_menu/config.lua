@@ -10,3 +10,8 @@ Config.AdminJobs = {
 Config.MenuCommand = 'adminmenu'
 Config.MenuKey = 'F6'
 Config.ActionCooldownSeconds = 3
+
+Config.Moderation = {
+    MaxWarningReasonLength = 200,
+    MaxKickReasonLength = 200
+}
