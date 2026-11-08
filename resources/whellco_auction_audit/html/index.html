@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Vehicle Auction Audit</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="auction-audit" id="auction-audit">
+        <div class="window">
+            <header>
+                <h1>Vehicle Auction Audit</h1>
+                <p>View and record auction audit logs.</p>
+            </header>
+
+            <div class="audit-options">
+                <input id="auction-input" placeholder="Enter auction ID">
+                <select id="action-select"></select>
+                <input id="details-input" maxlength="255" placeholder="Enter details">
+                <button id="record-button">Record Audit</button>
+            </div>
+
+            <div class="log-list" id="log-list"></div>
+
+            <button id="close-button">Close</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
