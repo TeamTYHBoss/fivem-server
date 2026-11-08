@@ -37,3 +37,35 @@ QBCore.Functions.CreateCallback('whellco_iptv:getChannels', function(source, cb,
         cb({ channels = parseM3U(body) })
     end, 'GET', '', {})
 end)
+
+local function hasRemote(Player)
+    local item = Player.Functions.GetItemByName('tv_remote')
+
+    return item and item.amount > 0
+end
+
+RegisterNetEvent('whellco_iptv:checkRemote', function()
+    local source = source
+    local Player = QBCore.Functions.GetPlayer(source)
+
+    if not Player then
+        return
+    end
+
+    TriggerClientEvent('whellco_iptv:remoteStatus', source, hasRemote(Player))
+end)
+
+QBCore.Functions.CreateUseableItem('tv_remote', function(source)
+    local Player = QBCore.Functions.GetPlayer(source)
+
+    if not Player then
+        return
+    end
+
+    if not hasRemote(Player) then
+        return
+    end
+
+    TriggerClientEvent('whellco_iptv:remoteStatus', source, true)
+    TriggerClientEvent('QBCore:Notify', source, 'TV remote ready.', 'success')
+end)

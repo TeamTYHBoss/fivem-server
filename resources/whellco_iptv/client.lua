@@ -3,6 +3,7 @@ local QBCore = exports['qb-core']:GetCoreObject()
 local tvOpen = false
 local currentChannel = 1
 local channels = {}
+local hasRemote = false
 
 local function loadChannels()
     channels = {}
@@ -24,6 +25,11 @@ end
 
 local function openTv()
     if tvOpen then
+        return
+    end
+
+    if not hasRemote then
+        QBCore.Functions.Notify('You need a TV remote to use this TV.', 'error')
         return
     end
 
@@ -126,6 +132,10 @@ CreateThread(function()
             closeTv()
         end
     end
+end)
+
+RegisterNetEvent('whellco_iptv:remoteStatus', function(status)
+    hasRemote = status
 end)
 
 RegisterNUICallback('close', function()

@@ -27,3 +27,4 @@ Config.Controls = {
 }
 
 Config.InteractDistance = 2.0
+Config.RemoteItem = 'tv_remote'
