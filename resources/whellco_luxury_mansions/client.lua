@@ -2,6 +2,8 @@ local QBCore = exports['qb-core']:GetCoreObject()
 
 local currentMansion = nil
 local securityGuards = {}
+local maids = {}
+local cleanliness = 100
 
 local function getMansion(id)
     for _, mansion in ipairs(Config.Mansions) do
@@ -13,7 +15,7 @@ local function getMansion(id)
     return nil
 end
 
-local function clearGuards()
+local function clearStaff()
     for _, guard in ipairs(securityGuards) do
         if DoesEntityExist(guard) then
             DeletePed(guard)
@@ -21,11 +23,17 @@ local function clearGuards()
     end
 
     securityGuards = {}
+
+    for _, maid in ipairs(maids) do
+        if DoesEntityExist(maid) then
+            DeletePed(maid)
+        end
+    end
+
+    maids = {}
 end
 
 local function spawnSecurityGuards(mansion)
-    clearGuards()
-
     local guardCount = mansion.maxSecurityGuards or 2
 
     for index = 1, guardCount do
@@ -41,6 +49,21 @@ local function spawnSecurityGuards(mansion)
             SetPedCombatAttributes(guard, 46, true)
 
             securityGuards[#securityGuards + 1] = guard
+        end
+    end
+end
+
+local function spawnMaids(mansion)
+    local maidCount = mansion.maxMaids or 2
+
+    for index = 1, maidCount do
+        local offset = vector3(math.random(-15, 15), math.random(-15, 15), 0)
+        local spawnCoords = mansion.interior + offset
+        local maid = CreatePed(4, GetHashKey('s_f_y_scrubs_01'), spawnCoords.x, spawnCoords.y, spawnCoords.z, 0.0, true, true)
+
+        if maid and maid ~= 0 then
+            SetEntityAsMissionEntity(maid, true, true)
+            maids[#maids + 1] = maid
         end
     end
 end
@@ -84,6 +107,29 @@ local function confrontIntruders()
     end)
 end
 
+local function cleanMansion()
+    CreateThread(function()
+        while currentMansion do
+            Wait(10000)
+
+            if #maids > 0 then
+                cleanliness = math.min(100, cleanliness + 5)
+            else
+                cleanliness = math.max(0, cleanliness - 2)
+            end
+
+            for _, maid in ipairs(maids) do
+                if DoesEntityExist(maid) then
+                    local mansion = currentMansion
+                    local cleaningPoint = mansion.interior + vector3(math.random(-20, 20), math.random(-20, 20), 0)
+
+                    TaskGoToCoordAnyMeans(maid, cleaningPoint.x, cleaningPoint.y, cleaningPoint.z, 1.0, 0, false, 786603, 0)
+                end
+            end
+        end
+    end)
+end
+
 local function drawMansionMarkers()
     CreateThread(function()
         while true do
@@ -112,6 +158,7 @@ end
 
 RegisterNetEvent('whellco_luxury_mansions:enter', function(mansion)
     currentMansion = mansion
+    cleanliness = 100
 
     DoScreenFadeOut(500)
     Wait(500)
@@ -122,8 +169,10 @@ RegisterNetEvent('whellco_luxury_mansions:enter', function(mansion)
     DoScreenFadeIn(500)
 
     spawnSecurityGuards(mansion)
+    spawnMaids(mansion)
     patrolGuards()
     confrontIntruders()
+    cleanMansion()
 
     QBCore.Functions.Notify(('Entered %s.'):format(mansion.label), 'success')
 end)
@@ -141,7 +190,7 @@ AddEventHandler('onResourceStop', function(resource)
         return
     end
 
-    clearGuards()
+    clearStaff()
 end)
 
 CreateThread(function()

@@ -77,6 +77,15 @@ source database/whellco_mansion_staff.sql
 - Guards have 50 armour.
 - Guards are removed when the player leaves the mansion.
 
+## Maid behaviour
+
+- Maids clean the mansion interior.
+- Maids move to random cleaning points every 10 seconds.
+- Each maid increases cleanliness by 5 points every 10 seconds.
+- Mansion cleanliness decreases by 2 points every 10 seconds without maids.
+- Cleanliness starts at 100 when the owner enters the mansion.
+- Maids are removed when the player leaves the mansion.
+
 ## Private events
 
 - Owners can host private parties or events.
