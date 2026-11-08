@@ -1,6 +1,6 @@
 # Weather
 
-`whellco_weather` adds realistic weather and real-time clock sync. Streetlights turn on gradually as it gets darker, house windows light up at night, some windows flicker like a TV is on inside, TV windows have a subtle blue tint, some windows have curtains or blinds, silhouettes appear behind the curtains, nearby buildings, NPCs, and items spawn only, network traffic is optimized for distant players, spawned entities are pooled to reduce lag, and working swimming pools allow players and NPCs to swim with water splash particles and sound effects.
+`whellco_weather` adds realistic weather and real-time clock sync. Streetlights turn on gradually as it gets darker, house windows light up at night, some windows flicker like a TV is on inside, TV windows have a subtle blue tint, some windows have curtains or blinds, silhouettes appear behind the curtains, nearby buildings, NPCs, and items spawn only, network traffic is optimized for distant players, spawned entities are pooled to reduce lag, and working swimming pools allow players and NPCs to swim with water splash particles, sound effects, and dive ripples.
 
 ## Weather
 
@@ -117,6 +117,17 @@
 - Splash cooldown is configurable.
 - Splashes only happen when a player is nearby.
 - Splashes are removed when the player moves away.
+
+## Dive ripples
+
+- Ripples trigger when players dive into water.
+- Ripples appear when a player enters water.
+- Ripples use a larger particle effect.
+- Ripples use a stronger splash sound.
+- Ripples have a shorter cooldown than normal splashes.
+- Ripples only trigger once when entering water.
+- Ripples do not repeat while a player stays in water.
+- Ripples reset when the player leaves water.
 
 ## Night time
 

@@ -5,6 +5,7 @@ local houseLights = {}
 local entityPools = {}
 local swimmingNpcs = {}
 local lastSplash = {}
+local wasInWater = false
 
 RegisterNetEvent('whellco_weather:setWeather', function(weather)
     if not weather then
@@ -220,31 +221,45 @@ local function updateHouseLights()
     end
 end
 
-local function playSplash(coords)
+local function playSplash(coords, isDive)
     local now = GetGameTimer()
+    local key = coords.x .. coords.y .. coords.z
+    local cooldown = isDive and 250 or 500
 
-    if lastSplash[coords.x .. coords.y .. coords.z] and now - lastSplash[coords.x .. coords.y .. coords.z] < 500 then
+    if lastSplash[key] and now - lastSplash[key] < cooldown then
         return
     end
 
-    lastSplash[coords.x .. coords.y .. coords.z] = now
+    lastSplash[key] = now
 
     UseParticleFxAssetNextCall('core')
     StartParticleFxNonLoopedAtCoord(
-        'water_splash',
+        isDive and 'water_ripples' or 'water_splash',
         coords.x,
         coords.y,
         coords.z,
         0.0,
         0.0,
         0.0,
-        1.0,
+        isDive and 1.5 or 1.0,
         false,
         false,
         false
     )
 
-    PlaySoundFromCoord(-1, 'SPLASH', coords.x, coords.y, coords.z, 'HUD_FRONTEND_DEFAULT_SOUNDSET', false, 0, false)
+    PlaySoundFromCoord(-1, isDive and 'SPLASH_BIG' or 'SPLASH', coords.x, coords.y, coords.z, 'HUD_FRONTEND_DEFAULT_SOUNDSET', false, 0, false)
+end
+
+local function updatePlayerWater()
+    local playerPed = PlayerPedId()
+    local inWater = IsPedInWater(playerPed)
+    local playerCoords = GetEntityCoords(playerPed)
+
+    if inWater and not wasInWater then
+        playSplash(playerCoords, true)
+    end
+
+    wasInWater = inWater
 end
 
 local function updateSwimmingPools()
@@ -279,7 +294,7 @@ local function updateSwimmingPools()
                             SetPedCoordsNoOffset(ped, npc.x, npc.y, npc.z, false, false, false)
                             SetPedConfigFlag(ped, 1, true)
                             TaskSwimToCoord(ped, npc.x + math.random(-5, 5), npc.y + math.random(-5, 5), npc.z)
-                            playSplash(vector3(npc.x, npc.y, npc.z))
+                            playSplash(vector3(npc.x, npc.y, npc.z), false)
                         else
                             FreezeEntityPosition(ped, true)
                         end
@@ -295,7 +310,7 @@ local function updateSwimmingPools()
                     local speed = GetEntitySpeed(ped)
 
                     if speed > 0.5 and IsEntityInWater(ped) then
-                        playSplash(pedCoords)
+                        playSplash(pedCoords, false)
                     end
                 end
             end
@@ -320,5 +335,6 @@ CreateThread(function()
         updateStreetLights()
         updateHouseLights()
         updateSwimmingPools()
+        updatePlayerWater()
     end
 end)

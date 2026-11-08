@@ -79,6 +79,7 @@ Config.SwimmingPools = {
         maxNpcs = 4,
         npcChance = 60,
         splashCooldown = 500,
+        diveRippleCooldown = 250,
         npcs = {
             {
                 model = 'a_f_y_bevhills_02',
