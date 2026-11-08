@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Vehicle Auction Moderation</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="auction-moderation" id="auction-moderation">
+        <div class="window">
+            <header>
+                <h1>Vehicle Auction Moderation</h1>
+                <p>Moderate auctions and view logs.</p>
+            </header>
+
+            <div class="moderation-options">
+                <input id="auction-input" placeholder="Enter auction ID">
+                <select id="action-select"></select>
+                <input id="note-input" maxlength="255" placeholder="Enter note">
+                <button id="moderate-button">Moderate Auction</button>
+            </div>
+
+            <div class="log-list" id="log-list"></div>
+
+            <button id="close-button">Close</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
