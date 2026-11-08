@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Menu</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="admin-menu" class="hidden">
+        <div class="menu-header">
+            <h1>Admin Menu</h1>
+            <button id="close-menu">Close</button>
+        </div>
+
+        <div class="menu-body">
+            <label>Target Player ID</label>
+            <input id="target-id" type="number" placeholder="Player ID">
+
+            <div class="section">
+                <h2>Self Tools</h2>
+                <button data-action="godmode" data-value="true">God Mode On</button>
+                <button data-action="godmode" data-value="false">God Mode Off</button>
+                <button data-action="invisibility" data-value="true">Invisible On</button>
+                <button data-action="invisibility" data-value="false">Invisible Off</button>
+                <button data-action="noclip" data-value="true">Noclip On</button>
+                <button data-action="noclip" data-value="false">Noclip Off</button>
+            </div>
+
+            <div class="section">
+                <h2>Player Tools</h2>
+                <button data-action="teleport">Teleport To Player</button>
+                <button data-action="heal">Heal Player</button>
+                <button data-action="revive">Revive Player</button>
+                <button data-action="freeze" data-value="true">Freeze Player</button>
+                <button data-action="freeze" data-value="false">Unfreeze Player</button>
+                <button data-action="inventory">View Inventory</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
