@@ -12,7 +12,8 @@ Config.Chickens = {
         panicDistance = 3.0,
         panicSpeed = 3.0,
         calmDistance = 6.0,
-        squawkInterval = 1500
+        squawkInterval = 1500,
+        featherInterval = 400
     }
 }
 

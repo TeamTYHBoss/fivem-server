@@ -24,7 +24,8 @@ local function spawnChicken(config)
             ped = ped,
             config = config,
             panicking = false,
-            lastSquawk = 0
+            lastSquawk = 0,
+            lastFeather = 0
         }
     end
 end
@@ -64,6 +65,35 @@ local function playPanicSound(chicken)
     )
 end
 
+local function dropFeathers(chicken)
+    local currentTime = GetGameTimer()
+
+    if currentTime - chicken.lastFeather < chicken.config.featherInterval then
+        return
+    end
+
+    chicken.lastFeather = currentTime
+
+    local chickenCoords = GetEntityCoords(chicken.ped)
+    local offsetX = math.random(-50, 50) / 100
+    local offsetY = math.random(-50, 50) / 100
+
+    UseParticleFxAssetNextCall('core')
+    StartParticleFxNonLoopedAtCoord(
+        'exp_grd_bzgas_smoke',
+        chickenCoords.x + offsetX,
+        chickenCoords.y + offsetY,
+        chickenCoords.z,
+        0.0,
+        0.0,
+        0.0,
+        0.4,
+        false,
+        false,
+        false
+    )
+end
+
 local function panicChicken(chicken, playerCoords)
     local config = chicken.config
     local chickenCoords = GetEntityCoords(chicken.ped)
@@ -85,6 +115,7 @@ local function panicChicken(chicken, playerCoords)
 
     chicken.panicking = true
     playPanicSound(chicken)
+    dropFeathers(chicken)
 end
 
 CreateThread(function()
@@ -128,6 +159,7 @@ CreateThread(function()
                         panicChicken(chicken, playerCoords)
                     else
                         playPanicSound(chicken)
+                        dropFeathers(chicken)
                     end
                 elseif chicken.panicking and distance > chicken.config.calmDistance then
                     chicken.panicking = false
