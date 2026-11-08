@@ -20,6 +20,15 @@ Config.TeleportTransition = {
         arrivalSoundSet = 'HUD_FRONTEND_DEFAULT_SOUNDSET',
         departureDelayMs = 0,
         arrivalDelayMs = 300
+    },
+    loadingScreen = {
+        enabled = true,
+        minimumMs = 1200,
+        maximumMs = 6000,
+        title = 'Loading Interior',
+        subtitle = 'Preparing the environment...',
+        backgroundColor = { 10, 10, 15 },
+        accentColor = { 0, 150, 255 }
     }
 }
 

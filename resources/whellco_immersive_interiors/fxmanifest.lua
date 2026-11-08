@@ -3,13 +3,16 @@ game 'gta5'
 
 author 'Chris Wheller'
 description 'QBCore-native immersive interiors, MLO streaming and interactive spaces'
-version '1.0.0'
+version '1.1.0'
 
 client_script 'client.lua'
 server_script 'server.lua'
 shared_script 'config.lua'
 
+ui_page 'html/index.html'
+
 files {
+    'html/index.html',
     'stream/**/*.ytd',
     'stream/**/*.ydr',
     'stream/**/*.ydd',

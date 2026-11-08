@@ -113,6 +113,42 @@ local function canTeleport()
     return true
 end
 
+local function showLoadingScreen(label)
+    local loading = Config.TeleportTransition.loadingScreen
+
+    if not loading or not loading.enabled then
+        return
+    end
+
+    SendNUIMessage({
+        action = 'showLoadingScreen',
+        title = loading.title,
+        subtitle = loading.subtitle,
+        interior = label,
+        backgroundColor = loading.backgroundColor,
+        accentColor = loading.accentColor
+    })
+
+    SetNuiFocus(true, false)
+end
+
+local function hideLoadingScreen(minimumMs)
+    local loading = Config.TeleportTransition.loadingScreen
+
+    if not loading or not loading.enabled then
+        return
+    end
+
+    local elapsed = GetGameTimer() - (hideLoadingScreen.startedAt or GetGameTimer())
+
+    if elapsed < minimumMs then
+        Wait(minimumMs - elapsed)
+    end
+
+    SendNUIMessage({ action = 'hideLoadingScreen' })
+    SetNuiFocus(false, false)
+end
+
 local function teleportPlayer(interiorId, coords, label)
     if not canTeleport() then
         return
@@ -122,6 +158,12 @@ local function teleportPlayer(interiorId, coords, label)
 
     local transition = Config.TeleportTransition
     local audio = transition.audio or {}
+    local loading = transition.loadingScreen or {}
+
+    if loading.enabled then
+        hideLoadingScreen.startedAt = GetGameTimer()
+        showLoadingScreen(label)
+    end
 
     if transition.enabled then
         if audio.enabled then
@@ -137,6 +179,14 @@ local function teleportPlayer(interiorId, coords, label)
         while not IsScreenFadedOut() do
             Wait(10)
         end
+    end
+
+    local loaded = requestInterior(interiorId)
+
+    if not loaded then
+        hideLoadingScreen(loading.minimumMs or 0)
+        QBCore.Functions.Notify('Interior could not be loaded.', 'error')
+        return
     end
 
     local playerPed = PlayerPedId()
@@ -159,6 +209,8 @@ local function teleportPlayer(interiorId, coords, label)
         DoScreenFadeIn(transition.fadeInMs)
     end
 
+    hideLoadingScreen(loading.minimumMs or 0)
+
     QBCore.Functions.Notify(('Teleported to %s.'):format(label), 'success')
 end
 
@@ -167,18 +219,16 @@ RegisterNetEvent('whellco_immersive_interiors:teleport', function(data)
         return
     end
 
-    local interiorId = data.interiorId
-
-    if not requestInterior(interiorId) then
-        QBCore.Functions.Notify('Interior could not be loaded.', 'error')
-        return
-    end
-
-    teleportPlayer(interiorId, data.coords, data.label)
+    teleportPlayer(data.interiorId, data.coords, data.label)
 end)
 
 RegisterNetEvent('whellco_immersive_interiors:notify', function(message, type)
     QBCore.Functions.Notify(message, type or 'primary')
+end)
+
+RegisterNUICallback('closeLoadingScreen', function(_, cb)
+    SetNuiFocus(false, false)
+    cb('ok')
 end)
 
 CreateThread(function()

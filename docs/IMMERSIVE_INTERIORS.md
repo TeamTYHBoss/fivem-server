@@ -1,6 +1,6 @@
 # Immersive Interiors
 
-`whellco_immersive_interiors` provides QBCore-native custom MLO interiors, seamless entry and exit points, job-gated rooms, interactive interior locations, and polished teleport transitions with audio cues and cooldown protection.
+`whellco_immersive_interiors` provides QBCore-native custom MLO interiors, seamless entry and exit points, job-gated rooms, interactive interior locations, teleport transitions, audio cues, cooldown protection, and a loading screen for heavy map transitions.
 
 ## Startup order
 
@@ -11,17 +11,37 @@ ensure whellco_qbcore
 ensure whellco_immersive_interiors
 ```
 
+## Loading screen
+
+```lua
+Config.TeleportTransition.loadingScreen = {
+    enabled = true,
+    minimumMs = 1200,
+    maximumMs = 6000,
+    title = 'Loading Interior',
+    subtitle = 'Preparing the environment...',
+    backgroundColor = { 10, 10, 15 },
+    accentColor = { 0, 150, 255 }
+}
+```
+
+- The loading screen appears before a heavy interior transition.
+- It remains visible for at least `minimumMs`.
+- It is automatically hidden after the interior loads and the teleport transition completes.
+- The title, subtitle, background colour, and accent colour are configurable.
+- Set `enabled = false` to disable the loading screen.
+
 ## Teleport transitions
 
 ```lua
 Config.TeleportTransition = {
     enabled = true,
+    cooldownMs = 5000,
     fadeOutMs = 400,
     fadeInMs = 500,
     particleEffect = 'scr_reconstructiontrust',
     particleName = 'scr_reconstruction_trust',
     particleDurationMs = 900,
-    cooldownMs = 5000,
     audio = {
         enabled = true,
         departureSound = 'CHECKPOINT_PERFECT',
@@ -33,12 +53,6 @@ Config.TeleportTransition = {
     }
 }
 ```
-
-- `cooldownMs` prevents teleport spam.
-- The default cooldown is 5 seconds.
-- Set `cooldownMs = 0` to disable the cooldown.
-- The cooldown applies to both normal interior entry/exit and `/interiortp`.
-- Players receive a QBCore notification showing the remaining cooldown.
 
 ## Admin teleport commands
 
