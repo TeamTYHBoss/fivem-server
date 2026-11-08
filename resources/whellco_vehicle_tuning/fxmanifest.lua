@@ -2,12 +2,14 @@ fx_version 'cerulean'
 game 'gta5'
 
 author 'Chris Wheller'
-description 'QBCore-native vehicle tuning system'
-version '2.0.0'
+description 'QBCore-compatible vehicle tuning and mod system'
+version '1.0.0'
 
-server_script 'server.lua'
 client_script 'client.lua'
+server_script 'server.lua'
+shared_script 'config.lua'
 
 dependencies {
-    'qb-core'
+    'qb-core',
+    'oxmysql'
 }
