@@ -17,6 +17,10 @@ local function notify(source, message, kind)
     TriggerClientEvent('QBCore:Notify', source, message, kind or 'primary', 5000)
 end
 
+local function trim(value)
+    return (value:gsub('^%s+', '')):gsub('%s+$', '')
+end
+
 local function isOnCooldown(source)
     local now = GetGameTimer()
     local lastAction = actionCooldowns[source] or 0
@@ -382,7 +386,7 @@ RegisterNetEvent('whellco_computer:createPost', function(content)
         return
     end
 
-    content = content:trim()
+    content = trim(content)
 
     if #content == 0 or #content > 500 then
         notify(source, 'Post must be between 1 and 500 characters.', 'error')
@@ -418,7 +422,7 @@ RegisterNetEvent('whellco_computer:createComment', function(postId, content)
         return
     end
 
-    content = content:trim()
+    content = trim(content)
 
     if #content == 0 or #content > 300 then
         notify(source, 'Comment must be between 1 and 300 characters.', 'error')
