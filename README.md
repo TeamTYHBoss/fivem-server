@@ -2,6 +2,14 @@
 
 This repository contains the FiveM server resources and documentation.
 
+## Refactor status
+
+The computer resource is now split into focused server and UI modules. Shared helpers live in `whellco_utils`, reducing duplicated notification, cooldown, validation, and formatting logic.
+
+The computer client callback names and database schema remain unchanged, so existing UI and SQL setups continue to work.
+
+IPTV now supports trusted-domain allowlisting and short-lived playlist caching.
+
 ## Bugs and errors squashed
 
 The following bugs, errors, and reliability issues have been fixed and pushed to the repository.
@@ -18,6 +26,8 @@ The following bugs, errors, and reliability issues have been fixed and pushed to
 - Added `/computerresolve <id>` to resolve recovery records.
 - Added cooldown cleanup when players disconnect.
 - Preserved recovery states and rollback behavior for failed transfers and marketplace purchases.
+- Split the computer server into `bank`, `shop`, `marketplace`, `social`, and `notifications` modules.
+- Added a shared `whellco_utils` resource for notifications, player lookup, cooldowns, validation, JSON handling, and money formatting.
 
 ### Fast food
 
@@ -47,6 +57,7 @@ The following bugs, errors, and reliability issues have been fixed and pushed to
 - Added IPv6 loopback, link-local, and unique-local address checks.
 - Ensured only channels with both a name and a valid URL are returned.
 - Preserved TV remote ownership, channel selection, and last-channel saving.
+- Added trusted-domain allowlisting and short-lived playlist caching.
 
 ### Weather
 
@@ -69,6 +80,31 @@ The following bugs, errors, and reliability issues have been fixed and pushed to
 
 `whellco_computer` adds an in-game computer with banking, shopping, a player marketplace, bank transfers, social posts, comments, and notifications.
 
+The server is now modular:
+
+- `server/main.lua` contains shared state, recovery commands, and player-disconnect cleanup.
+- `server/bank.lua` handles balances, transfers, transfer history, and recovery records.
+- `server/shop.lua` handles shop data and purchases.
+- `server/marketplace.lua` handles listings, cancellations, and purchases.
+- `server/social.lua` handles posts and comments.
+- `server/notifications.lua` handles notification retrieval and read state.
+
+The UI is split into `state.js`, `api.js`, `render.js`, and `events.js`. The existing `script.js` remains available until the modular UI is wired into `index.html`.
+
+## Shared utilities
+
+`whellco_utils` provides shared server and client helpers:
+
+- Player lookup by source or citizen ID.
+- QBCore notifications.
+- Per-player cooldowns.
+- Positive-integer validation.
+- Safe JSON encoding and decoding.
+- Money formatting.
+- String trimming.
+
+Ensure `ensure whellco_utils` runs before `ensure whellco_computer` in `server.cfg`.
+
 ## Computer marketplace metadata
 
 Marketplace listings now use server-side inventory metadata. When a player creates a listing, the server reads metadata from that player’s actual inventory item rather than trusting metadata sent by the client.
@@ -89,6 +125,19 @@ Failed or interrupted marketplace operations can be marked as `recovery`. Admini
 The IPTV resource uses a 10-second callback timeout. If an external playlist host is slow or unreachable, the TV returns an empty channel list after 10 seconds.
 
 FiveM’s `PerformHttpRequest` does not provide a reliable way to cancel an in-progress request. The timeout therefore prevents the UI callback from hanging, but the underlying request may still complete later. For production servers, use trusted playlist sources or an allowlist of playlist domains.
+
+## IPTV playlist security
+
+IPTV playlist requests are restricted to trusted domains. Add allowed hosts to `Config.TrustedPlaylistDomains`, for example:
+
+```lua
+Config.TrustedPlaylistDomains = {
+    'raw.githubusercontent.com',
+    'gist.githubusercontent.com'
+}
+```
+
+Parsed playlists are cached for `Config.PlaylistCacheSeconds`. This reduces repeated external requests while keeping channel data reasonably fresh.
 
 ## Fast food cooldowns
 
@@ -123,3 +172,4 @@ Both values must be at least 1. Invalid or non-positive values fall back to safe
 - Marketplace listing metadata is read from the seller’s server-side inventory item.
 - Bank transfers create durable records before debiting senders.
 - Notification ownership is validated server-side.
+- IPTV playlist hosts are restricted to the configured trusted-domain allowlist.
