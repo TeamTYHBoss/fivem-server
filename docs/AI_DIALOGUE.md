@@ -43,6 +43,21 @@ Players stand near a configured NPC and use:
 
 The server validates the QBCore player, NPC, prompt length, cooldown, and blocked phrases before sending a request.
 
+## Asynchronous HTTP handling
+
+`PerformHttpRequest` is asynchronous. The AI dialogue server now passes a callback through the request functions and sends the player response only after the provider responds.
+
+The corrected flow is:
+
+1. Player sends a dialogue request.
+2. Server validates the QBCore player, NPC, prompt, cooldown, and blocked phrases.
+3. Server calls the selected provider asynchronously.
+4. Provider response is decoded safely with `pcall(json.decode, ...)`.
+5. The callback extracts the reply and sends it to the originating player.
+6. If the request fails or the response is malformed, the player receives an error notification and the server logs the failure.
+
+This prevents the prior issue where `return reply` inside the HTTP callback did not return a value from `callOpenAI` or `callAnthropic`.
+
 ## Dynamic events
 
 Administrators can generate an event:
@@ -74,3 +89,4 @@ The system requests a JSON event from the selected AI provider, validates the re
 - Blocked phrases prevent sensitive or exploit-related prompts.
 - AI output is truncated before being sent to clients.
 - Dynamic events use a JSON extraction and validation step before activation.
+- HTTP responses are decoded safely and handled through callbacks.
