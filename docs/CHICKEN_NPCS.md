@@ -36,6 +36,9 @@
 - Wet footprints fade out gradually over time.
 - Wet footprints last for 12 seconds.
 - Wet footprints fade over the final 4 seconds.
+- Chickens shake dry after getting wet.
+- Chickens shake after calming down.
+- Chickens shake every 3 seconds while wet.
 - Chickens calm down when the player is more than 6 metres away.
 - Calm chickens return to normal wandering.
 
@@ -62,6 +65,7 @@
 | `footprintInterval` | Time between footprint effects |
 | `flourInterval` | Time between flour effects |
 | `wetFootprintInterval` | Time between wet footprint effects |
+| `shakeInterval` | Time between shake effects |
 | `counters` | Counter locations that trigger flour |
 | `sinks` | Sink locations that trigger wet footprints |
 | `FootprintLifetime` | Total footprint lifetime |

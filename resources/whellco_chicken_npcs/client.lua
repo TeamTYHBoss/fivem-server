@@ -57,11 +57,13 @@ local function spawnChicken(config)
             ped = ped,
             config = config,
             panicking = false,
+            wet = false,
             lastSquawk = 0,
             lastFeather = 0,
             lastFootprint = 0,
             lastFlour = 0,
-            lastWetFootprint = 0
+            lastWetFootprint = 0,
+            lastShake = 0
         }
     end
 end
@@ -232,6 +234,35 @@ local function leaveWetFootprints(chicken)
     }
 end
 
+local function shakeDry(chicken)
+    local currentTime = GetGameTimer()
+
+    if currentTime - chicken.lastShake < chicken.config.shakeInterval then
+        return
+    end
+
+    chicken.lastShake = currentTime
+
+    local chickenCoords = GetEntityCoords(chicken.ped)
+
+    UseParticleFxAssetNextCall('core')
+    StartParticleFxNonLoopedAtCoord(
+        'exp_grd_bzgas_smoke',
+        chickenCoords.x,
+        chickenCoords.y,
+        chickenCoords.z,
+        0.0,
+        0.0,
+        0.0,
+        0.6,
+        false,
+        false,
+        false
+    )
+
+    chicken.wet = false
+end
+
 local function updateFootprints()
     local currentTime = GetGameTimer()
 
@@ -333,6 +364,7 @@ local function panicChicken(chicken, playerCoords)
     end
 
     if chicken.nearSink then
+        chicken.wet = true
         leaveWetFootprints(chicken)
     end
 end
@@ -408,11 +440,17 @@ CreateThread(function()
                         end
 
                         if nearSink then
+                            chicken.wet = true
                             leaveWetFootprints(chicken)
                         end
                     end
                 elseif chicken.panicking and distance > chicken.config.calmDistance then
                     chicken.panicking = false
+
+                    if chicken.wet then
+                        shakeDry(chicken)
+                    end
+
                     wanderChicken(chicken)
                 end
             end
