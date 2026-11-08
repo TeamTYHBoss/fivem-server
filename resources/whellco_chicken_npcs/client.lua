@@ -68,7 +68,8 @@ local function spawnChicken(config)
             lastFootprint = 0,
             lastFlour = 0,
             lastWetFootprint = 0,
-            lastShake = 0
+            lastShake = 0,
+            lastShiver = 0
         }
     end
 end
@@ -284,6 +285,22 @@ local function shakeDry(chicken)
     chicken.wet = false
 end
 
+local function shiverChicken(chicken)
+    local currentTime = GetGameTimer()
+
+    if currentTime - chicken.lastShiver < chicken.config.shiverInterval then
+        return
+    end
+
+    chicken.lastShiver = currentTime
+
+    local chickenCoords = GetEntityCoords(chicken.ped)
+    local offsetX = math.random(-10, 10) / 100
+    local offsetY = math.random(-10, 10) / 100
+
+    SetEntityCoords(chicken.ped, chickenCoords.x + offsetX, chickenCoords.y + offsetY, chickenCoords.z, false, false, false, false)
+end
+
 local function updateDroplets()
     local currentTime = GetGameTimer()
 
@@ -429,7 +446,7 @@ end
 
 CreateThread(function()
     while true do
-        Wait(0)
+        Wait(500)
 
         local playerCoords = GetEntityCoords(PlayerPedId())
 
@@ -506,6 +523,7 @@ CreateThread(function()
                     chicken.panicking = false
 
                     if chicken.wet then
+                        shiverChicken(chicken)
                         shakeDry(chicken)
                     end
 
