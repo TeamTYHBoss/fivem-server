@@ -9,11 +9,12 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 900px;
+    width: 1000px;
     background: #111;
     border-radius: 10px;
     padding: 15px;
     color: white;
+    display: none;
 }
 
 #tv-screen {
@@ -52,4 +53,40 @@ button:hover {
 
 #channel-name {
     font-size: 16px;
+}
+
+#channel-list {
+    margin-top: 15px;
+    background: #181818;
+    border-radius: 6px;
+    padding: 10px;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+#channel-list h3 {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+}
+
+#channel-items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+#channel-items li {
+    padding: 8px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+#channel-items li:hover {
+    background: #2a2a2a;
+}
+
+#channel-items li.active {
+    background: #3a3a3a;
+    font-weight: bold;
 }

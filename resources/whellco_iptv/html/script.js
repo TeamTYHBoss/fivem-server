@@ -8,6 +8,7 @@ window.addEventListener('message', function(event) {
         channels = data.channels || [];
         currentChannel = data.currentChannel || 1;
         document.getElementById('tv-container').style.display = 'block';
+        renderChannelList();
         setChannel(currentChannel);
     }
 
@@ -20,6 +21,29 @@ window.addEventListener('message', function(event) {
         setChannel(data.channel);
     }
 });
+
+function renderChannelList() {
+    const list = document.getElementById('channel-items');
+    list.innerHTML = '';
+
+    channels.forEach(function(channel, index) {
+        const item = document.createElement('li');
+        item.textContent = channel.name || ('Channel ' + (index + 1));
+        item.dataset.index = index + 1;
+
+        if (index + 1 === currentChannel) {
+            item.classList.add('active');
+        }
+
+        item.addEventListener('click', function() {
+            currentChannel = index + 1;
+            setChannel(channel);
+            renderChannelList();
+        });
+
+        list.appendChild(item);
+    });
+}
 
 function setChannel(channel) {
     if (!channel) {

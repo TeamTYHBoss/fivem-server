@@ -1,6 +1,6 @@
 # IPTV
 
-`whellco_iptv` adds working TVs that use an M3U playlist. Players need a TV remote to use the TV and can flick through channels.
+`whellco_iptv` adds working TVs that use an M3U playlist. Players need a TV remote to use the TV and can flick through channels using the channel selection UI.
 
 ## Playlist
 
@@ -18,6 +18,15 @@ https://raw.githubusercontent.com/TeamTYHBoss/IPTV/refs/heads/main/IPTV.m3u8
 - Without the remote, players cannot open the TV.
 - The server validates remote ownership.
 
+## Channel selection UI
+
+- The TV screen includes a channel list.
+- Players can click a channel to select it.
+- The selected channel is highlighted.
+- The selected channel starts playing.
+- The channel name is shown above the list.
+- Players can still use arrow keys to change channels.
+
 ## TV channels
 
 - The server fetches the M3U playlist.
@@ -34,6 +43,7 @@ https://raw.githubusercontent.com/TeamTYHBoss/IPTV/refs/heads/main/IPTV.m3u8
 | Right arrow | Next channel |
 | Left arrow | Previous channel |
 | Esc | Close TV |
+| Click | Select channel |
 
 ## TV locations
 
@@ -52,6 +62,7 @@ https://raw.githubusercontent.com/TeamTYHBoss/IPTV/refs/heads/main/IPTV.m3u8
 - TV interaction prompt.
 - TV close prompt.
 - TV remote requirement.
+- Channel selection UI.
 
 ## Security
 
