@@ -177,7 +177,7 @@ View fast food help:
 
 ## Weather
 
-`whellco_weather` adds realistic weather, real-time clock sync, streetlights, house window lights, TV-style window flicker, curtains, silhouettes, nearby-only spawning, and entity pooling.
+`whellco_weather` adds realistic weather, real-time clock sync, streetlights, house window lights, TV-style window flicker, curtains, silhouettes, nearby-only spawning, entity pooling, swimming pools, water splashes, and dive ripples.
 
 ## Weather features
 
@@ -197,6 +197,11 @@ View fast food help:
 - Nearby-only spawning for buildings, NPCs, and items.
 - Entity pooling to reduce lag.
 - Network traffic optimization for distant players.
+- Working swimming pools.
+- Random NPC spawning at pools.
+- NPCs that swim in pools.
+- Water splash particles and sound effects.
+- Dive ripples when players enter water.
 
 ## Weather time
 
@@ -253,6 +258,41 @@ View fast food help:
 - Distant players receive fewer updates.
 - Distant players receive less weather, time, and entity data.
 
+## Swimming pools
+
+- Working swimming pools allow players to swim.
+- Players can swim in configured pool areas.
+- NPCs randomly spawn at swimming pools.
+- Some NPCs swim in the pool.
+- Other NPCs stand or sit near the pool.
+- NPCs spawn only when a player is nearby.
+- NPCs are removed when the player moves away.
+- Pool NPC count is configurable.
+- Pool NPC spawn chance is configurable.
+- Pool NPC models and positions are configurable.
+
+## Water splashes
+
+- Water splash particles appear when NPCs swim.
+- Water splash sound effects play when NPCs swim.
+- Splashes appear when an NPC enters the pool.
+- Splashes appear while an NPC is swimming.
+- Splashes are limited by a cooldown.
+- Splash cooldown is configurable.
+- Splashes only happen when a player is nearby.
+- Splashes are removed when the player moves away.
+
+## Dive ripples
+
+- Ripples trigger when players dive into water.
+- Ripples appear when a player enters water.
+- Ripples use a larger particle effect.
+- Ripples use a stronger splash sound.
+- Ripples have a shorter cooldown than normal splashes.
+- Ripples only trigger once when entering water.
+- Ripples do not repeat while a player stays in water.
+- Ripples reset when the player leaves water.
+
 ## Weather commands
 
 View current weather:
@@ -296,4 +336,8 @@ View current weather:
 - Added curtains, blinds, and silhouettes behind curtains.
 - Added nearby-only spawning and entity pooling.
 - Added network traffic optimization for distant players.
+- Added working swimming pools.
+- Added random NPC spawning and swimming NPCs.
+- Added water splash particles and sound effects.
+- Added dive ripples when players enter water.
 - Updated documentation to cover all fast food, IPTV, and weather features.
