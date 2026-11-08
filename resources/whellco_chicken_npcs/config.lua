@@ -1,0 +1,16 @@
+Config = {}
+
+Config.Chickens = {
+    {
+        id = 'cluckin_good_kitchen_chicken',
+        label = 'Kitchen Chicken',
+        model = 'a_c_chickenhawk',
+        coords = vector3(-268.0, -955.0, 31.0),
+        heading = 0.0,
+        wanderRadius = 5.0,
+        wanderInterval = 8000
+    }
+}
+
+Config.SpawnDistance = 30.0
+Config.DespawnDistance = 40.0
