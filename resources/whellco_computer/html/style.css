@@ -6,7 +6,7 @@ body {
 }
 
 .hidden {
-    display: none;
+    display: none !important;
 }
 
 #computer {
@@ -67,6 +67,14 @@ body {
     background: #3b82f6;
 }
 
+.badge {
+    background: #d33;
+    border-radius: 10px;
+    padding: 2px 7px;
+    margin-left: 5px;
+    font-size: 12px;
+}
+
 .panel {
     display: none;
     padding: 18px;
@@ -84,6 +92,10 @@ body {
     margin: 16px 0;
 }
 
+button, input, textarea {
+    font-family: inherit;
+}
+
 button {
     background: #3b82f6;
     border: 0;
@@ -93,26 +105,35 @@ button {
     cursor: pointer;
 }
 
-.shop-item {
+input, textarea {
+    width: 100%;
+    background: #1c2025;
+    color: white;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+}
+
+textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+.shop-item, .listing, .transfer, .notification {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 10px;
     background: #1c2025;
     padding: 12px;
     border-radius: 8px;
     margin-bottom: 10px;
 }
 
-textarea {
-    width: 100%;
-    min-height: 80px;
-    background: #1c2025;
-    color: white;
-    border: 1px solid #333;
-    border-radius: 8px;
-    padding: 10px;
-    resize: vertical;
-    box-sizing: border-box;
+.notification.unread {
+    border-left: 4px solid #3b82f6;
 }
 
 .post {

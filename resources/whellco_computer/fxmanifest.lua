@@ -2,17 +2,23 @@ fx_version 'cerulean'
 game 'gta5'
 
 author 'TeamTYHBoss'
-description 'Computer system with bank, shop, and social media'
-version '1.0.0'
+description 'Computer system with bank, shop, marketplace, transfers, notifications, and social media'
+version '1.1.0'
 
-client_scripts {
-    'client.lua',
+dependency 'qb-core'
+dependency 'oxmysql'
+
+shared_scripts {
     'config.lua'
 }
 
+client_scripts {
+    'client.lua'
+}
+
 server_scripts {
-    'server.lua',
-    'config.lua'
+    '@oxmysql/lib/MySQL.lua',
+    'server.lua'
 }
 
 ui_page 'html/index.html'

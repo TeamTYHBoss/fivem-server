@@ -15,22 +15,46 @@
             <div class="tabs">
                 <button class="tab active" data-tab="bank">Bank</button>
                 <button class="tab" data-tab="shop">Shop</button>
+                <button class="tab" data-tab="marketplace">Marketplace</button>
                 <button class="tab" data-tab="social">Social</button>
+                <button class="tab" data-tab="notifications">Notifications <span id="unread-count" class="badge hidden">0</span></button>
             </div>
             <div id="bank" class="panel active">
                 <h2>Bank Balance</h2>
                 <div id="balance">$0</div>
                 <button id="refresh-balance">Refresh</button>
+                <h3>Transfer Money</h3>
+                <input id="transfer-recipient" placeholder="Recipient citizen ID">
+                <input id="transfer-amount" type="number" min="1" placeholder="Amount">
+                <button id="send-transfer">Send Transfer</button>
+                <h3>Transfer History</h3>
+                <div id="transfers"></div>
             </div>
             <div id="shop" class="panel">
                 <h2>Shop</h2>
                 <div id="shop-items"></div>
+            </div>
+            <div id="marketplace" class="panel">
+                <h2>Marketplace</h2>
+                <h3>Create Listing</h3>
+                <input id="listing-item" placeholder="Item name">
+                <input id="listing-quantity" type="number" min="1" placeholder="Quantity">
+                <input id="listing-price" type="number" min="1" placeholder="Price">
+                <button id="create-listing">List Item</button>
+                <h3>Active Listings</h3>
+                <button id="refresh-marketplace">Refresh</button>
+                <div id="listings"></div>
             </div>
             <div id="social" class="panel">
                 <h2>Facewall</h2>
                 <textarea id="post-content" placeholder="What is happening?"></textarea>
                 <button id="create-post">Post</button>
                 <div id="posts"></div>
+            </div>
+            <div id="notifications" class="panel">
+                <h2>Notifications</h2>
+                <button id="refresh-notifications">Refresh</button>
+                <div id="notifications-list"></div>
             </div>
         </div>
     </div>

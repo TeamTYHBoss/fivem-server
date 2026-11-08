@@ -2,6 +2,93 @@
 
 This repository contains the FiveM server resources and documentation.
 
+## Computer resource
+
+`whellco_computer` adds an in-game computer with banking, shopping, a player marketplace, bank transfers, social posts, comments, and notifications.
+
+## Computer features
+
+- Bank balance display.
+- Shop purchases.
+- Marketplace listings, purchases, and cancellations.
+- Bank transfers with request IDs and transfer history.
+- Persistent social posts and comments.
+- Comment notifications.
+- Notification bell, unread count, and mark-as-read support.
+- `/computer` command.
+- Escape closes the computer.
+
+## Computer controls
+
+| Control | Action |
+|---|---|
+| E | Use a nearby computer |
+| `/computer` | Open the computer anywhere |
+| Esc | Close the computer |
+| X button | Close the computer |
+
+## Computer tabs
+
+### Bank
+
+Displays the bank balance and supports transfers to online players. Transfers use request IDs to prevent duplicate submissions and are completed through a database transaction. Transfer history shows sender, recipient, amount, and status.
+
+### Shop
+
+Displays configured shop items and purchases them with bank money. The item is added before payment is removed, preventing players from being charged when their inventory is full.
+
+### Marketplace
+
+Lets players create, browse, buy, and cancel listings. A purchase first conditionally claims the active listing in the database; only the player whose update affects a row can continue. The listing then moves through `pending` to `sold`, with rollback and recovery handling for failures.
+
+### Social
+
+Posts and comments are stored in the database, so they survive resource and server restarts. Commenting on another player’s post creates a notification for that player.
+
+### Notifications
+
+Shows transfer, marketplace, and comment notifications. Players can mark notifications as read, and the notification tab displays an unread count.
+
+## Database setup
+
+Run `resources/whellco_computer/sql/upgrade.sql` before starting the resource. It creates the state, posts, comments, messages, notifications, listings, and transfers tables.
+
+## Dependencies
+
+- `qb-core`
+- `oxmysql`
+
+## Recent computer fixes
+
+- Added `/computer` command.
+- Added Escape support to close the computer.
+- Added `getShop` NUI callback.
+- Added Marketplace tab with listing creation, purchase, and cancellation.
+- Added Bank transfer form and transfer-history list.
+- Added request-ID generation for transfers.
+- Added Notifications tab, notification bell, unread count, and mark-as-read support.
+- Added ownership checks for notification updates.
+- Added persistent social posts and comments.
+- Added database-backed comment notifications.
+- Added transactional transfer completion and notification creation.
+- Added conditional marketplace listing claims to prevent duplicate purchases.
+- Added rollback and recovery states for failed marketplace purchases and cancellations.
+- Added server-side limits for transfer amounts, listing quantities, and listing prices.
+- Added metadata validation for marketplace listings.
+- Added oxmysql dependency and MySQL library loading.
+- Made configuration shared between client and server.
+- Improved client proximity-loop performance.
+- Fixed shop purchases so inventory-full purchases do not charge the player.
+- Fixed social post and comment rendering to use safe DOM text updates.
+- Fixed oxmysql transaction parameter format.
+- Added automatic notification refresh while the computer is open.
+
+## Remaining limitations
+
+- Marketplace and transfer money/inventory operations still depend on QBCore runtime state; a server crash between database and QBCore operations may require manual reconciliation.
+- On resource restart, incomplete `pending` marketplace listings are marked `recovery` to prevent duplicate sales; administrators should inspect and resolve those records manually.
+- The mini browser is not yet implemented.
+
 ## Fast Food Restaurants
 
 `whellco_fast_food` adds fast food restaurants where players can purchase food and drinks. The system includes counter ordering, cashier food-bag handovers, player-held food bags, and eating food directly from the bag.
@@ -199,7 +286,7 @@ View fast food help:
 - Network traffic optimization for distant players.
 - Working swimming pools.
 - Random NPC spawning at pools.
-- NPCs that swim in pools.
+- NPCs swim in pools.
 - Water splash particles and sound effects.
 - Dive ripples when players enter water.
 
@@ -237,7 +324,6 @@ View fast food help:
 - Flicker only happens at night.
 - Flicker stops during the day.
 - TV windows use a subtle blue tint.
-- The blue tint uses configurable RGB values.
 
 ## Curtains and silhouettes
 
@@ -263,10 +349,10 @@ View fast food help:
 - Working swimming pools allow players to swim.
 - Players can swim in configured pool areas.
 - NPCs randomly spawn at swimming pools.
-- Some NPCs swim in the pool.
-- Other NPCs stand or sit near the pool.
+- Some NPCs swim in pools.
+- Other NPCs stand or sit near pools.
 - NPCs spawn only when a player is nearby.
-- NPCs are removed when the player moves away.
+- NPCs are removed when a player moves away.
 - Pool NPC count is configurable.
 - Pool NPC spawn chance is configurable.
 - Pool NPC models and positions are configurable.
@@ -275,22 +361,18 @@ View fast food help:
 
 - Water splash particles appear when NPCs swim.
 - Water splash sound effects play when NPCs swim.
-- Splashes appear when an NPC enters the pool.
-- Splashes appear while an NPC is swimming.
-- Splashes are limited by a cooldown.
-- Splash cooldown is configurable.
-- Splashes only happen when a player is nearby.
-- Splashes are removed when the player moves away.
+- Splashes appear while a player enters water.
+- Splash cooldowns prevent repeated effects.
+- Splash effects only appear when a player is nearby.
+- Splash effects are removed when the player moves away.
 
 ## Dive ripples
 
 - Ripples trigger when players dive into water.
-- Ripples appear when a player enters water.
 - Ripples use a larger particle effect.
 - Ripples use a stronger splash sound.
 - Ripples have a shorter cooldown than normal splashes.
-- Ripples only trigger once when entering water.
-- Ripples do not repeat while a player stays in water.
+- Ripples only happen once when entering water.
 - Ripples reset when the player leaves water.
 
 ## Weather commands
@@ -318,6 +400,10 @@ View current weather:
 - Time is synced server-side.
 - Night time is synced server-side.
 - Weather changes are validated server-side.
+- Computer purchases, listings, transfers, posts, comments, and notifications are validated server-side.
+- Marketplace purchases use conditional database claims and transactions.
+- Bank transfers use request IDs and transactional completion.
+- Notification ownership is validated server-side.
 
 ## Recent changes
 
@@ -340,4 +426,7 @@ View current weather:
 - Added random NPC spawning and swimming NPCs.
 - Added water splash particles and sound effects.
 - Added dive ripples when players enter water.
-- Updated documentation to cover all fast food, IPTV, and weather features.
+- Added computer bank, shop, marketplace, transfers, social, and notifications.
+- Added computer transactional purchases and transfers.
+- Added persistent computer posts, comments, and notifications.
+- Updated documentation to cover all fast food, IPTV, weather, and computer features.
