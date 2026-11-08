@@ -25,6 +25,14 @@
 - The indicator says: `Crowd blend active`.
 - Leaving the crowd or moving too fast resumes suspicion growth.
 - Nearby NPCs turn to look at the player when blend state breaks.
+- If an NPC catches the player breaking blend, suspicion spikes instantly.
+
+## NPC detection
+
+- NPC detection chance is 40% when blend state breaks.
+- NPC suspicion spike is 50 points.
+- A detected break can immediately push suspicion close to detection threshold.
+- NPC reactions and detection are handled locally for responsive feedback.
 
 ## Guard challenges
 

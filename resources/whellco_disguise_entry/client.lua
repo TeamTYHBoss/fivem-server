@@ -49,13 +49,20 @@ end
 local function makePedsReact()
     local playerPed = PlayerPedId()
     local nearbyPeds = getNearbyPeds()
+    local detected = false
 
     for _, ped in ipairs(nearbyPeds) do
         if DoesEntityExist(ped) then
             TaskLookAtEntity(ped, playerPed, 3000, 2048, 3)
             TaskTurnPedToFaceEntity(ped, playerPed, 2000)
+
+            if math.random(100) <= Config.Disguise.NpcDetectionChance then
+                detected = true
+            end
         end
     end
+
+    return detected
 end
 
 local function updateSuspicionHud()
@@ -107,7 +114,11 @@ RegisterNetEvent('whellco_disguise_entry:apply', function(data)
                 updateSuspicionHud()
             else
                 if wasBlending then
-                    makePedsReact()
+                    local detected = makePedsReact()
+
+                    if detected then
+                        suspicion = math.min(Config.Disguise.SuspicionMax, suspicion + Config.Disguise.NpcSuspicionSpike)
+                    end
                 end
 
                 suspicion = math.min(Config.Disguise.SuspicionMax, suspicion + Config.Disguise.SuspicionPerSecond)
