@@ -118,6 +118,15 @@ Marketplace listings currently store empty metadata. This prevents clients from 
 
 `whellco_fast_food` adds fast food restaurants where players can purchase food and drinks. The system includes counter ordering, cashier food-bag handovers, player-held food bags, and eating food directly from the bag.
 
+## Fast food fixes
+
+- Added the missing `oxmysql` integration to the fast-food server script.
+- Made purchases inventory-safe by adding the food item before charging the player.
+- Added rollback so a failed payment removes the item that was added.
+- Added checks for `AddItem`, `RemoveMoney`, and `RemoveItem` results.
+- Made admin-job validation safe when `Config.AdminJobs` is not configured.
+- Retained purchase logging, food-bag handover, and eating functionality.
+
 ## What was added
 
 - Fast food restaurant locations.
@@ -232,6 +241,15 @@ View fast food help:
 ## IPTV
 
 `whellco_iptv` adds working TVs that players can use to watch channels and flick through them.
+
+## IPTV fixes
+
+- Added the missing `oxmysql` integration to the IPTV server script.
+- Validated playlist URLs as HTTP or HTTPS and limited playlist URLs to 2,048 characters.
+- Limited parsed playlists to 500 channels.
+- Validated saved channel values as integers from 1 through 1,000.
+- Added checks for remote `AddItem` and `RemoveItem` results.
+- Replaced the blocking last-channel database lookup with an asynchronous callback.
 
 ## IPTV features
 
@@ -454,4 +472,7 @@ View current weather:
 - Added computer bank, shop, marketplace, transfers, social, and notifications.
 - Added computer transactional purchases and transfers.
 - Added persistent computer posts, comments, and notifications.
+- Fixed fast-food purchases to add items before charging players and roll back items when payment fails.
+- Added missing fast-food and IPTV `oxmysql` integrations.
+- Added IPTV playlist, channel, and inventory validation.
 - Updated documentation to cover all fast food, IPTV, weather, and computer features.
