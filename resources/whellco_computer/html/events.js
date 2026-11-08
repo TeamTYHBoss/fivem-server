@@ -1,14 +1,14 @@
 document.addEventListener('click', async event => {
     const target = event.target;
 
-    if (ComputerState.pendingRequest) {
-        return;
-    }
-
     if (target.id === 'close') {
         ComputerState.isOpen = false;
         document.getElementById('computer').classList.add('hidden');
         postNui('escape');
+        return;
+    }
+
+    if (ComputerState.pendingRequest) {
         return;
     }
 
@@ -236,8 +236,10 @@ async function refreshSocial() {
 
 async function refreshNotifications() {
     const notifications = await getNotifications();
+    const unreadCount = await postNui('getUnreadCount');
 
     setNotifications(notifications);
+    setUnreadCount(unreadCount);
     renderNotifications();
 }
 
