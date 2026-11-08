@@ -31,13 +31,13 @@ document.addEventListener('click', async event => {
 
         if (tabName === 'bank') {
             await refreshBank();
-        } elseif (tabName === 'shop') {
+        } else if (tabName === 'shop') {
             await refreshShop();
-        } elseif (tabName === 'marketplace') {
+        } else if (tabName === 'marketplace') {
             await refreshMarketplace();
-        } elseif (tabName === 'social') {
+        } else if (tabName === 'social') {
             await refreshSocial();
-        } elseif (tabName === 'notifications') {
+        } else if (tabName === 'notifications') {
             await refreshNotifications();
         }
 
