@@ -1,6 +1,6 @@
 # Weather
 
-`whellco_weather` adds realistic weather and real-time clock sync. Streetlights turn on gradually as it gets darker, house windows light up at night, some windows flicker like a TV is on inside, TV windows have a subtle blue tint, some windows have curtains or blinds, silhouettes appear behind the curtains, nearby buildings, NPCs, and items spawn only, network traffic is optimized for distant players, spawned entities are pooled to reduce lag, and working swimming pools allow players and NPCs to swim.
+`whellco_weather` adds realistic weather and real-time clock sync. Streetlights turn on gradually as it gets darker, house windows light up at night, some windows flicker like a TV is on inside, TV windows have a subtle blue tint, some windows have curtains or blinds, silhouettes appear behind the curtains, nearby buildings, NPCs, and items spawn only, network traffic is optimized for distant players, spawned entities are pooled to reduce lag, and working swimming pools allow players and NPCs to swim with water splash particles and sound effects.
 
 ## Weather
 
@@ -106,6 +106,17 @@
 - Pool NPC count is configurable.
 - Pool NPC spawn chance is configurable.
 - Pool NPC models and positions are configurable.
+
+## Water splashes
+
+- Water splash particles appear when NPCs swim.
+- Water splash sound effects play when NPCs swim.
+- Splashes appear when an NPC enters the pool.
+- Splashes appear while an NPC is swimming.
+- Splashes are limited by a cooldown.
+- Splash cooldown is configurable.
+- Splashes only happen when a player is nearby.
+- Splashes are removed when the player moves away.
 
 ## Night time
 

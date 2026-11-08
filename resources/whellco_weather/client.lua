@@ -4,6 +4,7 @@ local streetLightLevel = 0.0
 local houseLights = {}
 local entityPools = {}
 local swimmingNpcs = {}
+local lastSplash = {}
 
 RegisterNetEvent('whellco_weather:setWeather', function(weather)
     if not weather then
@@ -219,6 +220,33 @@ local function updateHouseLights()
     end
 end
 
+local function playSplash(coords)
+    local now = GetGameTimer()
+
+    if lastSplash[coords.x .. coords.y .. coords.z] and now - lastSplash[coords.x .. coords.y .. coords.z] < 500 then
+        return
+    end
+
+    lastSplash[coords.x .. coords.y .. coords.z] = now
+
+    UseParticleFxAssetNextCall('core')
+    StartParticleFxNonLoopedAtCoord(
+        'water_splash',
+        coords.x,
+        coords.y,
+        coords.z,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        false,
+        false,
+        false
+    )
+
+    PlaySoundFromCoord(-1, 'SPLASH', coords.x, coords.y, coords.z, 'HUD_FRONTEND_DEFAULT_SOUNDSET', false, 0, false)
+end
+
 local function updateSwimmingPools()
     local playerCoords = GetEntityCoords(PlayerPedId())
 
@@ -251,11 +279,23 @@ local function updateSwimmingPools()
                             SetPedCoordsNoOffset(ped, npc.x, npc.y, npc.z, false, false, false)
                             SetPedConfigFlag(ped, 1, true)
                             TaskSwimToCoord(ped, npc.x + math.random(-5, 5), npc.y + math.random(-5, 5), npc.z)
+                            playSplash(vector3(npc.x, npc.y, npc.z))
                         else
                             FreezeEntityPosition(ped, true)
                         end
 
                         swimmingNpcs[pool.id][#swimmingNpcs[pool.id] + 1] = ped
+                    end
+                end
+            end
+
+            for _, ped in ipairs(swimmingNpcs[pool.id]) do
+                if DoesEntityExist(ped) then
+                    local pedCoords = GetEntityCoords(ped)
+                    local speed = GetEntitySpeed(ped)
+
+                    if speed > 0.5 and IsEntityInWater(ped) then
+                        playSplash(pedCoords)
                     end
                 end
             end

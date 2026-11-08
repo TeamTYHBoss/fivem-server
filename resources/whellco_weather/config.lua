@@ -78,6 +78,7 @@ Config.SwimmingPools = {
         activateDistance = 50.0,
         maxNpcs = 4,
         npcChance = 60,
+        splashCooldown = 500,
         npcs = {
             {
                 model = 'a_f_y_bevhills_02',
