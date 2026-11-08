@@ -1,6 +1,9 @@
 local QBCore = exports['qb-core']:GetCoreObject()
 
-local cooldowns = {}
+local playerRequests = {}
+local globalRequests = {}
+local activeRequests = 0
+local queue = {}
 
 local function isAllowed(npcId)
     return Config.AllowedNpcs[npcId] ~= nil
@@ -16,6 +19,81 @@ local function isBlocked(text)
     end
 
     return false
+end
+
+local function pruneTimestamps(timestamps, windowSeconds)
+    local now = os.time()
+    local valid = {}
+
+    for _, timestamp in ipairs(timestamps) do
+        if now - timestamp <= windowSeconds then
+            valid[#valid + 1] = timestamp
+        end
+    end
+
+    return valid
+end
+
+local function canRequest(source)
+    local limits = Config.RateLimits
+    local now = os.time()
+
+    playerRequests[source] = pruneTimestamps(playerRequests[source] or {}, limits.perPlayerWindowSeconds)
+    globalRequests = pruneTimestamps(globalRequests, limits.globalWindowSeconds)
+
+    if #playerRequests[source] >= limits.perPlayerMaxRequests then
+        return false, 'You have reached the AI dialogue limit. Please try again later.'
+    end
+
+    if #globalRequests >= limits.globalMaxRequests then
+        return false, 'AI dialogue is busy. Please try again shortly.'
+    end
+
+    if now - (cooldowns[source] or 0) < limits.perPlayerCooldownSeconds then
+        return false, 'Please wait before speaking again.'
+    end
+
+    return true
+end
+
+local function recordRequest(source)
+    local now = os.time()
+
+    playerRequests[source] = playerRequests[source] or {}
+    playerRequests[source][#playerRequests[source] + 1] = now
+    globalRequests[#globalRequests + 1] = now
+    cooldowns[source] = now
+end
+
+local function processQueue()
+    while activeRequests < Config.RateLimits.globalMaxConcurrent and #queue > 0 do
+        local job = table.remove(queue, 1)
+
+        if job then
+            activeRequests = activeRequests + 1
+            job.execute(function()
+                activeRequests = math.max(0, activeRequests - 1)
+                processQueue()
+            end)
+        end
+    end
+end
+
+local function enqueue(source, npc, prompt, callback)
+    if #queue >= Config.RateLimits.queueMaxSize then
+        TriggerClientEvent('QBCore:Notify', source, 'AI dialogue queue is full. Please try again shortly.', 'error')
+        return
+    end
+
+    queue[#queue + 1] = {
+        source = source,
+        npc = npc,
+        prompt = prompt,
+        callback = callback,
+        queuedAt = os.time()
+    }
+
+    processQueue()
 end
 
 local function request(url, body, headers, callback)
@@ -104,6 +182,34 @@ local function callAnthropic(prompt, systemPrompt, callback)
     )
 end
 
+local function dispatch(job, done)
+    local source = job.source
+    local npc = job.npc
+
+    local callback = function(reply, error)
+        if not reply then
+            TriggerClientEvent('QBCore:Notify', source, 'The NPC is unavailable right now.', 'error')
+            print(('[whellco_ai_dialogue] %s'):format(error or 'Unknown AI error'))
+        else
+            reply = tostring(reply):sub(1, Config.MaxResponseLength)
+
+            TriggerClientEvent('whellco_ai_dialogue:receive', source, {
+                npcId = job.npcId,
+                npcLabel = npc.label,
+                message = reply
+            })
+        end
+
+        done()
+    end
+
+    if Config.Provider == 'anthropic' then
+        callAnthropic(job.prompt, npc.systemPrompt, callback)
+    else
+        callOpenAI(job.prompt, npc.systemPrompt, callback)
+    end
+end
+
 RegisterNetEvent('whellco_ai_dialogue:send', function(npcId, message)
     local source = source
     local Player = QBCore.Functions.GetPlayer(source)
@@ -129,42 +235,59 @@ RegisterNetEvent('whellco_ai_dialogue:send', function(npcId, message)
         return
     end
 
-    local now = os.time()
-    local last = cooldowns[source] or 0
+    local allowed, error = canRequest(source)
 
-    if now - last < Config.CooldownSeconds then
-        TriggerClientEvent('QBCore:Notify', source, 'Please wait before speaking again.', 'error')
+    if not allowed then
+        TriggerClientEvent('QBCore:Notify', source, error, 'error')
         return
     end
 
-    cooldowns[source] = now
+    recordRequest(source)
 
     local npc = Config.AllowedNpcs[npcId]
     local prompt = ('Player: %s\nNPC: %s'):format(Player.PlayerData.charinfo.firstname, message)
 
-    local callback = function(reply, error)
-        if not reply then
-            TriggerClientEvent('QBCore:Notify', source, 'The NPC is unavailable right now.', 'error')
-            print(('[whellco_ai_dialogue] %s'):format(error or 'Unknown AI error'))
-            return
+    enqueue(source, npc, prompt, function()
+        -- Placeholder to retain a stable queue interface.
+    end)
+
+    -- Dispatch immediately through the queue-controlled worker.
+    local job = queue[#queue]
+
+    if job then
+        job.npcId = npcId
+        job.execute = function(done)
+            dispatch(job, done)
         end
 
-        reply = tostring(reply):sub(1, Config.MaxResponseLength)
-
-        TriggerClientEvent('whellco_ai_dialogue:receive', source, {
-            npcId = npcId,
-            npcLabel = npc.label,
-            message = reply
-        })
+        processQueue()
     end
+end)
 
-    if Config.Provider == 'anthropic' then
-        callAnthropic(prompt, npc.systemPrompt, callback)
-    else
-        callOpenAI(prompt, npc.systemPrompt, callback)
+CreateThread(function()
+    while true do
+        Wait(5000)
+
+        local now = os.time()
+        local remaining = {}
+
+        for index = #queue, 1, -1 do
+            local job = queue[index]
+
+            if now - job.queuedAt > Config.RateLimits.queueTimeoutSeconds then
+                TriggerClientEvent('QBCore:Notify', job.source, 'AI dialogue request timed out.', 'error')
+                table.remove(queue, index)
+            else
+                remaining[#remaining + 1] = job
+            end
+        end
+
+        queue = remaining
+        processQueue()
     end
 end)
 
 AddEventHandler('playerDropped', function()
     cooldowns[source] = nil
+    playerRequests[source] = nil
 end)

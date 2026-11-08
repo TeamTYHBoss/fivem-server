@@ -32,6 +32,37 @@ In each resource’s `config.lua`:
 Config.Provider = 'openai' -- or 'anthropic'
 ```
 
+## Rate limits
+
+```lua
+Config.RateLimits = {
+    perPlayerCooldownSeconds = 8,
+    perPlayerWindowSeconds = 300,
+    perPlayerMaxRequests = 8,
+    globalWindowSeconds = 60,
+    globalMaxRequests = 30,
+    globalMaxConcurrent = 3,
+    queueMaxSize = 25,
+    queueTimeoutSeconds = 20
+}
+```
+
+- Each player may send at most 8 requests in any rolling 5-minute period.
+- Each player must wait at least 8 seconds between requests.
+- The server allows at most 30 requests in any rolling 60-second period.
+- No more than 3 provider requests run concurrently.
+- The queue holds up to 25 waiting requests.
+- Requests older than 20 seconds are removed from the queue and the player receives a timeout notification.
+
+## Request queue
+
+1. Player submits a dialogue request.
+2. Server validates QBCore identity, NPC, prompt, cooldown, and rolling rate limits.
+3. Valid requests enter a bounded queue.
+4. Up to three requests are dispatched concurrently.
+5. When a provider response arrives, the queue worker starts the next request.
+6. Expired queue entries are removed and players are notified.
+
 ## NPC dialogue
 
 Players stand near a configured NPC and use:
@@ -41,22 +72,9 @@ Players stand near a configured NPC and use:
 /aiclear
 ```
 
-The server validates the QBCore player, NPC, prompt length, cooldown, and blocked phrases before sending a request.
-
 ## Asynchronous HTTP handling
 
-`PerformHttpRequest` is asynchronous. The AI dialogue server now passes a callback through the request functions and sends the player response only after the provider responds.
-
-The corrected flow is:
-
-1. Player sends a dialogue request.
-2. Server validates the QBCore player, NPC, prompt, cooldown, and blocked phrases.
-3. Server calls the selected provider asynchronously.
-4. Provider response is decoded safely with `pcall(json.decode, ...)`.
-5. The callback extracts the reply and sends it to the originating player.
-6. If the request fails or the response is malformed, the player receives an error notification and the server logs the failure.
-
-This prevents the prior issue where `return reply` inside the HTTP callback did not return a value from `callOpenAI` or `callAnthropic`.
+`PerformHttpRequest` is asynchronous. The AI dialogue server passes a callback through the request functions and sends the player response only after the provider responds.
 
 ## Dynamic events
 
@@ -69,8 +87,6 @@ aievent search
 aievent rescue
 aievent community
 ```
-
-The system requests a JSON event from the selected AI provider, validates the response, announces it to players, and rewards completion through QBCore money and XP metadata.
 
 ## QBCore integration
 
@@ -85,8 +101,7 @@ The system requests a JSON event from the selected AI provider, validates the re
 
 - API keys are server-side only.
 - Player prompts are length-limited.
-- Requests are cooldown-limited.
+- Requests are cooldown-, rolling-window-, concurrency-, and queue-limited.
 - Blocked phrases prevent sensitive or exploit-related prompts.
 - AI output is truncated before being sent to clients.
-- Dynamic events use a JSON extraction and validation step before activation.
 - HTTP responses are decoded safely and handled through callbacks.
