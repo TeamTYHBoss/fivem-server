@@ -36,8 +36,9 @@ source database/whellco_anticheat.sql
 - Warning threshold: 20 points.
 - Kick threshold: 50 points.
 - Quarantine threshold: 80 points.
-- Automatic permanent bans are disabled by default.
-- High-confidence events create staff review cases.
+- Permanent ban threshold: 100 points.
+- Automatic permanent bans are enabled by default.
+- High-confidence events create audit records before enforcement.
 
 ## Detection layers
 
@@ -68,6 +69,6 @@ View anti-cheat information:
 
 - Detection and enforcement run server-side.
 - Client reports are treated as signals, not proof.
-- Automatic permanent bans are disabled by default.
-- Staff review is required for permanent action.
+- Automatic permanent bans are enabled by default.
+- Permanent bans require a score of 100 or higher.
 - Audit trails store detection, score, and case details.

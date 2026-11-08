@@ -32,7 +32,20 @@ local function addScore(source, amount, reason)
 
     local score = playerScores[source]
 
-    if score >= Config.Enforcement.QuarantineThreshold then
+    if Config.Enforcement.AutomaticPermanentBan and score >= Config.Enforcement.PermanentBanThreshold then
+        MySQL.query.await(
+            [[INSERT INTO whellco_anticheat_cases
+                (player_citizenid, reason, score, status)
+              VALUES (?, ?, ?, 'permanent_ban')]],
+            {
+                Player.PlayerData.citizenid,
+                reason,
+                score
+            }
+        )
+
+        DropPlayer(source, 'Anti-cheat: permanent ban applied for repeated integrity violations.')
+    elseif score >= Config.Enforcement.QuarantineThreshold then
         TriggerEvent('whellco_anticheat:quarantine', source, reason, score)
     elseif score >= Config.Enforcement.KickThreshold then
         DropPlayer(source, 'Anti-cheat: suspicious activity detected. Contact staff if this is an error.')

@@ -11,13 +11,14 @@ Config.Adaptive = {
     MaxThresholdIncrease = 50
 }
 
--- Graduated enforcement. Automatic permanent bans are intentionally disabled;
--- high-confidence events quarantine the player and create a staff review case.
+-- Graduated enforcement. Automatic permanent bans are enabled by default.
+-- High-confidence detections create an audit record before enforcement.
 Config.Enforcement = {
     WarnThreshold = 20,
     KickThreshold = 50,
     QuarantineThreshold = 80,
-    AutomaticPermanentBan = false,
+    PermanentBanThreshold = 100,
+    AutomaticPermanentBan = true,
     QuarantineDurationMinutes = 60
 }
 
