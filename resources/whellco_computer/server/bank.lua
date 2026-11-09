@@ -21,7 +21,7 @@ QBCore.Functions.CreateCallback('whellco_computer:transferMoney', function(sourc
         return
     end
 
-    if Computer.Cooldown.IsOnCooldown(source) then
+    if Computer.Cooldowns.bank.IsOnCooldown(source) then
         cb(false, 'Please wait before making another transfer.')
         return
     end
@@ -50,7 +50,7 @@ QBCore.Functions.CreateCallback('whellco_computer:transferMoney', function(sourc
         return
     end
 
-    Computer.Cooldown.SetCooldown(source)
+    Computer.Cooldowns.bank.SetCooldown(source)
 
     local requestId = ('%s-%d'):format(Player.PlayerData.citizenid, GetGameTimer())
 

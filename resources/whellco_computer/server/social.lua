@@ -4,7 +4,7 @@ QBCore.Functions.CreateCallback('whellco_computer:getPosts', function(source, cb
                  COUNT(c.id) AS comment_count
           FROM whellco_computer_posts p
           LEFT JOIN whellco_computer_comments c ON c.post_id = p.id
-          GROUP BY p.id
+          GROUP BY p.id, p.citizenid, p.author, p.content, p.created_at
           ORDER BY p.id DESC
           LIMIT 50]],
         {},
@@ -24,17 +24,19 @@ QBCore.Functions.CreateCallback('whellco_computer:createPost', function(source, 
 
     content = Utils.Trim(content)
 
-    if #content == 0 or #content > 500 then
-        cb(false, 'Post must be between 1 and 500 characters.')
+    local maxLength = Config.MaxPostLength or 500
+
+    if #content == 0 or #content > maxLength then
+        cb(false, ('Post must be between 1 and %d characters.'):format(maxLength))
         return
     end
 
-    if Computer.Cooldown.IsOnCooldown(source) then
+    if Computer.Cooldowns.social.IsOnCooldown(source) then
         cb(false, 'Please wait before posting again.')
         return
     end
 
-    Computer.Cooldown.SetCooldown(source)
+    Computer.Cooldowns.social.SetCooldown(source)
 
     Computer.MySQL.insert(
         'INSERT INTO whellco_computer_posts (citizenid, author, content) VALUES (?, ?, ?)',
@@ -64,17 +66,19 @@ QBCore.Functions.CreateCallback('whellco_computer:addComment', function(source, 
 
     content = Utils.Trim(content)
 
-    if #content == 0 or #content > 300 then
-        cb(false, 'Comment must be between 1 and 300 characters.')
+    local maxLength = Config.MaxCommentLength or 300
+
+    if #content == 0 or #content > maxLength then
+        cb(false, ('Comment must be between 1 and %d characters.'):format(maxLength))
         return
     end
 
-    if Computer.Cooldown.IsOnCooldown(source) then
+    if Computer.Cooldowns.social.IsOnCooldown(source) then
         cb(false, 'Please wait before commenting again.')
         return
     end
 
-    Computer.Cooldown.SetCooldown(source)
+    Computer.Cooldowns.social.SetCooldown(source)
 
     Computer.MySQL.query(
         'SELECT id, citizenid FROM whellco_computer_posts WHERE id = ? LIMIT 1',

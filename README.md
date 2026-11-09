@@ -22,11 +22,16 @@ The computer client callback names and database schema remain unchanged, so exis
 - Fixed the modular renderer to use the existing HTML element IDs.
 - Wired the modular UI files into `index.html` and removed the legacy `script.js` include.
 - Added a status-message element for user feedback.
+- Fixed the shop configuration mismatch so the server reads `Config.Shop`.
+- Fixed the shop item mapping so catalog keys such as `water` correctly add the configured inventory item, such as `water_bottle`.
+- Fixed the social posts query to remain compatible with MySQL `ONLY_FULL_GROUP_BY` mode.
+- Fixed the notification badge so unread notifications update correctly.
+- Fixed the close button so it remains available while another request is pending.
 
 #### Architecture updates
 
 - Split the computer server into focused modules:
-  - `server/main.lua` for shared state, recovery commands, and disconnect cleanup.
+  - `server/main.lua` for shared state, recovery commands, startup recovery, and disconnect cleanup.
   - `server/bank.lua` for balances, transfers, transfer history, and recovery records.
   - `server/shop.lua` for shop data and purchases.
   - `server/marketplace.lua` for listings, cancellations, and purchases.
@@ -38,6 +43,8 @@ The computer client callback names and database schema remain unchanged, so exis
   - `render.js` for rendering, HTML escaping, and status messages.
   - `events.js` for all UI event handling and data refreshes.
 - Added a shared `whellco_utils` resource for notifications, player lookup, cooldowns, validation, JSON handling, and money formatting.
+- Added separate per-action cooldowns for bank, shop, marketplace, social, and notifications.
+- Added startup recovery for stale pending transfers.
 
 #### UI features
 
@@ -53,6 +60,7 @@ The modular computer UI now handles:
 - Social post display and creation.
 - Notification display, refresh, and mark-as-read.
 - HTML escaping for user-controlled content.
+- Refreshing only the active tab when the computer opens.
 
 #### Marketplace security
 
@@ -67,6 +75,7 @@ The modular computer UI now handles:
 - Bank transfers create durable records before debiting the sender.
 - Transfer records use `pending`, `recovery`, and `resolved` states.
 - Failed transfers are marked for recovery when a player disconnects or payment fails.
+- Stale pending transfers older than five minutes are marked for recovery on resource startup.
 - Failed receiver payment credits are refunded to the sender where possible.
 - `/computerrecovery` lists unresolved recovery records.
 - `/computerresolve <id>` marks a recovery record as resolved.
@@ -109,19 +118,9 @@ The modular computer UI now handles:
 - Limited parsed playlists to 500 channels.
 - Added validation for saved channel values from 1 through 1,000.
 - Added private/internal address filtering for playlist and channel URLs.
-- Added IPv6 loopback, link-local, and unique-local address checks.
-- Added trusted-domain allowlisting for playlist hosts.
+- Added IPv6 loopback, link-local, unique-local, and IPv4-mapped private-address checks.
+- Added trusted-domain allowlisting for both playlist and channel URLs.
 - Added short-lived playlist caching to reduce repeated external requests.
-
-### Weather
-
-#### Bugs and errors fixed
-
-- Fixed the weather scheduler so `Config.SyncInterval` controls the actual time-sync interval.
-- Removed overlapping weather and time-update loops.
-- Added safe defaults for invalid, zero, or negative sync and weather-change intervals.
-- Added guarded access to seasonal and realistic weather configuration.
-- Preserved seasonal weather, real-time clock sync, night detection, and `/weatherinfo`.
 
 ## Resource overview
 
@@ -166,7 +165,7 @@ Failed or interrupted computer operations can be marked as `recovery`. Administr
 
 ## IPTV configuration
 
-IPTV playlist requests are restricted to trusted domains. Add allowed hosts to `Config.TrustedPlaylistDomains`:
+IPTV playlist and channel requests are restricted to trusted domains. Add allowed hosts to `Config.TrustedPlaylistDomains`:
 
 ```lua
 Config.TrustedPlaylistDomains = {
@@ -210,6 +209,6 @@ Both values must be at least 1. Invalid or non-positive values fall back to safe
 - Marketplace listing metadata is read from the seller’s server-side inventory item.
 - Bank transfers create durable records before debiting senders.
 - Notification ownership is validated server-side.
-- IPTV playlist hosts are restricted to the configured trusted-domain allowlist.
+- IPTV playlist and channel hosts are restricted to the configured trusted-domain allowlist.
 - IPTV playlist and channel URLs are checked against private and internal network ranges.
 - IPTV external requests have timeout and response-size limits.

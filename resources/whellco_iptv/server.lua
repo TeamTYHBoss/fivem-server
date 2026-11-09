@@ -7,6 +7,14 @@ local MAX_CHANNELS = 500
 local MAX_CHANNEL_NUMBER = 1000
 local REQUEST_TIMEOUT = 10000
 
+local TRUSTED_PLAYLIST_DOMAINS = Config.TrustedPlaylistDomains or {
+    'raw.githubusercontent.com',
+    'gist.githubusercontent.com'
+}
+
+local PLAYLIST_CACHE_SECONDS = Config.PlaylistCacheSeconds or 300
+local playlistCache = {}
+
 local function notify(source, message, kind)
     TriggerClientEvent('QBCore:Notify', source, message, kind or 'primary', 5000)
 end
@@ -34,10 +42,32 @@ local function isPrivateHost(host)
         return true
     end
 
+    local mappedIpv4 = lowerHost:match('^::ffff:(%d+%.%d+%.%d+%.%d+)$')
+
+    if mappedIpv4 then
+        return isPrivateHost(mappedIpv4)
+    end
+
     return false
 end
 
-local function isValidPlaylistUrl(url)
+local function isTrustedHost(host)
+    for _, domain in ipairs(TRUSTED_PLAYLIST_DOMAINS) do
+        if host == domain then
+            return true
+        end
+
+        local suffix = ('.%s'):format(domain)
+
+        if host:sub(-#suffix) == suffix then
+            return true
+        end
+    end
+
+    return false
+end
+
+local function isValidUrl(url, requireTrusted)
     if type(url) ~= 'string' or #url == 0 or #url > MAX_PLAYLIST_LENGTH then
         return false
     end
@@ -64,11 +94,19 @@ local function isValidPlaylistUrl(url)
         end
     end
 
+    if requireTrusted and not isTrustedHost(host:lower()) then
+        return false
+    end
+
     return true
 end
 
+local function isValidPlaylistUrl(url)
+    return isValidUrl(url, true)
+end
+
 local function isValidChannelUrl(url)
-    return isValidPlaylistUrl(url)
+    return isValidUrl(url, true)
 end
 
 local function parseM3U(content)
@@ -101,9 +139,38 @@ local function parseM3U(content)
     return validChannels
 end
 
+local function getCachedPlaylist(url)
+    local cached = playlistCache[url]
+
+    if not cached then
+        return nil
+    end
+
+    if GetGameTimer() - cached.time > PLAYLIST_CACHE_SECONDS * 1000 then
+        playlistCache[url] = nil
+        return nil
+    end
+
+    return cached.channels
+end
+
+local function cachePlaylist(url, channels)
+    playlistCache[url] = {
+        time = GetGameTimer(),
+        channels = channels
+    }
+end
+
 QBCore.Functions.CreateCallback('whellco_iptv:getChannels', function(source, cb, playlistUrl)
     if not isValidPlaylistUrl(playlistUrl) then
         cb({ channels = {} })
+        return
+    end
+
+    local cached = getCachedPlaylist(playlistUrl)
+
+    if cached then
+        cb({ channels = cached })
         return
     end
 
@@ -128,7 +195,10 @@ QBCore.Functions.CreateCallback('whellco_iptv:getChannels', function(source, cb,
             return
         end
 
-        cb({ channels = parseM3U(body) })
+        local channels = parseM3U(body)
+
+        cachePlaylist(playlistUrl, channels)
+        cb({ channels = channels })
     end, 'GET', '', {})
 end)
 

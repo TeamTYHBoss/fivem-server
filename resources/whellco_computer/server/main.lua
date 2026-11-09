@@ -9,7 +9,13 @@ Computer = {
         RECOVERY = 'recovery',
         RESOLVED = 'resolved'
     },
-    Cooldown = Utils.CreateCooldown(1000)
+    Cooldowns = {
+        bank = Utils.CreateCooldown(1000),
+        shop = Utils.CreateCooldown(1000),
+        marketplace = Utils.CreateCooldown(1000),
+        social = Utils.CreateCooldown(1000),
+        notifications = Utils.CreateCooldown(1000)
+    }
 }
 
 function Computer.Notify(source, message, kind)
@@ -21,7 +27,28 @@ function Computer.GetPlayer(source)
 end
 
 AddEventHandler('playerDropped', function()
-    Computer.Cooldown.Clear(source)
+    for _, cooldown in pairs(Computer.Cooldowns) do
+        cooldown.Clear(source)
+    end
+end)
+
+CreateThread(function()
+    Wait(5000)
+
+    MySQL.update(
+        [[UPDATE whellco_computer_transfers
+          SET status = ?
+          WHERE status = ? AND created_at < NOW() - INTERVAL 5 MINUTE]],
+        {
+            Computer.RecoveryStates.RECOVERY,
+            Computer.RecoveryStates.PENDING
+        },
+        function(affectedRows)
+            if affectedRows and affectedRows > 0 then
+                print(('[whellco_computer] Marked %d stale transfer(s) for recovery.'):format(affectedRows))
+            end
+        end
+    )
 end)
 
 QBCore.Commands.Add('computerrecovery', 'List unresolved computer recovery records', {}, false, function(source)

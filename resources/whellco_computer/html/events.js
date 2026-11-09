@@ -253,10 +253,6 @@ window.addEventListener('message', async event => {
         document.getElementById('computer').classList.remove('hidden');
 
         await refreshBank();
-        await refreshShop();
-        await refreshMarketplace();
-        await refreshSocial();
-        await refreshNotifications();
     }
 
     if (data.action === 'close') {

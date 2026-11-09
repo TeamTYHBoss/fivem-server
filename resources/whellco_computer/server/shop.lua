@@ -10,7 +10,7 @@ QBCore.Functions.CreateCallback('whellco_computer:buyItem', function(source, cb,
         return
     end
 
-    if Computer.Cooldown.IsOnCooldown(source) then
+    if Computer.Cooldowns.shop.IsOnCooldown(source) then
         cb(false, 'Please wait before making another purchase.')
         return
     end
@@ -40,6 +40,6 @@ QBCore.Functions.CreateCallback('whellco_computer:buyItem', function(source, cb,
         return
     end
 
-    Computer.Cooldown.SetCooldown(source)
+    Computer.Cooldowns.shop.SetCooldown(source)
     cb(true, ('Purchased %s.'):format(shopItem.label or itemId))
 end)

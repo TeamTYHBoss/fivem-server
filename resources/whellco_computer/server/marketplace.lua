@@ -52,7 +52,7 @@ QBCore.Functions.CreateCallback('whellco_computer:createListing', function(sourc
         return
     end
 
-    if Computer.Cooldown.IsOnCooldown(source) then
+    if Computer.Cooldowns.marketplace.IsOnCooldown(source) then
         cb(false, 'Please wait before creating another listing.')
         return
     end
@@ -72,7 +72,7 @@ QBCore.Functions.CreateCallback('whellco_computer:createListing', function(sourc
         return
     end
 
-    Computer.Cooldown.SetCooldown(source)
+    Computer.Cooldowns.marketplace.SetCooldown(source)
 
     local metadata = Utils.SafeJsonEncode(getVerifiedMetadata(Player, itemName))
 
@@ -107,12 +107,12 @@ QBCore.Functions.CreateCallback('whellco_computer:cancelListing', function(sourc
         return
     end
 
-    if Computer.Cooldown.IsOnCooldown(source) then
+    if Computer.Cooldowns.marketplace.IsOnCooldown(source) then
         cb(false, 'Please wait before making another request.')
         return
     end
 
-    Computer.Cooldown.SetCooldown(source)
+    Computer.Cooldowns.marketplace.SetCooldown(source)
 
     Computer.MySQL.update(
         [[UPDATE whellco_computer_listings
@@ -141,12 +141,12 @@ QBCore.Functions.CreateCallback('whellco_computer:buyListing', function(source, 
         return
     end
 
-    if Computer.Cooldown.IsOnCooldown(source) then
+    if Computer.Cooldowns.marketplace.IsOnCooldown(source) then
         cb(false, 'Please wait before making another purchase.')
         return
     end
 
-    Computer.Cooldown.SetCooldown(source)
+    Computer.Cooldowns.marketplace.SetCooldown(source)
 
     Computer.MySQL.query(
         [[SELECT id, seller, item, quantity, metadata, price
