@@ -58,6 +58,8 @@ The modular computer UI now handles:
 - Shop item display and purchases.
 - Marketplace listing display, creation, cancellation, and purchase.
 - Social post display and creation.
+- Social post comment input and submit button.
+- Comment submission validates non-empty input, calls the existing `addComment` API, clears the input, and refreshes the social feed.
 - Notification display, refresh, and mark-as-read.
 - HTML escaping for user-controlled content.
 - Refreshing only the active tab when the computer opens.
