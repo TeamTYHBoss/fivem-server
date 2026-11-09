@@ -164,6 +164,31 @@ document.addEventListener('click', async event => {
         return;
     }
 
+    if (target.classList.contains('comment-submit')) {
+        const postId = target.dataset.commentPostId;
+        const commentInput = document.querySelector(`.comment-input[data-comment-post-id="${postId}"]`);
+        const content = commentInput ? commentInput.value.trim() : '';
+
+        if (!postId || !content) {
+            showMessage('Enter a comment before submitting.', 'error');
+            return;
+        }
+
+        setPendingRequest(true);
+
+        const result = await addComment(postId, content);
+
+        setPendingRequest(false);
+        showMessage(result.message, result.success ? 'success' : 'error');
+
+        if (commentInput) {
+            commentInput.value = '';
+        }
+
+        await refreshSocial();
+        return;
+    }
+
     if (target.dataset.itemId) {
         setPendingRequest(true);
 

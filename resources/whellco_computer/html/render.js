@@ -88,6 +88,18 @@ function renderSocial() {
             <strong>${escapeHtml(post.author)}</strong>
             <p>${escapeHtml(post.content)}</p>
             <span>${escapeHtml(post.comment_count || 0)} comments</span>
+            <div class="comment-form">
+                <input
+                    type="text"
+                    class="comment-input"
+                    data-comment-post-id="${escapeHtml(post.id)}"
+                    placeholder="Write a comment..."
+                >
+                <button
+                    class="comment-submit"
+                    data-comment-post-id="${escapeHtml(post.id)}"
+                >Comment</button>
+            </div>
         </div>
     `).join('');
 }
